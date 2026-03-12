@@ -4064,7 +4064,7 @@ function attachListeners() {
     _unsubs.push(
         db.collection('leads').onSnapshot(snap => {
             leads = snap.docs.map(d => d.data());
-            renderLeads();
+            renderPipeline(); // ← renderLeads 아님, renderPipeline이 정확한 함수명
         })
     );
     _unsubs.push(
@@ -4135,7 +4135,7 @@ handleNewSaleSite = async function(e) {
                 manager:  document.getElementById('ssManager').value.trim(),
                 phone:    document.getElementById('ssPhone').value.trim(),
                 status:   document.getElementById('ssStatus').value,
-                note:     document.getElementById('ssNote')?.value.trim() || saleSites[idx].note,
+                memo:     document.getElementById('ssMemo')?.value.trim() || saleSites[idx].memo || '',
             };
             if (_fbReady) { await fbSet('saleSites', id, updated); }
             else { saleSites[idx] = updated; renderSaleSiteList(); checkDuplicates(); }
@@ -4151,7 +4151,7 @@ handleNewSaleSite = async function(e) {
     }
 
     // 신규 등록
-    const newId = _fbReady ? fbGenId() : Date.now();
+    const newId = _fbReady ? fbGenId() : String(Date.now());
     const companyId = isAdmin
         ? (parseInt(document.getElementById('adminSiteCompany')?.value) || 1)
         : currentUser.id;
@@ -4161,13 +4161,18 @@ handleNewSaleSite = async function(e) {
         scope:    document.getElementById('ssScope').value.trim(),
         manager:  document.getElementById('ssManager').value.trim(),
         phone:    document.getElementById('ssPhone').value.trim(),
-        status:   isAdmin ? document.getElementById('ssStatus').value : '영업중',
-        note:     document.getElementById('ssNote')?.value.trim() || '',
+        status:   isAdmin ? (document.getElementById('ssStatus')?.value || '영업중') : '영업중',
+        memo:     document.getElementById('ssMemo')?.value.trim() || '',
         createdAt: new Date().toLocaleDateString('ko-KR').replace(/\. /g, '.').slice(0,-1),
     };
-    if (_fbReady) { await fbSet('saleSites', newId, entry); }
-    else { saleSites.push(entry); renderSaleSiteList(); checkDuplicates(); }
+    try {
+        if (_fbReady) { await fbSet('saleSites', newId, entry); }
+        else { saleSites.push(entry); renderSaleSiteList(); checkDuplicates(); }
+    } catch(e) {
+        console.error('[Firebase] 저장 실패', e);
+    }
     closeModal('newSaleSiteModal');
+    foldAddressEmbed();
     showToast(`${building} 단지가 등록되었습니다.`, 'success');
 };
 
@@ -4283,15 +4288,13 @@ handleNewSite = async function(e) {
 };
 
 // ── Firebase 초기화 실행 ──
-window.addEventListener('DOMContentLoaded', () => {
-    // Firebase config가 실제 값으로 채워졌을 때만 초기화
-    if (FIREBASE_CONFIG.apiKey !== 'YOUR_API_KEY') {
-        initFirebase();
-    } else {
-        console.warn('[Firebase] Config가 설정되지 않았습니다. 로컬 데이터로 동작합니다.');
-        console.warn('partner.html 파일에서 FIREBASE_CONFIG를 채워주세요.');
-    }
-});
+// ★ 스크립트가 </body> 직전에 위치하므로 DOMContentLoaded는 이미 지나간 상태
+//   → 이벤트 리스너 대신 직접 호출
+if (FIREBASE_CONFIG.apiKey !== 'YOUR_API_KEY') {
+    initFirebase();
+} else {
+    console.warn('[Firebase] Config가 설정되지 않았습니다. 로컬 데이터로 동작합니다.');
+}
 </script>
 </body>
 </html>
