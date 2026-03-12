@@ -2289,6 +2289,26 @@
         </div>
         <div class="modal-body">
             <form class="modal-form" id="newSaleSiteForm" onsubmit="handleNewSaleSite(event)">
+
+                <!-- 시공사 선택 (관리자 전용) -->
+                <div class="form-group" id="ssAdminCompanyGroup" style="display:none;">
+                    <label class="form-label">시공사 <span style="color:var(--red)">*</span></label>
+                    <div style="position:relative;">
+                        <input type="text" class="form-input" id="ssCompanyInput"
+                               placeholder="시공사명 입력 (1~2글자로 검색)"
+                               autocomplete="off"
+                               oninput="onSsCompanyInput(this.value)"
+                               onblur="setTimeout(()=>hideSsDropdown(),200)">
+                        <div id="ssCompanyDropdown" style="display:none; position:absolute; top:100%; left:0; right:0; background:#fff; border:1px solid var(--gray-200); border-radius:11px; box-shadow:0 4px 16px rgba(0,0,0,0.1); z-index:9999; overflow:hidden; margin-top:4px;"></div>
+                    </div>
+                    <!-- 선택된 시공사 ID 저장 (없으면 0 = 미등록) -->
+                    <input type="hidden" id="ssCompanyId" value="0">
+                    <div id="ssCompanyTag" style="display:none; margin-top:6px; padding:6px 12px; background:var(--blue-light,#eff6ff); border-radius:8px; font-size:13px; color:var(--blue); display:flex; align-items:center; gap:6px;">
+                        <span id="ssCompanyTagText"></span>
+                        <span onclick="clearSsCompany()" style="cursor:pointer; font-weight:700; margin-left:auto;">✕</span>
+                    </div>
+                </div>
+
                 <div class="form-group">
                     <label class="form-label">단지명 <span style="color:var(--red)">*</span></label>
                     <input type="text" class="form-input" id="ssBuilding" placeholder="예: 래미안 강동팰리스" required>
@@ -3581,16 +3601,83 @@ function foldAddressEmbed() {
 }
 
 // ========== SALE SITES FUNCTIONS ==========
+
+// ── 기술사용단지 모달: 시공사 자동완성 ──
+function onSsCompanyInput(val) {
+    const dropdown = document.getElementById('ssCompanyDropdown');
+    if (!val || val.length < 1) { dropdown.style.display = 'none'; return; }
+
+    const q = val.trim().toLowerCase();
+    const matches = Object.values(companies).filter(c =>
+        c.name.toLowerCase().includes(q)
+    );
+
+    let html = '';
+    matches.forEach(c => {
+        html += `<div onclick="selectSsCompany(${c.id},'${c.name}')"
+                      style="padding:10px 14px; cursor:pointer; font-size:14px; border-bottom:1px solid var(--gray-100);"
+                      onmouseover="this.style.background='var(--gray-50)'"
+                      onmouseout="this.style.background=''"
+                 >🏢 ${c.name}</div>`;
+    });
+
+    // 미등록 시공사 입력 옵션
+    const exactMatch = Object.values(companies).some(c => c.name === val.trim());
+    if (!exactMatch && val.trim().length > 0) {
+        html += `<div onclick="selectSsCompany(0,'${val.trim().replace(/'/g, "\'")}')"
+                      style="padding:10px 14px; cursor:pointer; font-size:14px; color:var(--gray-500);"
+                      onmouseover="this.style.background='var(--gray-50)'"
+                      onmouseout="this.style.background=''"
+                 >➕ "${val.trim()}" 으로 등록 (미등록 시공사)</div>`;
+    }
+
+    if (html) {
+        dropdown.innerHTML = html;
+        dropdown.style.display = 'block';
+    } else {
+        dropdown.style.display = 'none';
+    }
+}
+
+function selectSsCompany(id, name) {
+    document.getElementById('ssCompanyInput').value = '';
+    document.getElementById('ssCompanyId').value = id;
+    document.getElementById('ssCompanyDropdown').style.display = 'none';
+
+    const tag = document.getElementById('ssCompanyTag');
+    document.getElementById('ssCompanyTagText').textContent =
+        (id > 0 ? '🏢 ' : '➕ ') + name + (id === 0 ? ' (미등록)' : '');
+    tag.style.display = 'flex';
+
+    // 입력창 숨김
+    document.getElementById('ssCompanyInput').style.display = 'none';
+}
+
+function clearSsCompany() {
+    document.getElementById('ssCompanyInput').value = '';
+    document.getElementById('ssCompanyInput').style.display = '';
+    document.getElementById('ssCompanyId').value = '0';
+    document.getElementById('ssCompanyDropdown').style.display = 'none';
+    const tag = document.getElementById('ssCompanyTag');
+    if (tag) tag.style.display = 'none';
+}
+
+function hideSsDropdown() {
+    const dd = document.getElementById('ssCompanyDropdown');
+    if (dd) dd.style.display = 'none';
+}
+
 function openNewSaleSiteModal() {
     document.getElementById('newSaleSiteForm').reset();
     document.getElementById('ssAddressVisible').value  = '';
     document.getElementById('ssPostcodeVisible').value = '';
     document.getElementById('ssAddress').value  = '';
     document.getElementById('ssPostcode').value = '';
-    foldAddressEmbed(); // embed 영역 초기화
+    foldAddressEmbed();
 
-    // 영업 상태: 관리자만 표시
     document.getElementById('ssStatusGroup').style.display = isAdmin ? 'block' : 'none';
+    document.getElementById('ssAdminCompanyGroup').style.display = isAdmin ? 'block' : 'none';
+    clearSsCompany();
 
     document.getElementById('newSaleSiteModal').classList.add('active');
 }
@@ -3639,12 +3726,25 @@ async function handleNewSaleSite(e) {
     }
 
     // ── 신규 등록 모드 ──
-    const newId     = _fbReady ? fbGenId() : String(Date.now());
-    const companyId = isAdmin
-        ? (parseInt(document.getElementById('adminSiteCompany')?.value) || 1)
-        : currentUser.id;
+    const newId = _fbReady ? fbGenId() : String(Date.now());
+
+    // 시공사 처리: 관리자는 자동완성 필드에서, 시공사는 currentUser에서
+    let companyId, companyName;
+    if (isAdmin) {
+        companyId = parseInt(document.getElementById('ssCompanyId')?.value) || 0;
+        const tagText = document.getElementById('ssCompanyTagText')?.textContent || '';
+        // 태그 텍스트에서 이름 추출 (이모지 제거)
+        companyName = tagText.replace(/^[🏢➕]\s*/, '').replace(/ \(미등록\)$/, '').trim();
+        if (!companyName) {
+            showToast('시공사를 입력해주세요.', 'error'); return;
+        }
+    } else {
+        companyId = currentUser.id;
+        companyName = currentUser.name;
+    }
+
     const entry = {
-        id: newId, companyId, building, address: baseAddr,
+        id: newId, companyId, companyName, building, address: baseAddr,
         postcode: document.getElementById('ssPostcodeVisible').value,
         scope:    document.getElementById('ssScope').value.trim(),
         manager:  document.getElementById('ssManager').value.trim(),
@@ -3728,7 +3828,8 @@ function renderSaleSiteList() {
         const dupKey = normKey(s.building, s.address);
         const isDup = isAdmin && dupKeys.has(dupKey); // 관리자만 중복 표시
         const company = companies[s.companyId];
-        const adminCols = isAdmin ? `<div><span class="salesite-company-chip">${company?.name || '-'}</span></div>` : '';
+        const displayCompanyName = company?.name || s.companyName || '미등록 시공사';
+        const adminCols = isAdmin ? `<div><span class="salesite-company-chip">${displayCompanyName}</span></div>` : '';
         const gridStyle = isAdmin
             ? 'grid-template-columns:1.4fr 1.8fr 1fr 1fr 1fr 80px 100px;'
             : 'grid-template-columns:1.6fr 2fr 1.2fr 1.2fr 100px;';
