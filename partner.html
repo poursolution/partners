@@ -2282,13 +2282,18 @@
                     <div style="display:flex; gap:8px; margin-bottom:8px;">
                         <input type="text" id="ssPostcodeVisible" class="form-input" placeholder="우편번호" readonly
                                style="width:120px; flex-shrink:0; background:var(--gray-50);">
-                        <button type="button" onclick="openAddressPopup()"
+                        <button type="button" id="ssSearchBtn" onclick="openAddressPopup()"
                                 style="flex-shrink:0; padding:0 16px; height:44px; border:none; border-radius:11px; background:var(--blue); color:#fff; font-size:14px; font-weight:700; cursor:pointer; font-family:inherit; white-space:nowrap;">
                             🔍 주소 검색
+                        </button>
+                        <button type="button" id="ssFoldBtn" onclick="foldAddressEmbed()" style="display:none; flex-shrink:0; padding:0 14px; height:44px; border:none; border-radius:11px; background:var(--gray-200); color:var(--gray-700); font-size:14px; font-weight:700; cursor:pointer; font-family:inherit; white-space:nowrap;">
+                            ✕ 닫기
                         </button>
                     </div>
                     <input type="text" id="ssAddressVisible" class="form-input" placeholder="도로명 주소 (위 버튼을 눌러 검색)" readonly
                            style="background:var(--gray-50); margin-bottom:0;">
+                    <!-- 인라인 카카오 주소검색 embed 영역 -->
+                    <div id="daumPostcodeWrap" style="display:none; margin-top:8px; border:1px solid var(--gray-200); border-radius:11px; overflow:hidden; width:100%; height:400px;"></div>
                     <!-- 값 저장용 hidden -->
                     <input type="hidden" id="ssAddress">
                     <input type="hidden" id="ssPostcode">
@@ -3463,57 +3468,76 @@ const faqData = [
 
 let currentTechQAFilter = 'all';
 
-// ========== ADDRESS SEARCH ==========
+// ========== ADDRESS SEARCH (인라인 embed) ==========
+window._daumPcInst = null;
+
 function openAddressPopup() {
-    // 1. 기술사용단지 모달을 완전히 숨김 (interference 제거)
-    var modal = document.getElementById('newSaleSiteModal');
-    modal.style.display = 'none';
+    var wrap = document.getElementById('daumPostcodeWrap');
+    if (!wrap) return;
 
-    // 2. 전체화면 주소검색 div를 body에 직접 생성
-    var wrap = document.createElement('div');
-    wrap.id = '__addrWrap';
-    wrap.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:#fff;z-index:999999;display:flex;flex-direction:column;';
+    // 이미 열려있으면 닫기
+    if (wrap.style.display !== 'none') {
+        foldAddressEmbed();
+        return;
+    }
 
-    var topbar = document.createElement('div');
-    topbar.style.cssText = 'background:#0066ff;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;';
-    topbar.innerHTML = '<span style="color:#fff;font-size:16px;font-weight:700;">🔍 주소 검색</span>';
+    // 버튼 토글
+    document.getElementById('ssSearchBtn').style.display = 'none';
+    document.getElementById('ssFoldBtn').style.display   = '';
 
-    var cancelBtn = document.createElement('button');
-    cancelBtn.type = 'button';
-    cancelBtn.textContent = '취소';
-    cancelBtn.style.cssText = 'background:rgba(255,255,255,0.2);border:none;color:#fff;padding:6px 16px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;';
-    cancelBtn.onclick = function() {
-        wrap.remove();
-        modal.style.display = 'flex';
-    };
-    topbar.appendChild(cancelBtn);
+    // embed 영역 표시
+    wrap.style.display = 'block';
+    wrap.innerHTML = '';
+    window._daumPcInst = null;
 
-    // 3. embed 타겟: 전체 남은 높이, transform/overflow:hidden 없음
-    var target = document.createElement('div');
-    target.style.cssText = 'flex:1;width:100%;';
+    var W = wrap.offsetWidth || 500;
 
-    wrap.appendChild(topbar);
-    wrap.appendChild(target);
-    document.body.appendChild(wrap);
-
-    // 4. Daum embed — 이제 방해하는 요소 전혀 없음
-    new kakao.Postcode({
+    window._daumPcInst = new kakao.Postcode({
         oncomplete: function(data) {
-            var addr = data.roadAddress || data.jibunAddress;
+            var addr = data.roadAddress || data.autoRoadAddress
+                     || data.jibunAddress || data.autoJibunAddress || '';
+            var code = data.zonecode || '';
 
-            // 모달 내 input에 값 채우기
-            document.getElementById('ssPostcodeVisible').value = data.zonecode;
+            document.getElementById('ssPostcodeVisible').value = code;
             document.getElementById('ssAddressVisible').value  = addr;
             document.getElementById('ssAddress').value         = addr;
-            document.getElementById('ssPostcode').value        = data.zonecode;
+            document.getElementById('ssPostcode').value        = code;
 
-            // 주소검색 레이어 제거 후 모달 복원
-            wrap.remove();
-            modal.style.display = 'flex';
+            // 시각 피드백
+            var adVis = document.getElementById('ssAddressVisible');
+            if (adVis) {
+                adVis.style.borderColor = '#00c853';
+                adVis.style.background  = '#e6f9f0';
+                setTimeout(function() {
+                    adVis.style.borderColor = '';
+                    adVis.style.background  = 'var(--gray-50)';
+                }, 1600);
+            }
+
+            foldAddressEmbed();
         },
-        width:  '100%',
-        height: '100%',
-    }).embed(target, { autoClose: false });
+        onresize: function(size) {
+            wrap.style.height = size.height + 'px';
+        },
+        width:  W,
+        height: 400,
+    });
+    window._daumPcInst.embed(wrap);
+
+    // embed 영역으로 스크롤
+    setTimeout(function() {
+        wrap.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }, 100);
+}
+
+function foldAddressEmbed() {
+    var wrap = document.getElementById('daumPostcodeWrap');
+    if (wrap) { wrap.style.display = 'none'; wrap.innerHTML = ''; }
+    window._daumPcInst = null;
+    var sb = document.getElementById('ssSearchBtn');
+    var fb = document.getElementById('ssFoldBtn');
+    if (sb) sb.style.display = '';
+    if (fb) fb.style.display = 'none';
 }
 
 // ========== SALE SITES FUNCTIONS ==========
@@ -3523,6 +3547,7 @@ function openNewSaleSiteModal() {
     document.getElementById('ssPostcodeVisible').value = '';
     document.getElementById('ssAddress').value  = '';
     document.getElementById('ssPostcode').value = '';
+    foldAddressEmbed(); // embed 영역 초기화
 
     // 영업 상태: 관리자만 표시
     document.getElementById('ssStatusGroup').style.display = isAdmin ? 'block' : 'none';
@@ -3659,14 +3684,15 @@ function deleteSaleSite(id) {
 }
 
 function normKey(building, address) {
-    return (building.replace(/\s/g, '') + '|' + address.replace(/\s/g, '')).toLowerCase();
+    // 주소만으로 중복 판단
+    return address.replace(/\s/g, '').toLowerCase();
 }
 
 function getDuplicates() {
     const map = {};
     saleSites.forEach(s => {
         const key = normKey(s.building, s.address);
-        if (!map[key]) map[key] = { key, building: s.building, address: s.address, entries: [] };
+        if (!map[key]) map[key] = { key, address: s.address, entries: [] };
         map[key].entries.push(s);
     });
     return Object.values(map).filter(v => v.entries.length > 1);
@@ -3676,15 +3702,18 @@ function checkDuplicates() {
     const dups = getDuplicates();
     const banner = document.getElementById('dupAlertBanner');
     const listEl = document.getElementById('dupAlertList');
-    const badge = document.getElementById('dupBadge');
+    const badge  = document.getElementById('dupBadge');
 
     if (dups.length > 0 && isAdmin) {
         banner.classList.add('show');
         badge.style.display = 'inline';
         badge.textContent = dups.length;
         listEl.innerHTML = dups.map(d => {
-            const names = d.entries.map(e => companies[e.companyId]?.name || '-').join(', ');
-            return `<li><strong>${d.building}</strong> — ${d.address} &nbsp;(${names})</li>`;
+            const names = d.entries.map(e => {
+                const co = companies[e.companyId]?.name || '-';
+                return `${e.building}(${co})`;
+            }).join(', ');
+            return `<li><strong>${d.address}</strong> &nbsp;— ${names}</li>`;
         }).join('');
     } else {
         banner.classList.remove('show');
