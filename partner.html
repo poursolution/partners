@@ -3090,22 +3090,30 @@ function showTicketDetail(id) {
 
 function submitReply(id) {
     const reply = document.getElementById(`replyInput_${id}`)?.value;
-    const ticket = tickets.find(t => t.id === id);
+    const ticket = tickets.find(t => String(t.id) === String(id));
     if (ticket && reply) {
-        ticket.reply = reply;
-        ticket.status = 'processing';
-        renderTickets();
-        showTicketDetail(id);
+        if (_fbReady) {
+            fbUpdate('tickets', id, { reply, status: 'processing' }).catch(err => console.error('[Firebase] reply 저장 실패', err));
+        } else {
+            ticket.reply = reply;
+            ticket.status = 'processing';
+            renderTickets();
+            showTicketDetail(id);
+        }
         showToast('답변이 저장되었습니다.', 'success');
     }
 }
 
 function markTicketDone(id) {
-    const ticket = tickets.find(t => t.id === id);
+    const ticket = tickets.find(t => String(t.id) === String(id));
     if (ticket) {
-        ticket.status = 'done';
-        renderTickets();
-        showTicketDetail(id);
+        if (_fbReady) {
+            fbUpdate('tickets', id, { status: 'done' }).catch(err => console.error('[Firebase] ticket 완료 처리 실패', err));
+        } else {
+            ticket.status = 'done';
+            renderTickets();
+            showTicketDetail(id);
+        }
         showToast('요청이 완료 처리되었습니다.', 'success');
     }
 }
@@ -3252,9 +3260,10 @@ function handleNewSite(e) {
     const typeEl = document.querySelector('input[name="newProjectType"]:checked');
 
     if (!typeEl) { showToast('공사 유형을 선택해주세요.', 'error'); return; }
+    const newId = _fbReady ? fbGenId() : String(Date.now());
 
     const newSite = {
-        id: sites.length + 1, companyId,
+        id: newId, companyId,
         type: typeEl.value,
         region, district: document.getElementById('newSiteDistrict').value,
         building, scope: document.getElementById('newSiteScope').value,
@@ -3269,13 +3278,18 @@ function handleNewSite(e) {
         startDate: new Date().toLocaleDateString('ko-KR').replace(/\. /g, '.'),
     };
 
-    sites.push(newSite);
     closeModal('newSiteModal');
     document.getElementById('newSiteForm').reset();
     removeSiteFile();
-    renderSiteList();
-    renderHome();
     showToast(`${building} 현장이 등록되었습니다.`, 'success');
+
+    if (_fbReady) {
+        fbSet('sites', newId, newSite).catch(err => console.error('[Firebase] site 저장 실패', err));
+    } else {
+        sites.push(newSite);
+        renderSiteList();
+        renderHome();
+    }
 }
 
 function handleNewTicket(e) {
@@ -3283,32 +3297,31 @@ function handleNewTicket(e) {
     const title = document.getElementById('ticketTitle').value;
     const type = document.getElementById('ticketType').value;
     const content = document.getElementById('ticketContent').value;
+    const now = new Date().toLocaleDateString('ko-KR').replace(/\. /g, '.').slice(0,-1);
+    const newId = _fbReady ? fbGenId() : String(Date.now());
 
     const newTicket = {
-        id: tickets.length + 1,
+        id: newId,
         companyId: currentUser.id,
         type, title, content,
         status: 'receiving',
         siteId: document.getElementById('ticketSite').value || null,
-        createdAt: new Date().toLocaleDateString('ko-KR').replace(/\. /g, '.'),
-        updatedAt: new Date().toLocaleDateString('ko-KR').replace(/\. /g, '.'),
-        reply: '',
+        createdAt: now, updatedAt: now, reply: '',
     };
 
-    tickets.push(newTicket);
     closeModal('newTicketModal');
     document.getElementById('newTicketForm').reset();
     removeTicketFile();
-    renderTickets();
-    renderHome();
+    showToast('요청이 접수되었습니다. 담당자가 확인 후 답변드립니다.', 'success');
 
-    const badge = document.getElementById('unreadBadge');
-    const myTickets = tickets.filter(t => t.companyId === currentUser.id);
-    const unread = myTickets.filter(t => t.status === 'receiving').length;
-    badge.style.display = unread > 0 ? 'inline' : 'none';
-    badge.textContent = unread;
-
-    showToast(`요청이 접수되었습니다. 담당자가 확인 후 답변드립니다.`, 'success');
+    if (_fbReady) {
+        fbSet('tickets', newId, newTicket).catch(err => console.error('[Firebase] ticket 저장 실패', err));
+    } else {
+        tickets.push(newTicket);
+        renderTickets();
+        renderHome();
+        updateBadges();
+    }
 }
 
 function handleDocUpload(e) {
@@ -3568,69 +3581,82 @@ function openNewSaleSiteModal() {
     document.getElementById('newSaleSiteModal').classList.add('active');
 }
 
-function handleNewSaleSite(e) {
+async function handleNewSaleSite(e) {
     e.preventDefault();
-    const building  = document.getElementById('ssBuilding').value.trim();
-    const baseAddr  = document.getElementById('ssAddressVisible').value.trim();
-
-    if (!baseAddr) {
-        showToast('주소 검색 버튼을 눌러 주소를 선택해주세요.', 'error');
-        return;
-    }
+    const building = document.getElementById('ssBuilding').value.trim();
+    const baseAddr = document.getElementById('ssAddressVisible').value.trim();
+    if (!baseAddr) { showToast('주소 검색 버튼을 눌러 주소를 선택해주세요.', 'error'); return; }
 
     // ── 수정 모드 ──
     if (_editingSaleSiteId !== null) {
-        const idx = saleSites.findIndex(s => s.id === _editingSaleSiteId);
+        const id  = _editingSaleSiteId;
+        const idx = saleSites.findIndex(s => String(s.id) === String(id));
         if (idx >= 0) {
-            const orig = saleSites[idx];
-            saleSites[idx] = {
-                ...orig,
+            const updated = {
+                ...saleSites[idx],
                 building,
                 address:  baseAddr,
                 postcode: document.getElementById('ssPostcodeVisible').value,
                 scope:    document.getElementById('ssScope').value.trim(),
                 manager:  document.getElementById('ssManager').value.trim(),
                 phone:    document.getElementById('ssPhone').value.trim(),
-                status:   document.getElementById('ssStatus').value,
-                note:     document.getElementById('ssNote') ? document.getElementById('ssNote').value.trim() : orig.note,
+                status:   document.getElementById('ssStatus')?.value || saleSites[idx].status,
+                memo:     document.getElementById('ssMemo')?.value.trim() || '',
             };
+            // 모달 먼저 닫고 저장
+            _editingSaleSiteId = null;
+            const titleEl = document.querySelector('#newSaleSiteModal .modal-title');
+            if (titleEl) titleEl.textContent = '📍 기술사용단지 추가';
+            const submitBtn = document.querySelector('#newSaleSiteForm button[type="submit"]');
+            if (submitBtn) submitBtn.textContent = '등록하기';
+            closeModal('newSaleSiteModal');
+            foldAddressEmbed();
+            showToast(`${building} 정보가 수정되었습니다.`, 'success');
+            // Firebase 저장 (백그라운드)
+            if (_fbReady) {
+                fbSet('saleSites', updated.id, updated).catch(err => console.error('수정 저장 실패', err));
+            } else {
+                saleSites[idx] = updated;
+                renderSaleSiteList();
+                checkDuplicates();
+            }
         }
-        _editingSaleSiteId = null;
-        // 모달 제목·버튼 원복
-        const titleEl = document.querySelector('#newSaleSiteModal .modal-title');
-        if (titleEl) titleEl.textContent = '📍 기술사용단지 추가';
-        const submitBtn = document.querySelector('#newSaleSiteForm button[type="submit"]');
-        if (submitBtn) submitBtn.textContent = '등록하기';
-
-        closeModal('newSaleSiteModal');
-        renderSaleSiteList();
-        checkDuplicates();
-        showToast(`${building} 정보가 수정되었습니다.`, 'success');
         return;
     }
 
     // ── 신규 등록 모드 ──
-    const newEntry = {
-        id:        Date.now(),
-        companyId: isAdmin
-            ? (parseInt(document.getElementById('adminSiteCompany')?.value) || 1)
-            : currentUser.id,
-        building,
-        address:   baseAddr,
-        postcode:  document.getElementById('ssPostcodeVisible').value,
-        scope:     document.getElementById('ssScope').value.trim(),
-        manager:   document.getElementById('ssManager').value.trim(),
-        phone:     document.getElementById('ssPhone').value.trim(),
-        status:    isAdmin ? document.getElementById('ssStatus').value : '영업중',
-        note:      document.getElementById('ssNote') ? document.getElementById('ssNote').value.trim() : '',
-        createdAt: new Date().toLocaleDateString('ko-KR').replace(/\. /g, '.').slice(0, -1),
+    const newId     = _fbReady ? fbGenId() : String(Date.now());
+    const companyId = isAdmin
+        ? (parseInt(document.getElementById('adminSiteCompany')?.value) || 1)
+        : currentUser.id;
+    const entry = {
+        id: newId, companyId, building, address: baseAddr,
+        postcode: document.getElementById('ssPostcodeVisible').value,
+        scope:    document.getElementById('ssScope').value.trim(),
+        manager:  document.getElementById('ssManager').value.trim(),
+        phone:    document.getElementById('ssPhone').value.trim(),
+        status:   isAdmin ? (document.getElementById('ssStatus')?.value || '영업중') : '영업중',
+        memo:     document.getElementById('ssMemo')?.value.trim() || '',
+        createdAt: new Date().toLocaleDateString('ko-KR').replace(/\. /g, '.').slice(0,-1),
     };
 
-    saleSites.push(newEntry);
+    // 모달 먼저 닫고 저장 (UX 즉시 반응)
     closeModal('newSaleSiteModal');
-    renderSaleSiteList();
-    checkDuplicates();
+    foldAddressEmbed();
     showToast(`${building} 단지가 등록되었습니다.`, 'success');
+
+    if (_fbReady) {
+        fbSet('saleSites', newId, entry)
+            .then(() => console.log('[Firebase] saleSite 저장 완료:', newId))
+            .catch(err => {
+                console.error('[Firebase] saleSite 저장 실패:', err);
+                showToast('저장 중 오류가 발생했습니다. 다시 시도해주세요.', 'error');
+            });
+    } else {
+        saleSites.push(entry);
+        renderSaleSiteList();
+        checkDuplicates();
+    }
 }
 
 function filterSaleSites(btn, filter) {
@@ -3835,9 +3861,10 @@ function handleNewTechQA(e) {
     const title = document.getElementById('tqTitle').value;
     const type = document.getElementById('tqType').value;
     const content = document.getElementById('tqContent').value;
+    const newId = _fbReady ? fbGenId() : String(Date.now());
 
     const newQ = {
-        id: techQAs.length + 1,
+        id: newId,
         companyId: currentUser.id,
         type, title, content,
         status: 'receiving',
@@ -3846,17 +3873,17 @@ function handleNewTechQA(e) {
         reply: '',
     };
 
-    techQAs.push(newQ);
     closeModal('newTechQAModal');
     document.getElementById('newTechQAForm').reset();
-    renderTechQAList();
-
-    const cnt = techQAs.filter(t => t.status !== 'done' && (isAdmin || t.companyId === currentUser.id)).length;
-    const b = document.getElementById('techBadge');
-    b.style.display = cnt > 0 ? 'inline' : 'none';
-    b.textContent = cnt;
-
     showToast('기술 문의가 접수되었습니다. 기술팀에서 확인 후 답변드립니다.', 'success');
+
+    if (_fbReady) {
+        fbSet('techQAs', newId, newQ).catch(err => console.error('[Firebase] techQA 저장 실패', err));
+    } else {
+        techQAs.push(newQ);
+        renderTechQAList();
+        updateBadges();
+    }
 }
 
 function renderTechQAList() {
@@ -3980,20 +4007,51 @@ let db = null;
 let _fbReady = false;
 const _unsubs = [];   // 실시간 리스너 해제용
 
+function showFbBanner(msg, type) {
+    // type: 'error' | 'warn' | 'ok'
+    let banner = document.getElementById('_fbBanner');
+    if (!banner) {
+        banner = document.createElement('div');
+        banner.id = '_fbBanner';
+        banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;padding:10px 20px;font-size:13px;font-weight:600;text-align:center;transition:all 0.3s;';
+        document.body.appendChild(banner);
+    }
+    const colors = { error:'#ef4444', warn:'#f59e0b', ok:'#10b981' };
+    banner.style.background = colors[type] || colors.warn;
+    banner.style.color = '#fff';
+    banner.innerHTML = msg + (type !== 'ok' ? ' &nbsp;<span style="cursor:pointer;opacity:0.8" onclick="this.parentElement.style.display='none'">✕</span>' : '');
+    banner.style.display = 'block';
+    if (type === 'ok') setTimeout(() => { banner.style.display = 'none'; }, 3000);
+}
+
 function initFirebase() {
     try {
         if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
         db = firebase.firestore();
-        _fbReady = true;
-        console.log('[Firebase] 연결 완료');
 
-        // 초기 데이터 Firestore에 시드 (비어있을 때만)
-        seedInitialData();
+        // 연결 테스트: 실제 쓰기 권한 확인
+        db.collection('_ping').doc('test').set({ t: Date.now() })
+            .then(() => {
+                _fbReady = true;
+                console.log('[Firebase] 연결 및 쓰기 권한 확인 완료');
+                showFbBanner('✅ 데이터베이스 연결됨 — 모든 데이터가 자동 저장됩니다.', 'ok');
+                seedInitialData();
+                attachListeners();
+            })
+            .catch(err => {
+                console.error('[Firebase] 쓰기 권한 없음:', err);
+                showFbBanner(
+                    '⚠️ <b>Firebase 보안 규칙 설정 필요</b> — 지금은 새로고침 시 데이터가 사라집니다. ' +
+                    '<a href="https://console.firebase.google.com/project/partner-a3006/firestore/rules" target="_blank" style="color:#fff;text-decoration:underline;">규칙 설정하기 →</a>',
+                    'error'
+                );
+            });
 
-        // 실시간 리스너 등록
+        // 리스너는 일단 붙여두기 (읽기 권한은 별도)
         attachListeners();
     } catch(e) {
         console.warn('[Firebase] 초기화 실패 — 로컬 데이터로 동작합니다.', e);
+        showFbBanner('⚠️ Firebase 연결 실패 — 새로고침 시 데이터가 초기화됩니다.', 'error');
     }
 }
 
@@ -4035,44 +4093,43 @@ async function seedInitialData() {
 
 // ── 실시간 리스너 ──
 function attachListeners() {
-    // 기존 리스너 해제
     _unsubs.forEach(u => u());
     _unsubs.length = 0;
 
     _unsubs.push(
-        db.collection('saleSites').orderBy('createdAt', 'asc').onSnapshot(snap => {
+        db.collection('saleSites').onSnapshot(snap => {
             saleSites = snap.docs.map(d => d.data());
             renderSaleSiteList();
             checkDuplicates();
-        })
+        }, err => console.error('[Firebase] saleSites 리스너 오류:', err))
     );
     _unsubs.push(
-        db.collection('tickets').orderBy('createdAt', 'desc').onSnapshot(snap => {
+        db.collection('tickets').onSnapshot(snap => {
             tickets = snap.docs.map(d => d.data());
             renderTickets();
             renderHome();
             updateBadges();
-        })
+        }, err => console.error('[Firebase] tickets 리스너 오류:', err))
     );
     _unsubs.push(
-        db.collection('techQAs').orderBy('createdAt', 'desc').onSnapshot(snap => {
+        db.collection('techQAs').onSnapshot(snap => {
             techQAs = snap.docs.map(d => d.data());
             renderTechQAList();
             updateBadges();
-        })
+        }, err => console.error('[Firebase] techQAs 리스너 오류:', err))
     );
     _unsubs.push(
         db.collection('leads').onSnapshot(snap => {
             leads = snap.docs.map(d => d.data());
-            renderPipeline(); // ← renderLeads 아님, renderPipeline이 정확한 함수명
-        })
+            renderPipeline();
+        }, err => console.error('[Firebase] leads 리스너 오류:', err))
     );
     _unsubs.push(
         db.collection('sites').onSnapshot(snap => {
             sites = snap.docs.map(d => d.data());
             renderSiteList();
             renderHome();
-        })
+        }, err => console.error('[Firebase] sites 리스너 오류:', err))
     );
 }
 
@@ -4113,68 +4170,7 @@ async function fbDelete(col, id) {
 
 // ── 기존 함수 오버라이드 ──
 
-// 기술사용단지 추가/수정
-const _origHandleNewSaleSite = handleNewSaleSite;
-handleNewSaleSite = async function(e) {
-    e.preventDefault();
-    const building = document.getElementById('ssBuilding').value.trim();
-    const baseAddr = document.getElementById('ssAddressVisible').value.trim();
-    if (!baseAddr) { showToast('주소 검색 버튼을 눌러 주소를 선택해주세요.', 'error'); return; }
-
-    if (_editingSaleSiteId !== null) {
-        // 수정 모드
-        const id = _editingSaleSiteId;
-        const idx = saleSites.findIndex(s => s.id === id);
-        if (idx >= 0) {
-            const updated = {
-                ...saleSites[idx],
-                building,
-                address:  baseAddr,
-                postcode: document.getElementById('ssPostcodeVisible').value,
-                scope:    document.getElementById('ssScope').value.trim(),
-                manager:  document.getElementById('ssManager').value.trim(),
-                phone:    document.getElementById('ssPhone').value.trim(),
-                status:   document.getElementById('ssStatus').value,
-                memo:     document.getElementById('ssMemo')?.value.trim() || saleSites[idx].memo || '',
-            };
-            if (_fbReady) { await fbSet('saleSites', id, updated); }
-            else { saleSites[idx] = updated; renderSaleSiteList(); checkDuplicates(); }
-        }
-        _editingSaleSiteId = null;
-        const titleEl = document.querySelector('#newSaleSiteModal .modal-title');
-        if (titleEl) titleEl.textContent = '📍 기술사용단지 추가';
-        const submitBtn = document.querySelector('#newSaleSiteForm button[type="submit"]');
-        if (submitBtn) submitBtn.textContent = '등록하기';
-        closeModal('newSaleSiteModal');
-        showToast(`${building} 정보가 수정되었습니다.`, 'success');
-        return;
-    }
-
-    // 신규 등록
-    const newId = _fbReady ? fbGenId() : String(Date.now());
-    const companyId = isAdmin
-        ? (parseInt(document.getElementById('adminSiteCompany')?.value) || 1)
-        : currentUser.id;
-    const entry = {
-        id: newId, companyId, building, address: baseAddr,
-        postcode: document.getElementById('ssPostcodeVisible').value,
-        scope:    document.getElementById('ssScope').value.trim(),
-        manager:  document.getElementById('ssManager').value.trim(),
-        phone:    document.getElementById('ssPhone').value.trim(),
-        status:   isAdmin ? (document.getElementById('ssStatus')?.value || '영업중') : '영업중',
-        memo:     document.getElementById('ssMemo')?.value.trim() || '',
-        createdAt: new Date().toLocaleDateString('ko-KR').replace(/\. /g, '.').slice(0,-1),
-    };
-    try {
-        if (_fbReady) { await fbSet('saleSites', newId, entry); }
-        else { saleSites.push(entry); renderSaleSiteList(); checkDuplicates(); }
-    } catch(e) {
-        console.error('[Firebase] 저장 실패', e);
-    }
-    closeModal('newSaleSiteModal');
-    foldAddressEmbed();
-    showToast(`${building} 단지가 등록되었습니다.`, 'success');
-};
+// ※ handleNewSaleSite 는 위에서 이미 Firebase 통합 async 함수로 정의됨 (중복 제거)
 
 // 기술사용단지 삭제
 const _origDeleteSaleSite = deleteSaleSite;
@@ -4188,104 +4184,8 @@ deleteSaleSite = async function(id) {
     showToast(`${s.building} 등록이 삭제되었습니다.`, '');
 };
 
-// 소통창구 티켓 추가
-const _origHandleNewTicket = handleNewTicket;
-handleNewTicket = async function(e) {
-    e.preventDefault();
-    const title   = document.getElementById('ticketTitle').value;
-    const type    = document.getElementById('ticketType').value;
-    const content = document.getElementById('ticketContent').value;
-    const now     = new Date().toLocaleDateString('ko-KR').replace(/\. /g, '.').slice(0,-1);
-    const newId   = _fbReady ? fbGenId() : Date.now();
-    const entry   = {
-        id: newId, companyId: currentUser.id, type, title, content,
-        status: 'receiving', siteId: document.getElementById('ticketSite').value || null,
-        createdAt: now, updatedAt: now, reply: '',
-    };
-    if (_fbReady) { await fbSet('tickets', newId, entry); }
-    else { tickets.push(entry); renderTickets(); renderHome(); }
-    closeModal('newTicketModal');
-    document.getElementById('newTicketForm').reset();
-    showToast('요청이 접수되었습니다. 담당자가 확인 후 답변드립니다.', 'success');
-};
-
-// 티켓 답변 저장
-const _origSubmitReply = submitReply;
-submitReply = async function(id) {
-    const reply  = document.getElementById(`replyInput_${id}`)?.value;
-    const ticket = tickets.find(t => t.id === id);
-    if (!ticket || !reply) return;
-    if (_fbReady) {
-        await fbUpdate('tickets', id, { reply, status: 'processing' });
-    } else {
-        ticket.reply = reply; ticket.status = 'processing';
-        renderTickets(); showTicketDetail(id);
-    }
-    showToast('답변이 저장되었습니다.', 'success');
-};
-
-// 티켓 완료 처리
-const _origMarkTicketDone = markTicketDone;
-markTicketDone = async function(id) {
-    const ticket = tickets.find(t => t.id === id);
-    if (!ticket) return;
-    if (_fbReady) { await fbUpdate('tickets', id, { status: 'done' }); }
-    else { ticket.status = 'done'; renderTickets(); showTicketDetail(id); }
-    showToast('요청이 완료 처리되었습니다.', 'success');
-};
-
-// 기술문의 추가
-const _origHandleNewTechQA = handleNewTechQA;
-handleNewTechQA = async function(e) {
-    e.preventDefault();
-    const title   = document.getElementById('tqTitle').value;
-    const type    = document.getElementById('tqType').value;
-    const content = document.getElementById('tqContent').value;
-    const now     = new Date().toLocaleDateString('ko-KR').replace(/\. /g, '.').slice(0,-1);
-    const newId   = _fbReady ? fbGenId() : Date.now();
-    const entry   = {
-        id: newId, companyId: currentUser.id, type, title, content,
-        status: 'receiving', siteId: document.getElementById('tqSite').value || null,
-        createdAt: now, reply: '',
-    };
-    if (_fbReady) { await fbSet('techQAs', newId, entry); }
-    else { techQAs.push(entry); renderTechQAList(); updateBadges(); }
-    closeModal('newTechQAModal');
-    document.getElementById('newTechQAForm').reset();
-    showToast('기술 문의가 접수되었습니다. 기술팀에서 확인 후 답변드립니다.', 'success');
-};
-
-// 현장 추가
-const _origHandleNewSite = handleNewSite;
-handleNewSite = async function(e) {
-    e.preventDefault();
-    const building   = document.getElementById('newSiteBuilding').value;
-    const region     = document.getElementById('newSiteRegion').value;
-    const companyId  = isAdmin ? parseInt(document.getElementById('newSiteCompany').value) : currentUser.id;
-    const typeEl     = document.querySelector('input[name="newProjectType"]:checked');
-    if (!typeEl) { showToast('공사 유형을 선택해주세요.', 'error'); return; }
-    const newId      = _fbReady ? fbGenId() : Date.now();
-    const entry = {
-        id: newId, companyId, type: typeEl.value, region,
-        district: document.getElementById('newSiteDistrict').value,
-        building, scope: document.getElementById('newSiteScope').value,
-        stage: document.getElementById('newSiteStage').value, progress: 0,
-        material: { status: 'not-ordered', date: '견적 확정 후' },
-        payment: {
-            advance: { amount: document.getElementById('newSiteAdvance').value || '-', due: document.getElementById('newSiteAdvanceDue').value || '-', confirmed: false },
-            middle:  { amount: document.getElementById('newSiteMiddle').value  || '-', due: document.getElementById('newSiteMiddleDue').value  || '-', confirmed: false },
-            balance: { amount: document.getElementById('newSiteBalance').value || '-', due: document.getElementById('newSiteBalanceDue').value || '-', confirmed: false },
-        },
-        estimate:  selectedSiteFile ? { fileName: selectedSiteFile.name, uploadDate: new Date().toLocaleDateString('ko-KR') } : null,
-        startDate: new Date().toLocaleDateString('ko-KR').replace(/\. /g, '.'),
-    };
-    if (_fbReady) { await fbSet('sites', newId, entry); }
-    else { sites.push(entry); renderSiteList(); renderHome(); }
-    closeModal('newSiteModal');
-    document.getElementById('newSiteForm').reset();
-    removeSiteFile();
-    showToast(`${building} 현장이 등록되었습니다.`, 'success');
-};
+// ※ 나머지 함수(handleNewTicket, submitReply, markTicketDone, handleNewTechQA, handleNewSite)는
+//    아래 각 함수 정의에서 직접 Firebase 저장 처리함
 
 // ── Firebase 초기화 실행 ──
 // ★ 스크립트가 </body> 직전에 위치하므로 DOMContentLoaded는 이미 지나간 상태
