@@ -1284,6 +1284,31 @@
             background: var(--purple-light); color: var(--purple);
         }
 
+        /* Inline memo input next to company chip */
+        .salesite-inline-memo {
+            display: inline-block; width: 70px; padding: 2px 6px;
+            margin-left: 6px; border: 1px solid var(--gray-200); border-radius: 5px;
+            font-size: 11px; color: var(--gray-700); background: #fff;
+            vertical-align: middle; font-family: inherit;
+        }
+        .salesite-inline-memo:focus {
+            outline: none; border-color: var(--blue);
+            box-shadow: 0 0 0 2px var(--blue-light);
+        }
+
+        /* Address group header for duplicate grouping */
+        .address-group-header {
+            padding: 10px 22px; background: #f8f5ff;
+            border-bottom: 1px solid var(--gray-200);
+            border-left: 3px solid var(--purple);
+            font-size: 13px; font-weight: 700; color: var(--gray-600);
+            display: flex; align-items: center; gap: 8px;
+        }
+        .address-group-header .group-count {
+            background: var(--orange-light); color: var(--orange);
+            padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 700;
+        }
+
         /* ========== TECH QA ========== */
         .techqa-layout {
             display: grid; grid-template-columns: 1fr 360px; gap: 20px; align-items: start;
@@ -1802,6 +1827,7 @@
                         <button class="filter-tab" data-ssfilter="영업중" onclick="filterSaleSites(this,'영업중')">영업중<span class="count" id="ssCountActive">0</span></button>
                         <button class="filter-tab" data-ssfilter="확정" onclick="filterSaleSites(this,'확정')">확정<span class="count" id="ssCountDone">0</span></button>
                         <button class="filter-tab" data-ssfilter="미정" onclick="filterSaleSites(this,'미정')">미정<span class="count" id="ssCountHold">0</span></button>
+                        <button class="filter-tab" data-ssfilter="dup" onclick="filterSaleSites(this,'dup')" style="color:var(--orange);border-color:var(--orange);">중복<span class="count" id="ssCountDup">0</span></button>
                     </div>
                     <div class="search-box">
                         <select class="admin-company-filter" id="ssCompanyFilter" onchange="renderSaleSiteList()" style="display:none;">
@@ -3780,15 +3806,91 @@ function filterSaleSites(btn, filter) {
     renderSaleSiteList();
 }
 
+// 시공사별 색상 배열
+const COMPANY_COLORS = [
+    { bg: 'var(--blue-light)', fg: 'var(--blue)' },
+    { bg: 'var(--green-light)', fg: 'var(--green)' },
+    { bg: 'var(--orange-light)', fg: '#b45309' },
+    { bg: 'var(--purple-light)', fg: 'var(--purple)' },
+    { bg: 'var(--red-light)', fg: 'var(--red)' },
+];
+
+function getCompanyColor(companyId) {
+    if (!companyId) return COMPANY_COLORS[3]; // default purple
+    return COMPANY_COLORS[(companyId - 1) % COMPANY_COLORS.length];
+}
+
+function renderSingleSaleSiteItem(s, dupKeys, statusColors) {
+    const dupKey = normKey(s.building, s.address);
+    const isDup = isAdmin && dupKeys.has(dupKey);
+    const company = companies[s.companyId];
+    const displayCompanyName = company?.name || s.companyName || '미등록 시공사';
+    const cc = getCompanyColor(s.companyId);
+    const companyChipStyle = `background:${cc.bg};color:${cc.fg}`;
+    const memoVal = (s.memo || '').replace(/"/g, '&quot;');
+    const idArg = typeof s.id === 'string' ? `'${s.id}'` : s.id;
+    const adminCols = isAdmin ? `<div>
+        <span class="salesite-company-chip" style="${companyChipStyle}">${displayCompanyName}</span>
+        <input type="text" class="salesite-inline-memo" value="${memoVal}"
+               placeholder="메모" title="메모 입력"
+               onchange="updateSaleSiteMemo(${idArg}, this.value)"
+               onclick="event.stopPropagation()">
+    </div>` : '';
+    const gridStyle = isAdmin
+        ? 'grid-template-columns:1.3fr 1.6fr 1fr 1fr 1.4fr 80px 100px;'
+        : 'grid-template-columns:1.6fr 2fr 1.2fr 1.2fr 100px;';
+
+    const actionBtns = isAdmin ? `
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            <button class="action-btn" onclick="editSaleSite(${idArg})" style="color:var(--blue);border-color:#bfdbfe;">✏️ 수정</button>
+            <button class="action-btn" onclick="deleteSaleSite(${idArg})" style="color:var(--red);border-color:var(--red-light);">🗑 삭제</button>
+        </div>` : '';
+
+    return `
+        <div class="salesite-item${isDup ? ' dup-item' : ''}" style="${gridStyle}">
+            <div>
+                <div class="salesite-name">
+                    ${s.building}
+                    ${isDup ? `<span class="dup-badge" title="중복 등록 감지">⚠️ 중복</span>` : ''}
+                </div>
+            </div>
+            <div>
+                <div style="font-size:13px;color:var(--gray-700);">${s.address}</div>
+            </div>
+            <div style="font-size:13px;color:var(--gray-700);">${s.scope}</div>
+            <div>
+                <div style="font-size:13px;font-weight:600;color:var(--gray-900);">${s.manager}</div>
+                ${s.phone ? `<div style="font-size:12px;color:var(--gray-400);">${s.phone}</div>` : ''}
+            </div>
+            ${adminCols}
+            <div>
+                <div style="font-size:12px;color:var(--gray-400);">${s.createdAt}</div>
+                <span class="status-badge ${statusColors[s.status]}" style="margin-top:4px;">${s.status}</span>
+            </div>
+            ${actionBtns}
+        </div>
+    `;
+}
+
 function renderSaleSiteList() {
     const myData = isAdmin ? saleSites : saleSites.filter(s => s.companyId === currentUser.id);
-    
+
     // Company filter (admin)
     const companyFilter = document.getElementById('ssCompanyFilter').value;
     let filtered = isAdmin && companyFilter ? myData.filter(s => s.companyId === parseInt(companyFilter)) : myData;
 
-    // Status filter
-    if (currentSaleSiteFilter !== 'all') filtered = filtered.filter(s => s.status === currentSaleSiteFilter);
+    // Duplicates (관리자만 체크)
+    const dups = isAdmin ? getDuplicates() : [];
+    const dupKeys = new Set(dups.map(d => d.key));
+    const dupIdSet = new Set();
+    dups.forEach(d => d.entries.forEach(e => dupIdSet.add(e.id)));
+
+    // Status / Duplicate filter
+    if (currentSaleSiteFilter === 'dup') {
+        filtered = filtered.filter(s => dupIdSet.has(s.id));
+    } else if (currentSaleSiteFilter !== 'all') {
+        filtered = filtered.filter(s => s.status === currentSaleSiteFilter);
+    }
 
     // Search
     const q = document.getElementById('ssSearchInput').value.toLowerCase();
@@ -3800,15 +3902,12 @@ function renderSaleSiteList() {
     document.getElementById('ssCountActive').textContent = base.filter(s => s.status === '영업중').length;
     document.getElementById('ssCountDone').textContent = base.filter(s => s.status === '확정').length;
     document.getElementById('ssCountHold').textContent = base.filter(s => s.status === '미정').length;
-
-    // Duplicates (관리자만 체크)
-    const dups = isAdmin ? getDuplicates() : [];
-    const dupKeys = new Set(dups.map(d => d.key));
+    document.getElementById('ssCountDup').textContent = isAdmin ? dupIdSet.size : 0;
 
     // Admin: show company + action columns
     const header = document.getElementById('saleSiteListHeader');
     if (isAdmin) {
-        header.style.gridTemplateColumns = '1.4fr 1.8fr 1fr 1fr 1fr 80px 100px';
+        header.style.gridTemplateColumns = '1.3fr 1.6fr 1fr 1fr 1.4fr 80px 100px';
         header.innerHTML = '<div>단지명</div><div>주소</div><div>공종</div><div>담당자</div><div>시공사</div><div>등록일 / 상태</div><div>관리</div>';
     } else {
         header.style.gridTemplateColumns = '1.6fr 2fr 1.2fr 1.2fr 100px';
@@ -3824,48 +3923,35 @@ function renderSaleSiteList() {
 
     const statusColors = { '영업중': 'blue', '확정': 'green', '미정': 'gray' };
 
-    body.innerHTML = filtered.map(s => {
-        const dupKey = normKey(s.building, s.address);
-        const isDup = isAdmin && dupKeys.has(dupKey); // 관리자만 중복 표시
-        const company = companies[s.companyId];
-        const displayCompanyName = company?.name || s.companyName || '미등록 시공사';
-        const adminCols = isAdmin ? `<div><span class="salesite-company-chip">${displayCompanyName}</span></div>` : '';
-        const gridStyle = isAdmin
-            ? 'grid-template-columns:1.4fr 1.8fr 1fr 1fr 1fr 80px 100px;'
-            : 'grid-template-columns:1.6fr 2fr 1.2fr 1.2fr 100px;';
+    // 중복 탭이면 주소별로 묶어서 표시
+    if (isAdmin && currentSaleSiteFilter === 'dup') {
+        const groups = {};
+        filtered.forEach(s => {
+            const key = normKey(s.building, s.address);
+            if (!groups[key]) groups[key] = { address: s.address, entries: [] };
+            groups[key].entries.push(s);
+        });
 
-        // 관리자: 수정+삭제 / 시공사: 버튼 없음
-        const actionBtns = isAdmin ? `
-            <div style="display:flex;gap:6px;flex-wrap:wrap;">
-                <button class="action-btn" onclick="editSaleSite(${s.id})" style="color:var(--blue);border-color:#bfdbfe;">✏️ 수정</button>
-                <button class="action-btn" onclick="deleteSaleSite(${s.id})" style="color:var(--red);border-color:var(--red-light);">🗑 삭제</button>
-            </div>` : '';
+        body.innerHTML = Object.values(groups).map(g => {
+            const groupHeader = `<div class="address-group-header">
+                📍 ${g.address}
+                <span class="group-count">${g.entries.length}건 등록</span>
+            </div>`;
+            const items = g.entries.map(s => renderSingleSaleSiteItem(s, dupKeys, statusColors)).join('');
+            return groupHeader + items;
+        }).join('');
+    } else {
+        body.innerHTML = filtered.map(s => renderSingleSaleSiteItem(s, dupKeys, statusColors)).join('');
+    }
+}
 
-        return `
-            <div class="salesite-item${isDup ? ' dup-item' : ''}" style="${gridStyle}">
-                <div>
-                    <div class="salesite-name">
-                        ${s.building}
-                        ${isDup ? `<span class="dup-badge" title="중복 등록 감지">⚠️ 중복</span>` : ''}
-                    </div>
-                </div>
-                <div>
-                    <div style="font-size:13px;color:var(--gray-700);">${s.address}</div>
-                </div>
-                <div style="font-size:13px;color:var(--gray-700);">${s.scope}</div>
-                <div>
-                    <div style="font-size:13px;font-weight:600;color:var(--gray-900);">${s.manager}</div>
-                    ${s.phone ? `<div style="font-size:12px;color:var(--gray-400);">${s.phone}</div>` : ''}
-                </div>
-                ${adminCols}
-                <div>
-                    <div style="font-size:12px;color:var(--gray-400);">${s.createdAt}</div>
-                    <span class="status-badge ${statusColors[s.status]}" style="margin-top:4px;">${s.status}</span>
-                </div>
-                ${actionBtns}
-            </div>
-        `;
-    }).join('');
+function updateSaleSiteMemo(id, value) {
+    const idx = saleSites.findIndex(s => String(s.id) === String(id));
+    if (idx < 0) return;
+    saleSites[idx].memo = value.trim();
+    if (_fbReady) {
+        fbSet('saleSites', saleSites[idx].id, saleSites[idx]).catch(err => console.error('메모 저장 실패', err));
+    }
 }
 
 function deleteSaleSite(id) {
@@ -3900,7 +3986,7 @@ function editSaleSite(id) {
     document.getElementById('ssScope').value           = s.scope;
     document.getElementById('ssManager').value         = s.manager;
     document.getElementById('ssPhone').value           = s.phone || '';
-    document.getElementById('ssNote').value            = s.note  || '';
+    document.getElementById('ssMemo').value            = s.memo  || '';
 
     // 영업상태 (관리자 전용 필드)
     document.getElementById('ssStatusGroup').style.display = 'block';
