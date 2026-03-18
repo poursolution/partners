@@ -2363,8 +2363,20 @@
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">공종 <span style="color:var(--red)">*</span></label>
-                    <input type="text" class="form-input" id="ssScope" placeholder="예: 지하주차장 방수, 옥상 우레탄 등" required>
+                    <label class="form-label">공종 (대분류) <span style="color:var(--red)">*</span></label>
+                    <select class="form-select" id="ssScopeCategory" onchange="onScopeCategoryChange()" required>
+                        <option value="">선택하세요</option>
+                        <option value="옥상방수">옥상방수</option>
+                        <option value="균열보수 및 재도장">균열보수 및 재도장</option>
+                        <option value="지하주차장">지하주차장</option>
+                        <option value="기타">기타</option>
+                    </select>
+                </div>
+                <div class="form-group" id="ssScopeSubGroup" style="display:none;">
+                    <label class="form-label">공종 (세부) <span style="color:var(--red)">*</span></label>
+                    <select class="form-select" id="ssScopeSub" required>
+                        <option value="">선택하세요</option>
+                    </select>
                 </div>
                 <div class="form-group">
                     <label class="form-label">담당자명 <span style="color:var(--red)">*</span></label>
@@ -3693,6 +3705,65 @@ function hideSsDropdown() {
     if (dd) dd.style.display = 'none';
 }
 
+// ========== 공종 카테고리 매핑 ==========
+const SCOPE_CATEGORIES = {
+    '옥상방수': ['싱글', '싱글+슬라브', '금속기와', '금속기와+슬라브', '슬라브(듀얼)', '슬라브(우레탄)', 'PVC'],
+    '균열보수 및 재도장': ['균열보수', '균열보수 및 재도장(써밋)', '균열보수 및 재도장(수성)'],
+    '지하주차장': ['배면차수', '에폭시', '내부재도장'],
+    '기타': ['보도블럭', '아스콘', '탄성강화보강'],
+};
+
+function onScopeCategoryChange() {
+    const cat = document.getElementById('ssScopeCategory').value;
+    const subGroup = document.getElementById('ssScopeSubGroup');
+    const subSel = document.getElementById('ssScopeSub');
+    if (cat && SCOPE_CATEGORIES[cat]) {
+        subSel.innerHTML = '<option value="">선택하세요</option>' +
+            SCOPE_CATEGORIES[cat].map(s => `<option value="${s}">${s}</option>`).join('');
+        subGroup.style.display = 'block';
+    } else {
+        subGroup.style.display = 'none';
+        subSel.innerHTML = '<option value="">선택하세요</option>';
+    }
+}
+
+function getScopeValue() {
+    const cat = document.getElementById('ssScopeCategory').value;
+    const sub = document.getElementById('ssScopeSub').value;
+    if (!cat) return '';
+    return sub ? `${cat} > ${sub}` : cat;
+}
+
+function setScopeFromValue(scope) {
+    const catEl = document.getElementById('ssScopeCategory');
+    const subEl = document.getElementById('ssScopeSub');
+    const subGroup = document.getElementById('ssScopeSubGroup');
+    // "대분류 > 세부" 형식 파싱
+    const parts = scope.split(' > ');
+    const cat = parts[0]?.trim() || '';
+    const sub = parts[1]?.trim() || '';
+    // 카테고리 매칭 시도
+    if (SCOPE_CATEGORIES[cat]) {
+        catEl.value = cat;
+        onScopeCategoryChange();
+        if (sub) subEl.value = sub;
+    } else {
+        // 기존 데이터 호환: 세부항목으로 역매칭
+        for (const [category, subs] of Object.entries(SCOPE_CATEGORIES)) {
+            if (subs.some(s => scope.includes(s))) {
+                catEl.value = category;
+                onScopeCategoryChange();
+                const matched = subs.find(s => scope.includes(s));
+                if (matched) subEl.value = matched;
+                return;
+            }
+        }
+        // 매칭 안되면 기타로 설정
+        catEl.value = '기타';
+        onScopeCategoryChange();
+    }
+}
+
 function openNewSaleSiteModal() {
     document.getElementById('newSaleSiteForm').reset();
     document.getElementById('ssAddressVisible').value  = '';
@@ -3700,6 +3771,11 @@ function openNewSaleSiteModal() {
     document.getElementById('ssAddress').value  = '';
     document.getElementById('ssPostcode').value = '';
     foldAddressEmbed();
+
+    // 공종 드롭다운 초기화
+    document.getElementById('ssScopeCategory').value = '';
+    document.getElementById('ssScopeSubGroup').style.display = 'none';
+    document.getElementById('ssScopeSub').innerHTML = '<option value="">선택하세요</option>';
 
     document.getElementById('ssStatusGroup').style.display = isAdmin ? 'block' : 'none';
     document.getElementById('ssAdminCompanyGroup').style.display = isAdmin ? 'block' : 'none';
@@ -3713,6 +3789,7 @@ async function handleNewSaleSite(e) {
     const building = document.getElementById('ssBuilding').value.trim();
     const baseAddr = document.getElementById('ssAddressVisible').value.trim();
     if (!baseAddr) { showToast('주소 검색 버튼을 눌러 주소를 선택해주세요.', 'error'); return; }
+    if (!getScopeValue()) { showToast('공종을 선택해주세요.', 'error'); return; }
 
     // ── 수정 모드 ──
     if (_editingSaleSiteId !== null) {
@@ -3724,7 +3801,7 @@ async function handleNewSaleSite(e) {
                 building,
                 address:  baseAddr,
                 postcode: document.getElementById('ssPostcodeVisible').value,
-                scope:    document.getElementById('ssScope').value.trim(),
+                scope:    getScopeValue(),
                 manager:  document.getElementById('ssManager').value.trim(),
                 phone:    document.getElementById('ssPhone').value.trim(),
                 status:   document.getElementById('ssStatus')?.value || saleSites[idx].status,
@@ -4001,7 +4078,7 @@ function editSaleSite(id) {
     document.getElementById('ssAddressVisible').value  = s.address;
     document.getElementById('ssAddress').value         = s.address;
     document.getElementById('ssPostcode').value        = s.postcode || '';
-    document.getElementById('ssScope').value           = s.scope;
+    setScopeFromValue(s.scope || '');
     document.getElementById('ssManager').value         = s.manager;
     document.getElementById('ssPhone').value           = s.phone || '';
     document.getElementById('ssMemo').value            = s.memo  || '';
