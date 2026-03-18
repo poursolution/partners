@@ -795,6 +795,7 @@
 
         .ticket-item:last-child { border-bottom: none; }
         .ticket-item:hover { background: var(--gray-50); }
+        .ticket-item.active { background: var(--blue-light); border-left: 3px solid var(--blue); }
 
         .ticket-status-dot {
             width: 10px; height: 10px; border-radius: 50%; margin-top: 4px; flex-shrink: 0;
@@ -1311,11 +1312,16 @@
 
         /* ========== TECH QA ========== */
         .techqa-layout {
-            display: grid; grid-template-columns: 1fr 360px; gap: 20px; align-items: start;
+            display: grid; grid-template-columns: 380px 1fr; gap: 20px; align-items: start;
         }
 
         .techqa-left { display: flex; flex-direction: column; gap: 14px; }
-        .techqa-right { display: flex; flex-direction: column; gap: 14px; }
+        .techqa-right { display: flex; flex-direction: column; gap: 14px; position: sticky; top: 20px; }
+
+        .techqa-detail-empty {
+            background: #fff; border-radius: 14px; border: 1px solid var(--gray-200);
+            padding: 60px 20px; text-align: center;
+        }
 
         .techqa-faq-card {
             background: #fff; border-radius: 14px;
@@ -1877,19 +1883,24 @@
                             </div>
                             <div id="techQAListBody"></div>
                         </div>
-                    </div>
 
-                    <div class="techqa-right">
                         <div class="techqa-faq-card">
                             <div class="notice-card-header">
                                 <div class="notice-card-title">💡 자주 묻는 기술 Q&A</div>
                             </div>
                             <div id="faqList"></div>
                         </div>
+                    </div>
 
+                    <div class="techqa-right">
                         <div class="ticket-detail-card" id="techQADetailCard" style="display:none;">
                             <div class="ticket-detail-title" id="techQADetailTitle">문의 상세</div>
                             <div id="techQADetailBody"></div>
+                        </div>
+                        <div class="techqa-detail-empty" id="techQADetailEmpty">
+                            <div class="empty-icon">📋</div>
+                            <div class="empty-title">문의를 선택하세요</div>
+                            <div class="empty-desc">왼쪽 목록에서 문의를 클릭하면 상세 내용과 답변을 확인할 수 있습니다.</div>
                         </div>
                     </div>
                 </div>
@@ -4195,12 +4206,13 @@ function renderTechQAList() {
         return;
     }
 
+    const idArg = id => typeof id === 'string' ? `'${id}'` : id;
     body.innerHTML = filtered.map(t => `
-        <div class="ticket-item" onclick="showTechQADetail(${t.id})">
+        <div class="ticket-item${String(t.id) === String(_activeTechQAId) ? ' active' : ''}" onclick="showTechQADetail(${idArg(t.id)})">
             <div class="ticket-status-dot ${t.status}"></div>
             <div class="ticket-info">
                 <div class="ticket-title">${typeIcons[t.type] || '💬'} ${t.title}</div>
-                <div class="ticket-meta">${t.type} 문의 &nbsp;|&nbsp; ${t.createdAt}${isAdmin ? ` &nbsp;|&nbsp; ${companies[t.companyId]?.name}` : ''}</div>
+                <div class="ticket-meta">${t.type} 문의 &nbsp;|&nbsp; ${t.createdAt}${isAdmin ? ` &nbsp;|&nbsp; ${companies[t.companyId]?.name || t.companyName || ''}` : ''}</div>
             </div>
             <span class="ticket-badge ${t.status}">${ticketStatusLabel(t.status)}</span>
         </div>
@@ -4214,51 +4226,82 @@ function filterTechQA(btn, filter) {
     renderTechQAList();
 }
 
+let _activeTechQAId = null;
+
 function showTechQADetail(id) {
-    const qa = techQAs.find(t => t.id === id);
+    const qa = techQAs.find(t => String(t.id) === String(id));
     if (!qa) return;
 
+    _activeTechQAId = id;
+    const idArg = typeof qa.id === 'string' ? `'${qa.id}'` : qa.id;
+
     document.getElementById('techQADetailCard').style.display = 'block';
+    const emptyEl = document.getElementById('techQADetailEmpty');
+    if (emptyEl) emptyEl.style.display = 'none';
     document.getElementById('techQADetailTitle').textContent = qa.title;
+
+    const companyName = companies[qa.companyId]?.name || qa.companyName || '';
+
     document.getElementById('techQADetailBody').innerHTML = `
         <div class="ticket-detail-row"><span class="ticket-detail-label">유형</span><span class="ticket-detail-value">${qa.type} 문의</span></div>
         <div class="ticket-detail-row"><span class="ticket-detail-label">상태</span><span class="ticket-badge ${qa.status}">${ticketStatusLabel(qa.status)}</span></div>
         <div class="ticket-detail-row"><span class="ticket-detail-label">등록일</span><span class="ticket-detail-value">${qa.createdAt}</span></div>
-        ${isAdmin ? `<div class="ticket-detail-row"><span class="ticket-detail-label">시공사</span><span class="ticket-detail-value">${companies[qa.companyId]?.name}</span></div>` : ''}
-        <div style="margin-top:14px;padding:14px;background:var(--gray-50);border-radius:10px;font-size:13px;color:var(--gray-700);line-height:1.7;">${qa.content}</div>
-        ${qa.reply ? `<div style="margin-top:10px;padding:14px;background:var(--blue-light);border-radius:10px;font-size:13px;color:var(--gray-700);line-height:1.7;border-left:3px solid var(--blue);"><strong style="color:var(--blue);">기술팀 답변:</strong><br>${qa.reply}</div>` : ''}
-        ${isAdmin && qa.status !== 'done' ? `
-            <div style="margin-top:14px;">
-                <textarea class="form-textarea" id="tqReplyInput_${qa.id}" placeholder="기술 답변을 입력하세요..." style="margin-bottom:10px;min-height:80px;">${qa.reply}</textarea>
-                <div style="display:flex;gap:8px;">
-                    <button class="btn btn-primary btn-sm" onclick="submitTechReply(${qa.id})">답변 저장</button>
-                    <button class="btn btn-secondary btn-sm" onclick="markTechQADone(${qa.id})">완료 처리</button>
+        ${isAdmin ? `<div class="ticket-detail-row"><span class="ticket-detail-label">시공사</span><span class="ticket-detail-value">${companyName}</span></div>` : ''}
+        <div style="margin-top:16px;">
+            <div style="font-size:12px;font-weight:700;color:var(--gray-500);margin-bottom:8px;">문의 내용</div>
+            <div style="padding:16px;background:var(--gray-50);border-radius:10px;font-size:14px;color:var(--gray-700);line-height:1.8;white-space:pre-wrap;">${qa.content}</div>
+        </div>
+        ${qa.reply ? `
+            <div style="margin-top:16px;">
+                <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:8px;">기술팀 답변</div>
+                <div style="padding:16px;background:var(--blue-light);border-radius:10px;font-size:14px;color:var(--gray-700);line-height:1.8;border-left:3px solid var(--blue);white-space:pre-wrap;">${qa.reply}</div>
+            </div>
+        ` : `
+            ${!isAdmin ? '<div style="margin-top:16px;padding:14px;background:var(--gray-50);border-radius:10px;font-size:13px;color:var(--gray-400);text-align:center;">아직 답변이 등록되지 않았습니다.</div>' : ''}
+        `}
+        ${isAdmin ? `
+            <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--gray-200);">
+                <div style="font-size:12px;font-weight:700;color:var(--gray-500);margin-bottom:8px;">${qa.status === 'done' ? '답변 수정' : '답변 작성'}</div>
+                <textarea class="form-textarea" id="tqReplyInput_${qa.id}" placeholder="기술 답변을 입력하세요..." style="margin-bottom:10px;min-height:120px;font-size:14px;line-height:1.7;">${qa.reply || ''}</textarea>
+                <div style="display:flex;gap:8px;justify-content:flex-end;">
+                    <button class="btn btn-primary btn-sm" onclick="submitTechReply(${idArg})" style="padding:8px 20px;">답변 저장</button>
+                    ${qa.status !== 'done' ? `<button class="btn btn-secondary btn-sm" onclick="markTechQADone(${idArg})" style="padding:8px 20px;">완료 처리</button>` : ''}
                 </div>
             </div>
         ` : ''}
     `;
+
+    // 목록에서 활성 항목 표시 갱신
+    renderTechQAList();
 }
 
 function submitTechReply(id) {
-    const reply = document.getElementById(`tqReplyInput_${id}`)?.value;
-    const qa = techQAs.find(t => t.id === id);
-    if (qa && reply) {
-        qa.reply = reply;
-        qa.status = 'processing';
-        renderTechQAList();
-        showTechQADetail(id);
-        showToast('기술 답변이 저장되었습니다.', 'success');
+    const qa = techQAs.find(t => String(t.id) === String(id));
+    if (!qa) return;
+    const reply = document.getElementById(`tqReplyInput_${qa.id}`)?.value?.trim();
+    if (!reply) { showToast('답변 내용을 입력해주세요.', 'error'); return; }
+    qa.reply = reply;
+    if (qa.status === 'receiving') qa.status = 'processing';
+    if (_fbReady) {
+        fbSet('techQAs', qa.id, qa).catch(err => console.error('답변 저장 실패', err));
     }
+    renderTechQAList();
+    showTechQADetail(id);
+    updateBadges();
+    showToast('기술 답변이 저장되었습니다.', 'success');
 }
 
 function markTechQADone(id) {
-    const qa = techQAs.find(t => t.id === id);
-    if (qa) {
-        qa.status = 'done';
-        renderTechQAList();
-        showTechQADetail(id);
-        showToast('기술 문의가 완료 처리되었습니다.', 'success');
+    const qa = techQAs.find(t => String(t.id) === String(id));
+    if (!qa) return;
+    qa.status = 'done';
+    if (_fbReady) {
+        fbSet('techQAs', qa.id, qa).catch(err => console.error('완료 처리 실패', err));
     }
+    renderTechQAList();
+    showTechQADetail(id);
+    updateBadges();
+    showToast('기술 문의가 완료 처리되었습니다.', 'success');
 }
 
 function renderFAQ() {
