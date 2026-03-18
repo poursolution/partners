@@ -143,6 +143,15 @@
             border: none; color: var(--gray-400); cursor: pointer; font-size: 18px;
         }
 
+        .auto-login-label {
+            display: flex; align-items: center; gap: 6px;
+            font-size: 13px; color: var(--gray-500); cursor: pointer;
+            margin-top: 4px; margin-bottom: 4px;
+        }
+        .auto-login-label input[type="checkbox"] {
+            width: 16px; height: 16px; accent-color: var(--blue); cursor: pointer;
+        }
+
         .login-btn {
             width: 100%; padding: 15px; border: none; border-radius: 12px;
             background: linear-gradient(135deg, var(--blue) 0%, var(--blue-dark) 100%);
@@ -447,6 +456,52 @@
         .welcome-stat-value { font-size: 30px; font-weight: 800; line-height: 1; }
         .welcome-stat-label { font-size: 12px; color: rgba(255,255,255,0.6); margin-top: 4px; }
 
+        /* 홈 공지사항 배너 */
+        .home-notice-banner {
+            background: #fff; border-radius: 14px; border: 1px solid var(--gray-200);
+            padding: 16px 20px; margin-bottom: 16px;
+        }
+        .home-notice-header {
+            display: flex; align-items: center; gap: 8px; margin-bottom: 10px;
+        }
+        .home-notice-icon { font-size: 18px; }
+        .home-notice-label { font-size: 14px; font-weight: 700; color: var(--gray-900); }
+        .home-notice-list { display: flex; flex-direction: column; gap: 6px; }
+        .home-notice-item {
+            display: flex; align-items: center; gap: 10px; padding: 8px 12px;
+            background: var(--gray-50); border-radius: 8px; cursor: pointer;
+            transition: background 0.15s;
+        }
+        .home-notice-item:hover { background: var(--blue-light); }
+        .home-notice-tag {
+            font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 5px;
+            flex-shrink: 0;
+        }
+        .home-notice-tag.important { background: #fee2e2; color: var(--red); }
+        .home-notice-tag.info { background: var(--blue-light); color: var(--blue); }
+        .home-notice-tag.update { background: var(--green-light); color: var(--green); }
+        .home-notice-title { font-size: 13px; color: var(--gray-700); font-weight: 500; flex: 1; }
+        .home-notice-date { font-size: 11px; color: var(--gray-400); flex-shrink: 0; }
+
+        /* 기술사용등록 바로가기 카드 */
+        .home-techsite-card {
+            display: flex; align-items: center; justify-content: space-between;
+            background: linear-gradient(135deg, #eff6ff 0%, #e0f2fe 100%);
+            border: 1.5px solid var(--blue);
+            border-radius: 14px; padding: 20px 24px; margin-bottom: 20px; gap: 20px;
+        }
+        .home-techsite-title { font-size: 16px; font-weight: 800; color: var(--gray-900); margin-bottom: 4px; }
+        .home-techsite-desc { font-size: 13px; color: var(--gray-500); margin-bottom: 10px; }
+        .home-techsite-stats { display: flex; gap: 16px; }
+        .home-techsite-stat {
+            display: flex; align-items: center; gap: 6px;
+            font-size: 13px; font-weight: 600; color: var(--gray-700);
+        }
+        .home-techsite-stat-dot {
+            width: 8px; height: 8px; border-radius: 50%;
+        }
+        .home-techsite-right { display: flex; flex-direction: column; gap: 8px; }
+
         .overview-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -525,95 +580,6 @@
             display: flex; justify-content: space-between;
             align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;
         }
-
-        .pipeline-title { font-size: 18px; font-weight: 700; color: var(--gray-900); }
-
-        .pipeline-board {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 14px;
-            align-items: start;
-        }
-
-        .pipeline-col {
-            background: var(--gray-50);
-            border-radius: 14px;
-            overflow: hidden;
-            border: 1px solid var(--gray-200);
-        }
-
-        .pipeline-col-header {
-            padding: 14px 16px;
-            border-bottom: 1px solid var(--gray-200);
-            background: #fff;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .pipeline-col-dot {
-            width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
-        }
-
-        .pipeline-col-dot.lead { background: var(--gray-400); }
-        .pipeline-col-dot.contact { background: var(--blue); }
-        .pipeline-col-dot.proposal { background: var(--orange); }
-        .pipeline-col-dot.quote { background: var(--purple); }
-        .pipeline-col-dot.contract { background: var(--green); }
-
-        .pipeline-col-name { font-size: 13px; font-weight: 700; color: var(--gray-900); flex: 1; }
-
-        .pipeline-col-count {
-            font-size: 12px; font-weight: 700;
-            background: var(--gray-200); color: var(--gray-600);
-            padding: 2px 8px; border-radius: 10px;
-        }
-
-        .pipeline-cards { padding: 10px; display: flex; flex-direction: column; gap: 8px; min-height: 60px; }
-
-        .pipeline-card {
-            background: #fff; border-radius: 10px;
-            padding: 14px; border: 1px solid var(--gray-200);
-            cursor: pointer; transition: all 0.15s;
-        }
-
-        .pipeline-card:hover {
-            border-color: var(--blue);
-            box-shadow: 0 4px 16px rgba(0,102,255,0.1);
-        }
-
-        .pipeline-card-top {
-            display: flex; justify-content: space-between; align-items: flex-start; gap: 6px; margin-bottom: 8px;
-        }
-
-        .pipeline-card-name { font-size: 13px; font-weight: 700; color: var(--gray-900); line-height: 1.3; }
-
-        .pipeline-priority {
-            font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 5px; flex-shrink: 0;
-        }
-
-        .pipeline-priority.high { background: var(--red-light); color: var(--red); }
-        .pipeline-priority.mid { background: var(--orange-light); color: var(--orange); }
-        .pipeline-priority.low { background: var(--green-light); color: var(--green); }
-
-        .pipeline-card-meta { font-size: 12px; color: var(--gray-400); margin-bottom: 10px; }
-
-        .pipeline-card-bottom {
-            display: flex; justify-content: space-between; align-items: center;
-        }
-
-        .pipeline-card-value { font-size: 13px; font-weight: 700; color: var(--blue); }
-        .pipeline-card-date { font-size: 11px; color: var(--gray-400); }
-
-        .pipeline-add-btn {
-            width: 100%; padding: 10px; border: 1.5px dashed var(--gray-300);
-            border-radius: 10px; background: transparent; color: var(--gray-400);
-            font-size: 13px; font-weight: 600; cursor: pointer;
-            transition: all 0.15s; font-family: inherit; margin: 2px 10px 10px;
-            width: calc(100% - 20px);
-        }
-
-        .pipeline-add-btn:hover { border-color: var(--blue); color: var(--blue); background: var(--blue-light); }
 
         /* ========== FIELD MANAGEMENT ========== */
         .site-list {
@@ -795,6 +761,7 @@
 
         .ticket-item:last-child { border-bottom: none; }
         .ticket-item:hover { background: var(--gray-50); }
+        .ticket-item.active { background: var(--blue-light); border-left: 3px solid var(--blue); }
 
         .ticket-status-dot {
             width: 10px; height: 10px; border-radius: 50%; margin-top: 4px; flex-shrink: 0;
@@ -1311,11 +1278,86 @@
 
         /* ========== TECH QA ========== */
         .techqa-layout {
-            display: grid; grid-template-columns: 1fr 360px; gap: 20px; align-items: start;
+            display: grid; grid-template-columns: 380px 1fr; gap: 20px; align-items: start;
         }
 
         .techqa-left { display: flex; flex-direction: column; gap: 14px; }
-        .techqa-right { display: flex; flex-direction: column; gap: 14px; }
+        .techqa-right { display: flex; flex-direction: column; gap: 14px; position: sticky; top: 20px; }
+
+        .techqa-detail-empty {
+            background: #fff; border-radius: 14px; border: 1px solid var(--gray-200);
+            padding: 60px 20px; text-align: center;
+        }
+
+        /* 미처리 알림 배너 */
+        .tq-overdue-alert {
+            display: none;
+            background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+            border: 1.5px solid var(--red);
+            border-radius: 12px;
+            padding: 14px 20px;
+            margin-bottom: 16px;
+            align-items: flex-start;
+            gap: 14px;
+        }
+        .tq-overdue-alert.show { display: flex; }
+        .tq-overdue-alert .dup-alert-list li::before { content: '•'; color: var(--red); font-weight: 700; }
+        .tq-overdue-alert .dup-alert-list li { color: #991b1b; }
+
+        /* AI 분석 패널 */
+        .ai-analysis-panel { display: flex; flex-direction: column; gap: 20px; }
+
+        .ai-summary-cards {
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px;
+        }
+        .ai-summary-card {
+            background: #fff; border-radius: 14px; border: 1px solid var(--gray-200);
+            padding: 20px; text-align: center;
+        }
+        .ai-summary-card .ai-card-value {
+            font-size: 28px; font-weight: 800; margin-bottom: 4px;
+        }
+        .ai-summary-card .ai-card-label {
+            font-size: 13px; color: var(--gray-500); font-weight: 500;
+        }
+
+        .ai-section-card {
+            background: #fff; border-radius: 14px; border: 1px solid var(--gray-200);
+            overflow: hidden;
+        }
+        .ai-section-header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 16px 20px; border-bottom: 1px solid var(--gray-100);
+        }
+        .ai-section-title { font-size: 15px; font-weight: 700; color: var(--gray-900); }
+
+        .ai-class-table { width: 100%; border-collapse: collapse; }
+        .ai-class-table th {
+            padding: 12px 16px; font-size: 12px; font-weight: 700; color: var(--gray-500);
+            background: var(--gray-50); text-align: left; border-bottom: 1px solid var(--gray-200);
+        }
+        .ai-class-table td {
+            padding: 12px 16px; font-size: 13px; color: var(--gray-700);
+            border-bottom: 1px solid var(--gray-100);
+        }
+        .ai-class-table tr:last-child td { border-bottom: none; }
+
+        .ai-insight-item {
+            padding: 16px 20px; border-bottom: 1px solid var(--gray-100);
+        }
+        .ai-insight-item:last-child { border-bottom: none; }
+        .ai-insight-tag {
+            display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 8px;
+            border-radius: 6px; margin-right: 8px;
+        }
+        .ai-insight-tag.warning { background: #fef3c7; color: #92400e; }
+        .ai-insight-tag.info { background: var(--blue-light); color: var(--blue); }
+        .ai-insight-tag.success { background: var(--green-light); color: var(--green); }
+        .ai-insight-title { font-size: 14px; font-weight: 600; color: var(--gray-900); margin-bottom: 6px; }
+        .ai-insight-desc { font-size: 13px; color: var(--gray-600); line-height: 1.6; }
+
+        .ai-bar { height: 8px; border-radius: 4px; background: var(--gray-100); overflow: hidden; }
+        .ai-bar-fill { height: 100%; border-radius: 4px; transition: width 0.5s ease; }
 
         .techqa-faq-card {
             background: #fff; border-radius: 14px;
@@ -1359,8 +1401,7 @@
 
         /* ========== RESPONSIVE ========== */
         @media (max-width: 1100px) {
-            .pipeline-board { grid-template-columns: repeat(3, 1fr); }
-            .doc-grid { grid-template-columns: repeat(2, 1fr); }
+.doc-grid { grid-template-columns: repeat(2, 1fr); }
             .overview-grid { grid-template-columns: repeat(2, 1fr); }
         }
 
@@ -1372,7 +1413,7 @@
             .comm-layout { grid-template-columns: 1fr; }
             .myinfo-grid { grid-template-columns: 1fr; }
             .welcome-stats { display: none; }
-            .pipeline-board { grid-template-columns: 1fr 1fr; }
+
         }
 
         @media (max-width: 600px) {
@@ -1382,8 +1423,7 @@
             .list-header, .site-item { grid-template-columns: 1fr 1fr 80px; }
             .list-header > div:nth-child(3), .list-header > div:nth-child(4),
             .site-item > div:nth-child(3), .site-item > div:nth-child(4) { display: none; }
-            .pipeline-board { grid-template-columns: 1fr; }
-            .doc-grid { grid-template-columns: 1fr; }
+.doc-grid { grid-template-columns: 1fr; }
         }
     </style>
     <!-- Firebase SDK (동적 로드) -->
@@ -1454,6 +1494,9 @@
                     </div>
                 </div>
 
+                <label class="auto-login-label">
+                    <input type="checkbox" id="companyAutoLogin"> <span>자동 로그인</span>
+                </label>
                 <button type="submit" class="login-btn" id="companyLoginBtn" disabled>로그인</button>
             </form>
 
@@ -1474,6 +1517,9 @@
                     </div>
                 </div>
 
+                <label class="auto-login-label">
+                    <input type="checkbox" id="adminAutoLogin"> <span>자동 로그인</span>
+                </label>
                 <button type="submit" class="login-btn admin-btn">관리자 로그인</button>
             </form>
 
@@ -1513,10 +1559,6 @@
             </div>
 
             <div class="nav-section-label" style="margin-top: 8px;">영업 & 현장</div>
-            <div class="nav-item" data-section="pipeline" onclick="switchSection('pipeline')">
-                <span class="nav-item-icon">📊</span>
-                <span class="nav-item-text">영업 파이프라인</span>
-            </div>
             <div class="nav-item" data-section="sites" onclick="switchSection('sites')">
                 <span class="nav-item-icon">🏗️</span>
                 <span class="nav-item-text">현장 관리</span>
@@ -1604,6 +1646,32 @@
                     </div>
                 </div>
 
+                <!-- 공지사항 배너 (관리자가 등록한 공지) -->
+                <div class="home-notice-banner" id="homeNoticeBanner">
+                    <div class="home-notice-header">
+                        <span class="home-notice-icon">📢</span>
+                        <span class="home-notice-label">공지사항</span>
+                    </div>
+                    <div class="home-notice-list" id="homeNoticeList"></div>
+                </div>
+
+                <!-- 기술사용등록 바로가기 카드 -->
+                <div class="home-techsite-card" id="homeTechSiteCard">
+                    <div class="home-techsite-left">
+                        <div class="home-techsite-title">📍 기술사용등록</div>
+                        <div class="home-techsite-desc">POUR공법 기술 사용 단지를 등록하고 관리하세요</div>
+                        <div class="home-techsite-stats" id="homeTechSiteStats"></div>
+                    </div>
+                    <div class="home-techsite-right">
+                        <button class="btn btn-primary" onclick="switchSection('salesites')" style="white-space:nowrap;">
+                            등록 현황 보기 →
+                        </button>
+                        <button class="btn btn-outline" onclick="switchSection('salesites'); setTimeout(()=>openNewSaleSiteModal(),200);" style="white-space:nowrap;">
+                            ➕ 새 단지 등록
+                        </button>
+                    </div>
+                </div>
+
                 <div class="overview-grid">
                     <div class="metric-card">
                         <div class="metric-icon blue">📊</div>
@@ -1643,26 +1711,6 @@
                         </div>
                         <div class="overview-card-body" id="homeTicketList"></div>
                     </div>
-                </div>
-            </div>
-
-            <!-- ========== PIPELINE ========== -->
-            <div class="section-page" id="section-pipeline">
-                <div class="section-header">
-                    <div>
-                        <div class="section-title">영업 파이프라인</div>
-                        <div style="font-size: 13px; color: var(--gray-400); margin-top: 3px;">현재 진행 중인 영업 현황을 단계별로 관리하세요</div>
-                    </div>
-                    <div style="display:flex; gap:10px; align-items:center;">
-                        <button class="btn btn-outline btn-sm" onclick="openLeadModal()">📋 목록 보기</button>
-                        <button class="new-lead-btn" onclick="openNewLeadModal()">
-                            ➕ 리드 추가
-                        </button>
-                    </div>
-                </div>
-
-                <div class="pipeline-board" id="pipelineBoard">
-                    <!-- JS로 렌더링 -->
                 </div>
             </div>
 
@@ -1815,7 +1863,7 @@
                 <div class="dup-alert" id="dupAlertBanner">
                     <div class="dup-alert-icon">⚠️</div>
                     <div class="dup-alert-content">
-                        <div class="dup-alert-title">중복 등록 감지됨 — 여러 시공사가 동일 현장을 등록했습니다</div>
+                        <div class="dup-alert-title">중복확인요청 단지 — 여러 시공사가 동일 현장을 등록했습니다</div>
                         <ul class="dup-alert-list" id="dupAlertList"></ul>
                     </div>
                 </div>
@@ -1857,8 +1905,23 @@
             <div class="section-page" id="section-techqa">
                 <div class="section-header">
                     <div class="section-title">기술문의</div>
+                    <div style="display:flex;gap:8px;">
+                        <button class="filter-tab active" id="tqTabMain" onclick="switchTechQATab('main')" style="padding:7px 16px;font-size:13px;">문의 관리</button>
+                        <button class="filter-tab" id="tqTabAI" onclick="switchTechQATab('ai')" style="padding:7px 16px;font-size:13px;">AI 분석</button>
+                    </div>
                 </div>
 
+                <!-- 관리자: 미처리 문의 알림 배너 -->
+                <div class="tq-overdue-alert" id="tqOverdueBanner">
+                    <div class="dup-alert-icon">🔔</div>
+                    <div class="dup-alert-content">
+                        <div class="dup-alert-title" style="color:#b91c1c;">미처리 문의 알림 — 영업일 기준 3일 이상 미답변 건이 있습니다</div>
+                        <ul class="dup-alert-list" id="tqOverdueList" style="margin-top:6px;"></ul>
+                    </div>
+                </div>
+
+                <!-- 탭 1: 문의 관리 -->
+                <div id="tqTabMainContent">
                 <div class="techqa-layout">
                     <div class="techqa-left">
                         <button class="comm-new-btn" onclick="openNewTechQAModal()">
@@ -1877,19 +1940,66 @@
                             </div>
                             <div id="techQAListBody"></div>
                         </div>
-                    </div>
 
-                    <div class="techqa-right">
                         <div class="techqa-faq-card">
                             <div class="notice-card-header">
                                 <div class="notice-card-title">💡 자주 묻는 기술 Q&A</div>
                             </div>
                             <div id="faqList"></div>
                         </div>
+                    </div>
 
+                    <div class="techqa-right">
                         <div class="ticket-detail-card" id="techQADetailCard" style="display:none;">
                             <div class="ticket-detail-title" id="techQADetailTitle">문의 상세</div>
                             <div id="techQADetailBody"></div>
+                        </div>
+                        <div class="techqa-detail-empty" id="techQADetailEmpty">
+                            <div class="empty-icon">📋</div>
+                            <div class="empty-title">문의를 선택하세요</div>
+                            <div class="empty-desc">왼쪽 목록에서 문의를 클릭하면 상세 내용과 답변을 확인할 수 있습니다.</div>
+                        </div>
+                    </div>
+                </div>
+                </div>
+
+                <!-- 탭 2: AI 분석 (관리자 전용) -->
+                <div id="tqTabAIContent" style="display:none;">
+                    <div class="ai-analysis-panel">
+                        <!-- 상단 요약 카드 -->
+                        <div class="ai-summary-cards" id="aiSummaryCards"></div>
+
+                        <!-- AI 분류 테이블 -->
+                        <div class="ai-section-card">
+                            <div class="ai-section-header">
+                                <div class="ai-section-title">📊 문의 유형별 분류 현황</div>
+                                <button class="btn btn-primary btn-sm" onclick="runAIAnalysis()" style="padding:6px 16px;">
+                                    🤖 AI 분석 실행
+                                </button>
+                            </div>
+                            <div id="aiClassificationBody"></div>
+                        </div>
+
+                        <!-- AI 인사이트 & 추천 -->
+                        <div class="ai-section-card">
+                            <div class="ai-section-header">
+                                <div class="ai-section-title">💡 AI 인사이트 & 개선 피드백</div>
+                            </div>
+                            <div id="aiInsightsBody">
+                                <div class="empty-state" style="padding:40px;">
+                                    <div class="empty-icon">🤖</div>
+                                    <div class="empty-title">AI 분석을 실행해주세요</div>
+                                    <div class="empty-desc">상단의 'AI 분석 실행' 버튼을 클릭하면 문의 데이터를 분석합니다.</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 자주 발생하는 문의 패턴 -->
+                        <div class="ai-section-card">
+                            <div class="ai-section-header">
+                                <div class="ai-section-title">🔁 반복 문의 패턴</div>
+                            </div>
+                            <div id="aiPatternsBody"></div>
                         </div>
                     </div>
                 </div>
@@ -1903,103 +2013,6 @@
 <!-- ========== MODALS ========== -->
 
 <!-- New Lead Modal -->
-<div class="modal-overlay" id="newLeadModal">
-    <div class="modal">
-        <div class="modal-header">
-            <div class="modal-title">➕ 영업 리드 등록</div>
-            <button class="modal-close" onclick="closeModal('newLeadModal')">×</button>
-        </div>
-        <div class="modal-body">
-            <form class="modal-form" id="newLeadForm" onsubmit="handleNewLead(event)">
-                <div class="admin-only" id="leadCompanyGroup" style="margin-bottom:18px; flex-direction:column;">
-                    <label class="form-label">시공사 <span style="color:var(--red)">*</span></label>
-                    <select class="form-select" id="newLeadCompany">
-                        <option value="">시공사 선택</option>
-                        <option value="1">석민이앤씨</option>
-                        <option value="2">기림이앤씨</option>
-                        <option value="3">엘케이개발</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">현장/건물명 <span style="color:var(--red)">*</span></label>
-                    <input type="text" class="form-input" id="newLeadBuilding" placeholder="예: 강남 래미안 퍼스티지" required>
-                </div>
-
-                <div class="form-row-2">
-                    <div class="form-group">
-                        <label class="form-label">지역 <span style="color:var(--red)">*</span></label>
-                        <select class="form-select" id="newLeadRegion" required>
-                            <option value="">지역 선택</option>
-                            <option>서울</option><option>경기</option><option>인천</option>
-                            <option>부산</option><option>대구</option><option>대전</option>
-                            <option>광주</option><option>울산</option><option>세종</option>
-                            <option>강원</option><option>충북</option><option>충남</option>
-                            <option>전북</option><option>전남</option><option>경북</option>
-                            <option>경남</option><option>제주</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">시군구</label>
-                        <input type="text" class="form-input" id="newLeadDistrict" placeholder="예: 강남구">
-                    </div>
-                </div>
-
-                <div class="form-row-2">
-                    <div class="form-group">
-                        <label class="form-label">공사 범위</label>
-                        <input type="text" class="form-input" id="newLeadScope" placeholder="예: 지하주차장 방수">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">예상 금액</label>
-                        <input type="text" class="form-input" id="newLeadValue" placeholder="예: 3,000만원">
-                    </div>
-                </div>
-
-                <div class="form-row-2">
-                    <div class="form-group">
-                        <label class="form-label">영업 단계</label>
-                        <select class="form-select" id="newLeadStage">
-                            <option value="lead">리드</option>
-                            <option value="contact">초기접촉</option>
-                            <option value="proposal">제안진행</option>
-                            <option value="quote">견적협의</option>
-                            <option value="contract">계약완료</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">우선순위</label>
-                        <select class="form-select" id="newLeadPriority">
-                            <option value="high">🔴 높음</option>
-                            <option value="mid" selected>🟡 보통</option>
-                            <option value="low">🟢 낮음</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">담당자 연락처</label>
-                    <input type="text" class="form-input" id="newLeadContact" placeholder="예: 홍길동 010-1234-5678">
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">다음 액션 예정일</label>
-                    <input type="date" class="form-input" id="newLeadNextDate">
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">메모</label>
-                    <textarea class="form-textarea" id="newLeadNote" placeholder="영업 관련 특이사항이나 메모를 입력하세요..."></textarea>
-                </div>
-            </form>
-        </div>
-        <div class="modal-footer">
-            <button class="btn btn-secondary" onclick="closeModal('newLeadModal')">취소</button>
-            <button class="btn btn-primary" onclick="document.getElementById('newLeadForm').requestSubmit()">등록하기</button>
-        </div>
-    </div>
-</div>
-
 <!-- New Site Modal -->
 <div class="modal-overlay" id="newSiteModal">
     <div class="modal modal-lg">
@@ -2363,8 +2376,20 @@
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">공종 <span style="color:var(--red)">*</span></label>
-                    <input type="text" class="form-input" id="ssScope" placeholder="예: 지하주차장 방수, 옥상 우레탄 등" required>
+                    <label class="form-label">공종 (대분류) <span style="color:var(--red)">*</span></label>
+                    <select class="form-select" id="ssScopeCategory" onchange="onScopeCategoryChange()" required>
+                        <option value="">선택하세요</option>
+                        <option value="옥상방수">옥상방수</option>
+                        <option value="균열보수 및 재도장">균열보수 및 재도장</option>
+                        <option value="지하주차장">지하주차장</option>
+                        <option value="기타">기타</option>
+                    </select>
+                </div>
+                <div class="form-group" id="ssScopeSubGroup" style="display:none;">
+                    <label class="form-label">공종 (세부) <span style="color:var(--red)">*</span></label>
+                    <select class="form-select" id="ssScopeSub" required>
+                        <option value="">선택하세요</option>
+                    </select>
                 </div>
                 <div class="form-group">
                     <label class="form-label">담당자명 <span style="color:var(--red)">*</span></label>
@@ -2666,6 +2691,10 @@ function handleCompanyLogin(e) {
     errEl.classList.remove('show');
     currentUser = companies[companyId];
     isAdmin = false;
+    // 자동 로그인 저장
+    if (document.getElementById('companyAutoLogin').checked) {
+        localStorage.setItem('pourAutoLogin', JSON.stringify({ type: 'company', companyId }));
+    }
     initDashboard();
 }
 
@@ -2680,11 +2709,16 @@ function handleAdminLogin(e) {
     errEl.classList.remove('show');
     currentUser = { id: 0, name: '관리자', manager: '관리자', phone: '-' };
     isAdmin = true;
+    // 자동 로그인 저장
+    if (document.getElementById('adminAutoLogin').checked) {
+        localStorage.setItem('pourAutoLogin', JSON.stringify({ type: 'admin' }));
+    }
     initDashboard();
 }
 
 function handleLogout() {
     currentUser = null; isAdmin = false; selectedLoginCompany = null;
+    localStorage.removeItem('pourAutoLogin');
     document.getElementById('companyPassword').value = '';
     document.getElementById('adminId').value = '';
     document.getElementById('adminPassword').value = '';
@@ -2693,6 +2727,23 @@ function handleLogout() {
     document.getElementById('appShell').classList.remove('active');
     switchSection('home');
 }
+
+// 자동 로그인 체크
+(function checkAutoLogin() {
+    try {
+        const saved = JSON.parse(localStorage.getItem('pourAutoLogin'));
+        if (!saved) return;
+        if (saved.type === 'company' && companies[saved.companyId]) {
+            currentUser = companies[saved.companyId];
+            isAdmin = false;
+            initDashboard();
+        } else if (saved.type === 'admin') {
+            currentUser = { id: 0, name: '관리자', manager: '관리자', phone: '-' };
+            isAdmin = true;
+            initDashboard();
+        }
+    } catch(e) { /* ignore */ }
+})();
 
 // ========== 대시보드 초기화 ==========
 function initDashboard() {
@@ -2724,7 +2775,6 @@ function initDashboard() {
     document.getElementById('adminCompanyFilter').className = isAdmin ? 'admin-company-filter show' : 'admin-company-filter';
 
     // Set admin company select in modals
-    document.getElementById('leadCompanyGroup').style.display = isAdmin ? 'flex' : 'none';
     document.getElementById('adminSiteCompanyGroup').style.display = isAdmin ? 'block' : 'none';
     
     // Unread badge
@@ -2735,7 +2785,6 @@ function initDashboard() {
     badge.textContent = unread;
 
     renderHome();
-    renderPipeline();
     renderSiteList();
     renderDocs();
     renderTickets();
@@ -2747,15 +2796,17 @@ function initDashboard() {
     if (isAdmin) {
         document.getElementById('ssCompanyFilter').style.display = 'block';
         checkDuplicates();
+        checkOverdueTechQAs();
     } else {
         document.getElementById('dupAlertBanner').classList.remove('show');
+        // AI 분석 탭은 관리자만 표시
+        document.getElementById('tqTabAI').style.display = 'none';
     }
 }
 
 // ========== 섹션 전환 ==========
 const sectionTitles = {
     home: ['홈', '대시보드 개요'],
-    pipeline: ['영업 파이프라인', '영업 리드 및 기회 관리'],
     sites: ['현장 관리', '진행중인 현장 목록'],
     docs: ['자료실', '시공 매뉴얼, 카탈로그, 계약서 다운로드'],
     comm: ['소통 창구', '요청, 문의 및 공지사항'],
@@ -2799,6 +2850,34 @@ function renderHome() {
     document.getElementById('metricPayment').textContent = mySites.filter(s => !s.payment.advance.confirmed).length;
     document.getElementById('metricTickets').textContent = myTickets.filter(t => t.status !== 'done').length;
 
+    // 공지사항 배너
+    const tagLabels = { important: '중요', info: '안내', update: '업데이트' };
+    const noticeList = document.getElementById('homeNoticeList');
+    if (notices.length > 0) {
+        document.getElementById('homeNoticeBanner').style.display = 'block';
+        noticeList.innerHTML = notices.slice(0, 3).map(n => `
+            <div class="home-notice-item" onclick="switchSection('comm')">
+                <span class="home-notice-tag ${n.tag}">${tagLabels[n.tag] || n.tag}</span>
+                <span class="home-notice-title">${n.title}</span>
+                <span class="home-notice-date">${n.date}</span>
+            </div>
+        `).join('');
+    } else {
+        document.getElementById('homeNoticeBanner').style.display = 'none';
+    }
+
+    // 기술사용등록 카드
+    const mySaleSites = isAdmin ? saleSites : saleSites.filter(s => s.companyId === currentUser.id);
+    const ssActive = mySaleSites.filter(s => s.status === '영업중').length;
+    const ssConfirmed = mySaleSites.filter(s => s.status === '확정').length;
+    const ssPending = mySaleSites.filter(s => s.status === '미정').length;
+    document.getElementById('homeTechSiteStats').innerHTML = `
+        <div class="home-techsite-stat"><div class="home-techsite-stat-dot" style="background:var(--blue);"></div> 영업중 ${ssActive}건</div>
+        <div class="home-techsite-stat"><div class="home-techsite-stat-dot" style="background:var(--green);"></div> 확정 ${ssConfirmed}건</div>
+        <div class="home-techsite-stat"><div class="home-techsite-stat-dot" style="background:var(--gray-400);"></div> 미정 ${ssPending}건</div>
+        <div class="home-techsite-stat" style="font-weight:800;color:var(--blue);">총 ${mySaleSites.length}건</div>
+    `;
+
     // Recent sites
     const recentSites = mySites.slice(0, 4);
     document.getElementById('homeSiteList').innerHTML = recentSites.length ? recentSites.map(s => `
@@ -2832,56 +2911,6 @@ function getStageColor(stage) {
 }
 
 // ========== PIPELINE ==========
-const pipelineStages = [
-    { key: 'lead', label: '리드', dotClass: 'lead' },
-    { key: 'contact', label: '초기접촉', dotClass: 'contact' },
-    { key: 'proposal', label: '제안진행', dotClass: 'proposal' },
-    { key: 'quote', label: '견적협의', dotClass: 'quote' },
-    { key: 'contract', label: '계약완료', dotClass: 'contract' },
-];
-
-function renderPipeline() {
-    const myLeads = isAdmin ? leads : leads.filter(l => l.companyId === currentUser.id);
-    const board = document.getElementById('pipelineBoard');
-
-    board.innerHTML = pipelineStages.map(stage => {
-        const stageLeads = myLeads.filter(l => l.stage === stage.key);
-        const cards = stageLeads.map(l => `
-            <div class="pipeline-card" onclick="openLeadDetail(${l.id})">
-                <div class="pipeline-card-top">
-                    <div class="pipeline-card-name">${l.building}</div>
-                    <span class="pipeline-priority ${l.priority}">${{high:'높음',mid:'보통',low:'낮음'}[l.priority]}</span>
-                </div>
-                <div class="pipeline-card-meta">📍 ${l.region} ${l.district} &nbsp;|&nbsp; ${l.scope}</div>
-                ${l.contact ? `<div class="pipeline-card-meta">👤 ${l.contact}</div>` : ''}
-                <div class="pipeline-card-bottom">
-                    <div class="pipeline-card-value">${l.value || '-'}</div>
-                    <div class="pipeline-card-date">📅 ${l.nextDate || '-'}</div>
-                </div>
-            </div>
-        `).join('');
-
-        return `
-            <div class="pipeline-col">
-                <div class="pipeline-col-header">
-                    <div class="pipeline-col-dot ${stage.dotClass}"></div>
-                    <div class="pipeline-col-name">${stage.label}</div>
-                    <div class="pipeline-col-count">${stageLeads.length}</div>
-                </div>
-                <div class="pipeline-cards">${cards}</div>
-                <button class="pipeline-add-btn" onclick="openNewLeadModal('${stage.key}')">+ 추가</button>
-            </div>
-        `;
-    }).join('');
-}
-
-function openLeadDetail(id) {
-    const lead = leads.find(l => l.id === id);
-    if (!lead) return;
-    const stageLabel = pipelineStages.find(s => s.key === lead.stage)?.label || lead.stage;
-    const prioLabel = {high:'🔴 높음',mid:'🟡 보통',low:'🟢 낮음'}[lead.priority];
-    showToast(`[${stageLabel}] ${lead.building} 상세보기`, '');
-}
 
 // ========== SITES ==========
 function renderSiteList() {
@@ -3272,42 +3301,6 @@ function getTicketRate(companyId) {
 }
 
 // ========== MODAL HANDLERS ==========
-function openNewLeadModal(defaultStage) {
-    if (defaultStage) document.getElementById('newLeadStage').value = defaultStage;
-    document.getElementById('newLeadModal').classList.add('active');
-}
-
-function openLeadModal() { showToast('목록 보기 준비 중입니다.', ''); }
-
-function handleNewLead(e) {
-    e.preventDefault();
-    const building = document.getElementById('newLeadBuilding').value;
-    const region = document.getElementById('newLeadRegion').value;
-    const stage = document.getElementById('newLeadStage').value;
-    const priority = document.getElementById('newLeadPriority').value;
-    const companyId = isAdmin ? parseInt(document.getElementById('newLeadCompany').value) : currentUser.id;
-
-    const newLead = {
-        id: Date.now(), companyId,
-        building, region,
-        district: document.getElementById('newLeadDistrict').value,
-        scope: document.getElementById('newLeadScope').value,
-        value: document.getElementById('newLeadValue').value,
-        stage, priority,
-        contact: document.getElementById('newLeadContact').value,
-        nextDate: document.getElementById('newLeadNextDate').value,
-        note: document.getElementById('newLeadNote').value,
-        createdAt: new Date().toLocaleDateString('ko-KR').replace(/\. /g, '.').replace('.', '.'),
-    };
-
-    leads.push(newLead);
-    closeModal('newLeadModal');
-    document.getElementById('newLeadForm').reset();
-    renderPipeline();
-    renderHome();
-    showToast(`${building} 리드가 등록되었습니다.`, 'success');
-}
-
 function openNewSiteModal() {
     document.getElementById('newSiteModal').classList.add('active');
 }
@@ -3693,6 +3686,65 @@ function hideSsDropdown() {
     if (dd) dd.style.display = 'none';
 }
 
+// ========== 공종 카테고리 매핑 ==========
+const SCOPE_CATEGORIES = {
+    '옥상방수': ['싱글', '싱글+슬라브', '금속기와', '금속기와+슬라브', '슬라브(듀얼)', '슬라브(우레탄)', 'PVC'],
+    '균열보수 및 재도장': ['균열보수', '균열보수 및 재도장(써밋)', '균열보수 및 재도장(수성)'],
+    '지하주차장': ['배면차수', '에폭시', '내부재도장'],
+    '기타': ['보도블럭', '아스콘', '탄성강화보강'],
+};
+
+function onScopeCategoryChange() {
+    const cat = document.getElementById('ssScopeCategory').value;
+    const subGroup = document.getElementById('ssScopeSubGroup');
+    const subSel = document.getElementById('ssScopeSub');
+    if (cat && SCOPE_CATEGORIES[cat]) {
+        subSel.innerHTML = '<option value="">선택하세요</option>' +
+            SCOPE_CATEGORIES[cat].map(s => `<option value="${s}">${s}</option>`).join('');
+        subGroup.style.display = 'block';
+    } else {
+        subGroup.style.display = 'none';
+        subSel.innerHTML = '<option value="">선택하세요</option>';
+    }
+}
+
+function getScopeValue() {
+    const cat = document.getElementById('ssScopeCategory').value;
+    const sub = document.getElementById('ssScopeSub').value;
+    if (!cat) return '';
+    return sub ? `${cat} > ${sub}` : cat;
+}
+
+function setScopeFromValue(scope) {
+    const catEl = document.getElementById('ssScopeCategory');
+    const subEl = document.getElementById('ssScopeSub');
+    const subGroup = document.getElementById('ssScopeSubGroup');
+    // "대분류 > 세부" 형식 파싱
+    const parts = scope.split(' > ');
+    const cat = parts[0]?.trim() || '';
+    const sub = parts[1]?.trim() || '';
+    // 카테고리 매칭 시도
+    if (SCOPE_CATEGORIES[cat]) {
+        catEl.value = cat;
+        onScopeCategoryChange();
+        if (sub) subEl.value = sub;
+    } else {
+        // 기존 데이터 호환: 세부항목으로 역매칭
+        for (const [category, subs] of Object.entries(SCOPE_CATEGORIES)) {
+            if (subs.some(s => scope.includes(s))) {
+                catEl.value = category;
+                onScopeCategoryChange();
+                const matched = subs.find(s => scope.includes(s));
+                if (matched) subEl.value = matched;
+                return;
+            }
+        }
+        // 매칭 안되면 기타로 설정
+        catEl.value = '기타';
+        onScopeCategoryChange();
+    }
+}
+
 function openNewSaleSiteModal() {
     document.getElementById('newSaleSiteForm').reset();
     document.getElementById('ssAddressVisible').value  = '';
@@ -3700,6 +3752,11 @@ function openNewSaleSiteModal() {
     document.getElementById('ssAddress').value  = '';
     document.getElementById('ssPostcode').value = '';
     foldAddressEmbed();
+
+    // 공종 드롭다운 초기화
+    document.getElementById('ssScopeCategory').value = '';
+    document.getElementById('ssScopeSubGroup').style.display = 'none';
+    document.getElementById('ssScopeSub').innerHTML = '<option value="">선택하세요</option>';
 
     document.getElementById('ssStatusGroup').style.display = isAdmin ? 'block' : 'none';
     document.getElementById('ssAdminCompanyGroup').style.display = isAdmin ? 'block' : 'none';
@@ -3713,6 +3770,7 @@ async function handleNewSaleSite(e) {
     const building = document.getElementById('ssBuilding').value.trim();
     const baseAddr = document.getElementById('ssAddressVisible').value.trim();
     if (!baseAddr) { showToast('주소 검색 버튼을 눌러 주소를 선택해주세요.', 'error'); return; }
+    if (!getScopeValue()) { showToast('공종을 선택해주세요.', 'error'); return; }
 
     // ── 수정 모드 ──
     if (_editingSaleSiteId !== null) {
@@ -3724,7 +3782,7 @@ async function handleNewSaleSite(e) {
                 building,
                 address:  baseAddr,
                 postcode: document.getElementById('ssPostcodeVisible').value,
-                scope:    document.getElementById('ssScope').value.trim(),
+                scope:    getScopeValue(),
                 manager:  document.getElementById('ssManager').value.trim(),
                 phone:    document.getElementById('ssPhone').value.trim(),
                 status:   document.getElementById('ssStatus')?.value || saleSites[idx].status,
@@ -3941,6 +3999,24 @@ function renderSaleSiteList() {
             return groupHeader + items;
         }).join('');
     } else {
+        // 등록일순 정렬 후, 중복건은 첫 등록 위치에 묶어서 표시
+        filtered.sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+        if (isAdmin) {
+            const ordered = [];
+            const seen = new Set();
+            filtered.forEach(s => {
+                if (seen.has(s.id)) return;
+                const key = normKey(s.building, s.address);
+                if (dupKeys.has(key)) {
+                    const group = filtered.filter(f => normKey(f.building, f.address) === key);
+                    group.forEach(g => { ordered.push(g); seen.add(g.id); });
+                } else {
+                    ordered.push(s);
+                    seen.add(s.id);
+                }
+            });
+            filtered = ordered;
+        }
         body.innerHTML = filtered.map(s => renderSingleSaleSiteItem(s, dupKeys, statusColors)).join('');
     }
 }
@@ -3983,7 +4059,7 @@ function editSaleSite(id) {
     document.getElementById('ssAddressVisible').value  = s.address;
     document.getElementById('ssAddress').value         = s.address;
     document.getElementById('ssPostcode').value        = s.postcode || '';
-    document.getElementById('ssScope').value           = s.scope;
+    setScopeFromValue(s.scope || '');
     document.getElementById('ssManager').value         = s.manager;
     document.getElementById('ssPhone').value           = s.phone || '';
     document.getElementById('ssMemo').value            = s.memo  || '';
@@ -4028,15 +4104,17 @@ function getDuplicates() {
 
 function checkDuplicates() {
     const dups = getDuplicates();
+    // 확정된 항목이 있는 중복 그룹은 배너에서 제외
+    const unconfirmedDups = dups.filter(d => !d.entries.some(e => e.status === '확정'));
     const banner = document.getElementById('dupAlertBanner');
     const listEl = document.getElementById('dupAlertList');
     const badge  = document.getElementById('dupBadge');
 
-    if (dups.length > 0 && isAdmin) {
+    if (unconfirmedDups.length > 0 && isAdmin) {
         banner.classList.add('show');
         badge.style.display = 'inline';
-        badge.textContent = dups.length;
-        listEl.innerHTML = dups.map(d => {
+        badge.textContent = unconfirmedDups.length;
+        listEl.innerHTML = unconfirmedDups.map(d => {
             const names = d.entries.map(e => {
                 const co = companies[e.companyId]?.name || '-';
                 return `${e.building}(${co})`;
@@ -4098,12 +4176,13 @@ function renderTechQAList() {
         return;
     }
 
+    const idArg = id => typeof id === 'string' ? `'${id}'` : id;
     body.innerHTML = filtered.map(t => `
-        <div class="ticket-item" onclick="showTechQADetail(${t.id})">
+        <div class="ticket-item${String(t.id) === String(_activeTechQAId) ? ' active' : ''}" onclick="showTechQADetail(${idArg(t.id)})">
             <div class="ticket-status-dot ${t.status}"></div>
             <div class="ticket-info">
                 <div class="ticket-title">${typeIcons[t.type] || '💬'} ${t.title}</div>
-                <div class="ticket-meta">${t.type} 문의 &nbsp;|&nbsp; ${t.createdAt}${isAdmin ? ` &nbsp;|&nbsp; ${companies[t.companyId]?.name}` : ''}</div>
+                <div class="ticket-meta">${t.type} 문의 &nbsp;|&nbsp; ${t.createdAt}${isAdmin ? ` &nbsp;|&nbsp; ${companies[t.companyId]?.name || t.companyName || ''}` : ''}</div>
             </div>
             <span class="ticket-badge ${t.status}">${ticketStatusLabel(t.status)}</span>
         </div>
@@ -4117,51 +4196,84 @@ function filterTechQA(btn, filter) {
     renderTechQAList();
 }
 
+let _activeTechQAId = null;
+
 function showTechQADetail(id) {
-    const qa = techQAs.find(t => t.id === id);
+    const qa = techQAs.find(t => String(t.id) === String(id));
     if (!qa) return;
 
+    _activeTechQAId = id;
+    const idArg = typeof qa.id === 'string' ? `'${qa.id}'` : qa.id;
+
     document.getElementById('techQADetailCard').style.display = 'block';
+    const emptyEl = document.getElementById('techQADetailEmpty');
+    if (emptyEl) emptyEl.style.display = 'none';
     document.getElementById('techQADetailTitle').textContent = qa.title;
+
+    const companyName = companies[qa.companyId]?.name || qa.companyName || '';
+
     document.getElementById('techQADetailBody').innerHTML = `
         <div class="ticket-detail-row"><span class="ticket-detail-label">유형</span><span class="ticket-detail-value">${qa.type} 문의</span></div>
         <div class="ticket-detail-row"><span class="ticket-detail-label">상태</span><span class="ticket-badge ${qa.status}">${ticketStatusLabel(qa.status)}</span></div>
         <div class="ticket-detail-row"><span class="ticket-detail-label">등록일</span><span class="ticket-detail-value">${qa.createdAt}</span></div>
-        ${isAdmin ? `<div class="ticket-detail-row"><span class="ticket-detail-label">시공사</span><span class="ticket-detail-value">${companies[qa.companyId]?.name}</span></div>` : ''}
-        <div style="margin-top:14px;padding:14px;background:var(--gray-50);border-radius:10px;font-size:13px;color:var(--gray-700);line-height:1.7;">${qa.content}</div>
-        ${qa.reply ? `<div style="margin-top:10px;padding:14px;background:var(--blue-light);border-radius:10px;font-size:13px;color:var(--gray-700);line-height:1.7;border-left:3px solid var(--blue);"><strong style="color:var(--blue);">기술팀 답변:</strong><br>${qa.reply}</div>` : ''}
-        ${isAdmin && qa.status !== 'done' ? `
-            <div style="margin-top:14px;">
-                <textarea class="form-textarea" id="tqReplyInput_${qa.id}" placeholder="기술 답변을 입력하세요..." style="margin-bottom:10px;min-height:80px;">${qa.reply}</textarea>
-                <div style="display:flex;gap:8px;">
-                    <button class="btn btn-primary btn-sm" onclick="submitTechReply(${qa.id})">답변 저장</button>
-                    <button class="btn btn-secondary btn-sm" onclick="markTechQADone(${qa.id})">완료 처리</button>
+        ${isAdmin ? `<div class="ticket-detail-row"><span class="ticket-detail-label">시공사</span><span class="ticket-detail-value">${companyName}</span></div>` : ''}
+        <div style="margin-top:16px;">
+            <div style="font-size:12px;font-weight:700;color:var(--gray-500);margin-bottom:8px;">문의 내용</div>
+            <div style="padding:16px;background:var(--gray-50);border-radius:10px;font-size:14px;color:var(--gray-700);line-height:1.8;white-space:pre-wrap;">${qa.content}</div>
+        </div>
+        ${qa.reply ? `
+            <div style="margin-top:16px;">
+                <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:8px;">기술팀 답변</div>
+                <div style="padding:16px;background:var(--blue-light);border-radius:10px;font-size:14px;color:var(--gray-700);line-height:1.8;border-left:3px solid var(--blue);white-space:pre-wrap;">${qa.reply}</div>
+            </div>
+        ` : `
+            ${!isAdmin ? '<div style="margin-top:16px;padding:14px;background:var(--gray-50);border-radius:10px;font-size:13px;color:var(--gray-400);text-align:center;">아직 답변이 등록되지 않았습니다.</div>' : ''}
+        `}
+        ${isAdmin ? `
+            <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--gray-200);">
+                <div style="font-size:12px;font-weight:700;color:var(--gray-500);margin-bottom:8px;">${qa.status === 'done' ? '답변 수정' : '답변 작성'}</div>
+                <textarea class="form-textarea" id="tqReplyInput_${qa.id}" placeholder="기술 답변을 입력하세요..." style="margin-bottom:10px;min-height:120px;font-size:14px;line-height:1.7;">${qa.reply || ''}</textarea>
+                <div style="display:flex;gap:8px;justify-content:flex-end;">
+                    <button class="btn btn-primary btn-sm" onclick="submitTechReply(${idArg})" style="padding:8px 20px;">답변 저장</button>
+                    ${qa.status !== 'done' ? `<button class="btn btn-secondary btn-sm" onclick="markTechQADone(${idArg})" style="padding:8px 20px;">완료 처리</button>` : ''}
                 </div>
             </div>
         ` : ''}
     `;
+
+    // 목록에서 활성 항목 표시 갱신
+    renderTechQAList();
 }
 
 function submitTechReply(id) {
-    const reply = document.getElementById(`tqReplyInput_${id}`)?.value;
-    const qa = techQAs.find(t => t.id === id);
-    if (qa && reply) {
-        qa.reply = reply;
-        qa.status = 'processing';
-        renderTechQAList();
-        showTechQADetail(id);
-        showToast('기술 답변이 저장되었습니다.', 'success');
+    const qa = techQAs.find(t => String(t.id) === String(id));
+    if (!qa) return;
+    const reply = document.getElementById(`tqReplyInput_${qa.id}`)?.value?.trim();
+    if (!reply) { showToast('답변 내용을 입력해주세요.', 'error'); return; }
+    qa.reply = reply;
+    if (qa.status === 'receiving') qa.status = 'processing';
+    if (_fbReady) {
+        fbSet('techQAs', qa.id, qa).catch(err => console.error('답변 저장 실패', err));
     }
+    renderTechQAList();
+    showTechQADetail(id);
+    updateBadges();
+    checkOverdueTechQAs();
+    showToast('기술 답변이 저장되었습니다.', 'success');
 }
 
 function markTechQADone(id) {
-    const qa = techQAs.find(t => t.id === id);
-    if (qa) {
-        qa.status = 'done';
-        renderTechQAList();
-        showTechQADetail(id);
-        showToast('기술 문의가 완료 처리되었습니다.', 'success');
+    const qa = techQAs.find(t => String(t.id) === String(id));
+    if (!qa) return;
+    qa.status = 'done';
+    if (_fbReady) {
+        fbSet('techQAs', qa.id, qa).catch(err => console.error('완료 처리 실패', err));
     }
+    renderTechQAList();
+    showTechQADetail(id);
+    updateBadges();
+    checkOverdueTechQAs();
+    showToast('기술 문의가 완료 처리되었습니다.', 'success');
 }
 
 function renderFAQ() {
@@ -4181,6 +4293,228 @@ function renderFAQ() {
 
 function toggleFAQ(i) {
     document.getElementById(`faq_${i}`).classList.toggle('open');
+}
+
+// ========== TECH QA: 탭 전환 ==========
+function switchTechQATab(tab) {
+    document.getElementById('tqTabMain').classList.toggle('active', tab === 'main');
+    document.getElementById('tqTabAI').classList.toggle('active', tab === 'ai');
+    document.getElementById('tqTabMainContent').style.display = tab === 'main' ? 'block' : 'none';
+    document.getElementById('tqTabAIContent').style.display = tab === 'ai' ? 'block' : 'none';
+    if (tab === 'ai') renderAISummary();
+}
+
+// ========== TECH QA: 미처리 알림 (영업일 3일) ==========
+function getBusinessDaysAgo(date, days) {
+    const d = new Date(date);
+    let count = 0;
+    while (count < days) {
+        d.setDate(d.getDate() - 1);
+        const dow = d.getDay();
+        if (dow !== 0 && dow !== 6) count++;
+    }
+    return d;
+}
+
+function checkOverdueTechQAs() {
+    if (!isAdmin) {
+        const banner = document.getElementById('tqOverdueBanner');
+        if (banner) banner.classList.remove('show');
+        return;
+    }
+    const now = new Date();
+    const threshold = getBusinessDaysAgo(now, 3);
+    const overdue = techQAs.filter(qa => {
+        if (qa.status === 'done') return false;
+        if (qa.reply) return false; // 답변이 있으면 미처리가 아님
+        const parts = qa.createdAt.replace(/\./g, '-').split('-');
+        const created = new Date(parts[0], parts[1] - 1, parts[2]);
+        return created <= threshold;
+    });
+
+    const banner = document.getElementById('tqOverdueBanner');
+    const list = document.getElementById('tqOverdueList');
+    if (overdue.length > 0) {
+        banner.classList.add('show');
+        list.innerHTML = overdue.map(qa => {
+            const co = companies[qa.companyId]?.name || qa.companyName || '';
+            return `<li><strong>${qa.title}</strong> &nbsp;— ${co} (${qa.createdAt} 접수)</li>`;
+        }).join('');
+    } else {
+        banner.classList.remove('show');
+    }
+}
+
+// ========== TECH QA: AI 분석 ==========
+function renderAISummary() {
+    const total = techQAs.length;
+    const receiving = techQAs.filter(t => t.status === 'receiving').length;
+    const processing = techQAs.filter(t => t.status === 'processing').length;
+    const done = techQAs.filter(t => t.status === 'done').length;
+
+    document.getElementById('aiSummaryCards').innerHTML = `
+        <div class="ai-summary-card">
+            <div class="ai-card-value" style="color:var(--gray-900);">${total}</div>
+            <div class="ai-card-label">전체 문의</div>
+        </div>
+        <div class="ai-summary-card">
+            <div class="ai-card-value" style="color:var(--orange);">${receiving}</div>
+            <div class="ai-card-label">접수 대기</div>
+        </div>
+        <div class="ai-summary-card">
+            <div class="ai-card-value" style="color:var(--blue);">${processing}</div>
+            <div class="ai-card-label">처리 중</div>
+        </div>
+        <div class="ai-summary-card">
+            <div class="ai-card-value" style="color:var(--green);">${done}</div>
+            <div class="ai-card-label">완료</div>
+        </div>
+    `;
+
+    // 분류 테이블 기본 렌더링
+    renderAIClassification();
+    renderAIPatterns();
+}
+
+function renderAIClassification() {
+    const typeIcons = { 시공:'🔨', 자재:'🧪', 하자:'⚠️', 품질:'✅', 안전:'🦺', 기타:'💬' };
+    const types = ['시공', '자재', '하자', '품질', '안전', '기타'];
+    const total = techQAs.length || 1;
+
+    const rows = types.map(type => {
+        const items = techQAs.filter(t => t.type === type);
+        const cnt = items.length;
+        const pct = Math.round((cnt / total) * 100);
+        const doneCount = items.filter(t => t.status === 'done').length;
+        const avgStr = cnt > 0 ? `${doneCount}/${cnt} 완료` : '-';
+        const colors = { 시공:'var(--blue)', 자재:'var(--purple)', 하자:'var(--orange)', 품질:'var(--green)', 안전:'#b45309', 기타:'var(--gray-500)' };
+        return `<tr>
+            <td>${typeIcons[type]} ${type}</td>
+            <td><strong>${cnt}</strong>건</td>
+            <td>
+                <div class="ai-bar" style="width:120px;display:inline-block;vertical-align:middle;">
+                    <div class="ai-bar-fill" style="width:${pct}%;background:${colors[type]};"></div>
+                </div>
+                <span style="margin-left:8px;font-size:12px;color:var(--gray-400);">${pct}%</span>
+            </td>
+            <td>${avgStr}</td>
+        </tr>`;
+    }).join('');
+
+    document.getElementById('aiClassificationBody').innerHTML = `
+        <table class="ai-class-table">
+            <thead><tr><th>유형</th><th>건수</th><th>비율</th><th>처리현황</th></tr></thead>
+            <tbody>${rows}</tbody>
+        </table>
+    `;
+}
+
+function renderAIPatterns() {
+    const body = document.getElementById('aiPatternsBody');
+    if (techQAs.length < 2) {
+        body.innerHTML = '<div style="padding:30px;text-align:center;font-size:13px;color:var(--gray-400);">분석할 데이터가 부족합니다.</div>';
+        return;
+    }
+    // 키워드 빈도 분석
+    const keywords = {};
+    const stopwords = new Set(['및','의','에','를','을','이','가','은','는','로','에서','등','후','시','수','있','합니다','것','됩니다','입니다']);
+    techQAs.forEach(qa => {
+        const words = (qa.title + ' ' + qa.content).replace(/[^가-힣a-zA-Z0-9\s]/g, '').split(/\s+/);
+        words.forEach(w => {
+            if (w.length >= 2 && !stopwords.has(w)) {
+                keywords[w] = (keywords[w] || 0) + 1;
+            }
+        });
+    });
+    const sorted = Object.entries(keywords).sort((a, b) => b[1] - a[1]).slice(0, 10);
+    const maxCnt = sorted[0]?.[1] || 1;
+
+    body.innerHTML = `
+        <div style="padding:20px;">
+            <div style="font-size:13px;color:var(--gray-500);margin-bottom:14px;">자주 언급되는 키워드 TOP 10</div>
+            ${sorted.map(([word, cnt]) => `
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
+                    <span style="min-width:80px;font-size:13px;font-weight:600;color:var(--gray-700);">${word}</span>
+                    <div class="ai-bar" style="flex:1;">
+                        <div class="ai-bar-fill" style="width:${Math.round(cnt / maxCnt * 100)}%;background:var(--blue);"></div>
+                    </div>
+                    <span style="font-size:12px;color:var(--gray-400);min-width:30px;text-align:right;">${cnt}회</span>
+                </div>
+            `).join('')}
+        </div>
+    `;
+}
+
+function runAIAnalysis() {
+    const btn = event.target;
+    btn.disabled = true;
+    btn.textContent = '🤖 분석 중...';
+
+    setTimeout(() => {
+        renderAISummary();
+
+        // AI 인사이트 생성
+        const receiving = techQAs.filter(t => t.status === 'receiving');
+        const typeCount = {};
+        techQAs.forEach(t => { typeCount[t.type] = (typeCount[t.type] || 0) + 1; });
+        const topType = Object.entries(typeCount).sort((a, b) => b[1] - a[1])[0];
+
+        const companyCount = {};
+        techQAs.forEach(t => {
+            const name = companies[t.companyId]?.name || '기타';
+            companyCount[name] = (companyCount[name] || 0) + 1;
+        });
+        const topCompany = Object.entries(companyCount).sort((a, b) => b[1] - a[1])[0];
+
+        const insights = [];
+
+        if (receiving.length > 0) {
+            insights.push({
+                tag: 'warning', tagLabel: '주의',
+                title: `미답변 문의 ${receiving.length}건 대기 중`,
+                desc: `현재 접수 후 답변되지 않은 문의가 ${receiving.length}건 있습니다. 신속한 답변이 시공사 만족도 향상에 중요합니다.`
+            });
+        }
+
+        if (topType) {
+            insights.push({
+                tag: 'info', tagLabel: '분석',
+                title: `'${topType[0]}' 유형 문의가 가장 많습니다 (${topType[1]}건)`,
+                desc: `전체 문의의 ${Math.round(topType[1] / techQAs.length * 100)}%가 '${topType[0]}' 관련입니다. 해당 분야의 FAQ를 보강하면 문의 감소 효과를 기대할 수 있습니다.`
+            });
+        }
+
+        if (topCompany) {
+            insights.push({
+                tag: 'info', tagLabel: '분석',
+                title: `${topCompany[0]}에서 가장 많은 문의 발생 (${topCompany[1]}건)`,
+                desc: `해당 시공사의 주요 문의 패턴을 파악하여 선제적 기술 지원을 제공하면 효과적입니다.`
+            });
+        }
+
+        const done = techQAs.filter(t => t.status === 'done').length;
+        if (done > 0) {
+            insights.push({
+                tag: 'success', tagLabel: '성과',
+                title: `문의 처리 완료율 ${Math.round(done / techQAs.length * 100)}%`,
+                desc: `총 ${techQAs.length}건 중 ${done}건이 완료되었습니다. 완료된 답변 데이터는 자동으로 FAQ 후보로 활용됩니다.`
+            });
+        }
+
+        document.getElementById('aiInsightsBody').innerHTML = insights.map(i => `
+            <div class="ai-insight-item">
+                <div class="ai-insight-title">
+                    <span class="ai-insight-tag ${i.tag}">${i.tagLabel}</span>
+                    ${i.title}
+                </div>
+                <div class="ai-insight-desc">${i.desc}</div>
+            </div>
+        `).join('');
+
+        btn.disabled = false;
+        btn.textContent = '🤖 AI 분석 실행';
+        showToast('AI 분석이 완료되었습니다.', 'success');
+    }, 1200);
 }
 
 // ========== TOAST ==========
@@ -4322,7 +4656,7 @@ function attachListeners() {
     _unsubs.push(
         db.collection('leads').onSnapshot(snap => {
             leads = snap.docs.map(d => d.data());
-            renderPipeline();
+            renderHome();
         }, err => console.error('[Firebase] leads 리스너 오류:', err))
     );
     _unsubs.push(
