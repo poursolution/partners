@@ -1815,7 +1815,7 @@
                 <div class="dup-alert" id="dupAlertBanner">
                     <div class="dup-alert-icon">⚠️</div>
                     <div class="dup-alert-content">
-                        <div class="dup-alert-title">중복 등록 감지됨 — 여러 시공사가 동일 현장을 등록했습니다</div>
+                        <div class="dup-alert-title">중복확인요청 단지 — 여러 시공사가 동일 현장을 등록했습니다</div>
                         <ul class="dup-alert-list" id="dupAlertList"></ul>
                     </div>
                 </div>
@@ -3941,6 +3941,24 @@ function renderSaleSiteList() {
             return groupHeader + items;
         }).join('');
     } else {
+        // 등록일순 정렬 후, 중복건은 첫 등록 위치에 묶어서 표시
+        filtered.sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+        if (isAdmin) {
+            const ordered = [];
+            const seen = new Set();
+            filtered.forEach(s => {
+                if (seen.has(s.id)) return;
+                const key = normKey(s.building, s.address);
+                if (dupKeys.has(key)) {
+                    const group = filtered.filter(f => normKey(f.building, f.address) === key);
+                    group.forEach(g => { ordered.push(g); seen.add(g.id); });
+                } else {
+                    ordered.push(s);
+                    seen.add(s.id);
+                }
+            });
+            filtered = ordered;
+        }
         body.innerHTML = filtered.map(s => renderSingleSaleSiteItem(s, dupKeys, statusColors)).join('');
     }
 }
@@ -4028,15 +4046,17 @@ function getDuplicates() {
 
 function checkDuplicates() {
     const dups = getDuplicates();
+    // 확정된 항목이 있는 중복 그룹은 배너에서 제외
+    const unconfirmedDups = dups.filter(d => !d.entries.some(e => e.status === '확정'));
     const banner = document.getElementById('dupAlertBanner');
     const listEl = document.getElementById('dupAlertList');
     const badge  = document.getElementById('dupBadge');
 
-    if (dups.length > 0 && isAdmin) {
+    if (unconfirmedDups.length > 0 && isAdmin) {
         banner.classList.add('show');
         badge.style.display = 'inline';
-        badge.textContent = dups.length;
-        listEl.innerHTML = dups.map(d => {
+        badge.textContent = unconfirmedDups.length;
+        listEl.innerHTML = unconfirmedDups.map(d => {
             const names = d.entries.map(e => {
                 const co = companies[e.companyId]?.name || '-';
                 return `${e.building}(${co})`;
