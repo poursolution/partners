@@ -447,6 +447,52 @@
         .welcome-stat-value { font-size: 30px; font-weight: 800; line-height: 1; }
         .welcome-stat-label { font-size: 12px; color: rgba(255,255,255,0.6); margin-top: 4px; }
 
+        /* 홈 공지사항 배너 */
+        .home-notice-banner {
+            background: #fff; border-radius: 14px; border: 1px solid var(--gray-200);
+            padding: 16px 20px; margin-bottom: 16px;
+        }
+        .home-notice-header {
+            display: flex; align-items: center; gap: 8px; margin-bottom: 10px;
+        }
+        .home-notice-icon { font-size: 18px; }
+        .home-notice-label { font-size: 14px; font-weight: 700; color: var(--gray-900); }
+        .home-notice-list { display: flex; flex-direction: column; gap: 6px; }
+        .home-notice-item {
+            display: flex; align-items: center; gap: 10px; padding: 8px 12px;
+            background: var(--gray-50); border-radius: 8px; cursor: pointer;
+            transition: background 0.15s;
+        }
+        .home-notice-item:hover { background: var(--blue-light); }
+        .home-notice-tag {
+            font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 5px;
+            flex-shrink: 0;
+        }
+        .home-notice-tag.important { background: #fee2e2; color: var(--red); }
+        .home-notice-tag.info { background: var(--blue-light); color: var(--blue); }
+        .home-notice-tag.update { background: var(--green-light); color: var(--green); }
+        .home-notice-title { font-size: 13px; color: var(--gray-700); font-weight: 500; flex: 1; }
+        .home-notice-date { font-size: 11px; color: var(--gray-400); flex-shrink: 0; }
+
+        /* 기술사용등록 바로가기 카드 */
+        .home-techsite-card {
+            display: flex; align-items: center; justify-content: space-between;
+            background: linear-gradient(135deg, #eff6ff 0%, #e0f2fe 100%);
+            border: 1.5px solid var(--blue);
+            border-radius: 14px; padding: 20px 24px; margin-bottom: 20px; gap: 20px;
+        }
+        .home-techsite-title { font-size: 16px; font-weight: 800; color: var(--gray-900); margin-bottom: 4px; }
+        .home-techsite-desc { font-size: 13px; color: var(--gray-500); margin-bottom: 10px; }
+        .home-techsite-stats { display: flex; gap: 16px; }
+        .home-techsite-stat {
+            display: flex; align-items: center; gap: 6px;
+            font-size: 13px; font-weight: 600; color: var(--gray-700);
+        }
+        .home-techsite-stat-dot {
+            width: 8px; height: 8px; border-radius: 50%;
+        }
+        .home-techsite-right { display: flex; flex-direction: column; gap: 8px; }
+
         .overview-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -1677,6 +1723,32 @@
                             <div class="welcome-stat-value" id="homeStatPending">2</div>
                             <div class="welcome-stat-label">미처리 요청</div>
                         </div>
+                    </div>
+                </div>
+
+                <!-- 공지사항 배너 (관리자가 등록한 공지) -->
+                <div class="home-notice-banner" id="homeNoticeBanner">
+                    <div class="home-notice-header">
+                        <span class="home-notice-icon">📢</span>
+                        <span class="home-notice-label">공지사항</span>
+                    </div>
+                    <div class="home-notice-list" id="homeNoticeList"></div>
+                </div>
+
+                <!-- 기술사용등록 바로가기 카드 -->
+                <div class="home-techsite-card" id="homeTechSiteCard">
+                    <div class="home-techsite-left">
+                        <div class="home-techsite-title">📍 기술사용등록</div>
+                        <div class="home-techsite-desc">POUR공법 기술 사용 단지를 등록하고 관리하세요</div>
+                        <div class="home-techsite-stats" id="homeTechSiteStats"></div>
+                    </div>
+                    <div class="home-techsite-right">
+                        <button class="btn btn-primary" onclick="switchSection('salesites')" style="white-space:nowrap;">
+                            등록 현황 보기 →
+                        </button>
+                        <button class="btn btn-outline" onclick="switchSection('salesites'); setTimeout(()=>openNewSaleSiteModal(),200);" style="white-space:nowrap;">
+                            ➕ 새 단지 등록
+                        </button>
                     </div>
                 </div>
 
@@ -2951,6 +3023,34 @@ function renderHome() {
     document.getElementById('metricSites').textContent = mySites.filter(s => s.stage === '시공').length;
     document.getElementById('metricPayment').textContent = mySites.filter(s => !s.payment.advance.confirmed).length;
     document.getElementById('metricTickets').textContent = myTickets.filter(t => t.status !== 'done').length;
+
+    // 공지사항 배너
+    const tagLabels = { important: '중요', info: '안내', update: '업데이트' };
+    const noticeList = document.getElementById('homeNoticeList');
+    if (notices.length > 0) {
+        document.getElementById('homeNoticeBanner').style.display = 'block';
+        noticeList.innerHTML = notices.slice(0, 3).map(n => `
+            <div class="home-notice-item" onclick="switchSection('comm')">
+                <span class="home-notice-tag ${n.tag}">${tagLabels[n.tag] || n.tag}</span>
+                <span class="home-notice-title">${n.title}</span>
+                <span class="home-notice-date">${n.date}</span>
+            </div>
+        `).join('');
+    } else {
+        document.getElementById('homeNoticeBanner').style.display = 'none';
+    }
+
+    // 기술사용등록 카드
+    const mySaleSites = isAdmin ? saleSites : saleSites.filter(s => s.companyId === currentUser.id);
+    const ssActive = mySaleSites.filter(s => s.status === '영업중').length;
+    const ssConfirmed = mySaleSites.filter(s => s.status === '확정').length;
+    const ssPending = mySaleSites.filter(s => s.status === '미정').length;
+    document.getElementById('homeTechSiteStats').innerHTML = `
+        <div class="home-techsite-stat"><div class="home-techsite-stat-dot" style="background:var(--blue);"></div> 영업중 ${ssActive}건</div>
+        <div class="home-techsite-stat"><div class="home-techsite-stat-dot" style="background:var(--green);"></div> 확정 ${ssConfirmed}건</div>
+        <div class="home-techsite-stat"><div class="home-techsite-stat-dot" style="background:var(--gray-400);"></div> 미정 ${ssPending}건</div>
+        <div class="home-techsite-stat" style="font-weight:800;color:var(--blue);">총 ${mySaleSites.length}건</div>
+    `;
 
     // Recent sites
     const recentSites = mySites.slice(0, 4);
