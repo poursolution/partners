@@ -143,6 +143,15 @@
             border: none; color: var(--gray-400); cursor: pointer; font-size: 18px;
         }
 
+        .auto-login-label {
+            display: flex; align-items: center; gap: 6px;
+            font-size: 13px; color: var(--gray-500); cursor: pointer;
+            margin-top: 4px; margin-bottom: 4px;
+        }
+        .auto-login-label input[type="checkbox"] {
+            width: 16px; height: 16px; accent-color: var(--blue); cursor: pointer;
+        }
+
         .login-btn {
             width: 100%; padding: 15px; border: none; border-radius: 12px;
             background: linear-gradient(135deg, var(--blue) 0%, var(--blue-dark) 100%);
@@ -571,95 +580,6 @@
             display: flex; justify-content: space-between;
             align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;
         }
-
-        .pipeline-title { font-size: 18px; font-weight: 700; color: var(--gray-900); }
-
-        .pipeline-board {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 14px;
-            align-items: start;
-        }
-
-        .pipeline-col {
-            background: var(--gray-50);
-            border-radius: 14px;
-            overflow: hidden;
-            border: 1px solid var(--gray-200);
-        }
-
-        .pipeline-col-header {
-            padding: 14px 16px;
-            border-bottom: 1px solid var(--gray-200);
-            background: #fff;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .pipeline-col-dot {
-            width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
-        }
-
-        .pipeline-col-dot.lead { background: var(--gray-400); }
-        .pipeline-col-dot.contact { background: var(--blue); }
-        .pipeline-col-dot.proposal { background: var(--orange); }
-        .pipeline-col-dot.quote { background: var(--purple); }
-        .pipeline-col-dot.contract { background: var(--green); }
-
-        .pipeline-col-name { font-size: 13px; font-weight: 700; color: var(--gray-900); flex: 1; }
-
-        .pipeline-col-count {
-            font-size: 12px; font-weight: 700;
-            background: var(--gray-200); color: var(--gray-600);
-            padding: 2px 8px; border-radius: 10px;
-        }
-
-        .pipeline-cards { padding: 10px; display: flex; flex-direction: column; gap: 8px; min-height: 60px; }
-
-        .pipeline-card {
-            background: #fff; border-radius: 10px;
-            padding: 14px; border: 1px solid var(--gray-200);
-            cursor: pointer; transition: all 0.15s;
-        }
-
-        .pipeline-card:hover {
-            border-color: var(--blue);
-            box-shadow: 0 4px 16px rgba(0,102,255,0.1);
-        }
-
-        .pipeline-card-top {
-            display: flex; justify-content: space-between; align-items: flex-start; gap: 6px; margin-bottom: 8px;
-        }
-
-        .pipeline-card-name { font-size: 13px; font-weight: 700; color: var(--gray-900); line-height: 1.3; }
-
-        .pipeline-priority {
-            font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 5px; flex-shrink: 0;
-        }
-
-        .pipeline-priority.high { background: var(--red-light); color: var(--red); }
-        .pipeline-priority.mid { background: var(--orange-light); color: var(--orange); }
-        .pipeline-priority.low { background: var(--green-light); color: var(--green); }
-
-        .pipeline-card-meta { font-size: 12px; color: var(--gray-400); margin-bottom: 10px; }
-
-        .pipeline-card-bottom {
-            display: flex; justify-content: space-between; align-items: center;
-        }
-
-        .pipeline-card-value { font-size: 13px; font-weight: 700; color: var(--blue); }
-        .pipeline-card-date { font-size: 11px; color: var(--gray-400); }
-
-        .pipeline-add-btn {
-            width: 100%; padding: 10px; border: 1.5px dashed var(--gray-300);
-            border-radius: 10px; background: transparent; color: var(--gray-400);
-            font-size: 13px; font-weight: 600; cursor: pointer;
-            transition: all 0.15s; font-family: inherit; margin: 2px 10px 10px;
-            width: calc(100% - 20px);
-        }
-
-        .pipeline-add-btn:hover { border-color: var(--blue); color: var(--blue); background: var(--blue-light); }
 
         /* ========== FIELD MANAGEMENT ========== */
         .site-list {
@@ -1481,8 +1401,7 @@
 
         /* ========== RESPONSIVE ========== */
         @media (max-width: 1100px) {
-            .pipeline-board { grid-template-columns: repeat(3, 1fr); }
-            .doc-grid { grid-template-columns: repeat(2, 1fr); }
+.doc-grid { grid-template-columns: repeat(2, 1fr); }
             .overview-grid { grid-template-columns: repeat(2, 1fr); }
         }
 
@@ -1494,7 +1413,7 @@
             .comm-layout { grid-template-columns: 1fr; }
             .myinfo-grid { grid-template-columns: 1fr; }
             .welcome-stats { display: none; }
-            .pipeline-board { grid-template-columns: 1fr 1fr; }
+
         }
 
         @media (max-width: 600px) {
@@ -1504,8 +1423,7 @@
             .list-header, .site-item { grid-template-columns: 1fr 1fr 80px; }
             .list-header > div:nth-child(3), .list-header > div:nth-child(4),
             .site-item > div:nth-child(3), .site-item > div:nth-child(4) { display: none; }
-            .pipeline-board { grid-template-columns: 1fr; }
-            .doc-grid { grid-template-columns: 1fr; }
+.doc-grid { grid-template-columns: 1fr; }
         }
     </style>
     <!-- Firebase SDK (동적 로드) -->
@@ -1576,6 +1494,9 @@
                     </div>
                 </div>
 
+                <label class="auto-login-label">
+                    <input type="checkbox" id="companyAutoLogin"> <span>자동 로그인</span>
+                </label>
                 <button type="submit" class="login-btn" id="companyLoginBtn" disabled>로그인</button>
             </form>
 
@@ -1596,6 +1517,9 @@
                     </div>
                 </div>
 
+                <label class="auto-login-label">
+                    <input type="checkbox" id="adminAutoLogin"> <span>자동 로그인</span>
+                </label>
                 <button type="submit" class="login-btn admin-btn">관리자 로그인</button>
             </form>
 
@@ -1635,10 +1559,6 @@
             </div>
 
             <div class="nav-section-label" style="margin-top: 8px;">영업 & 현장</div>
-            <div class="nav-item" data-section="pipeline" onclick="switchSection('pipeline')">
-                <span class="nav-item-icon">📊</span>
-                <span class="nav-item-text">영업 파이프라인</span>
-            </div>
             <div class="nav-item" data-section="sites" onclick="switchSection('sites')">
                 <span class="nav-item-icon">🏗️</span>
                 <span class="nav-item-text">현장 관리</span>
@@ -1791,26 +1711,6 @@
                         </div>
                         <div class="overview-card-body" id="homeTicketList"></div>
                     </div>
-                </div>
-            </div>
-
-            <!-- ========== PIPELINE ========== -->
-            <div class="section-page" id="section-pipeline">
-                <div class="section-header">
-                    <div>
-                        <div class="section-title">영업 파이프라인</div>
-                        <div style="font-size: 13px; color: var(--gray-400); margin-top: 3px;">현재 진행 중인 영업 현황을 단계별로 관리하세요</div>
-                    </div>
-                    <div style="display:flex; gap:10px; align-items:center;">
-                        <button class="btn btn-outline btn-sm" onclick="openLeadModal()">📋 목록 보기</button>
-                        <button class="new-lead-btn" onclick="openNewLeadModal()">
-                            ➕ 리드 추가
-                        </button>
-                    </div>
-                </div>
-
-                <div class="pipeline-board" id="pipelineBoard">
-                    <!-- JS로 렌더링 -->
                 </div>
             </div>
 
@@ -2113,103 +2013,6 @@
 <!-- ========== MODALS ========== -->
 
 <!-- New Lead Modal -->
-<div class="modal-overlay" id="newLeadModal">
-    <div class="modal">
-        <div class="modal-header">
-            <div class="modal-title">➕ 영업 리드 등록</div>
-            <button class="modal-close" onclick="closeModal('newLeadModal')">×</button>
-        </div>
-        <div class="modal-body">
-            <form class="modal-form" id="newLeadForm" onsubmit="handleNewLead(event)">
-                <div class="admin-only" id="leadCompanyGroup" style="margin-bottom:18px; flex-direction:column;">
-                    <label class="form-label">시공사 <span style="color:var(--red)">*</span></label>
-                    <select class="form-select" id="newLeadCompany">
-                        <option value="">시공사 선택</option>
-                        <option value="1">석민이앤씨</option>
-                        <option value="2">기림이앤씨</option>
-                        <option value="3">엘케이개발</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">현장/건물명 <span style="color:var(--red)">*</span></label>
-                    <input type="text" class="form-input" id="newLeadBuilding" placeholder="예: 강남 래미안 퍼스티지" required>
-                </div>
-
-                <div class="form-row-2">
-                    <div class="form-group">
-                        <label class="form-label">지역 <span style="color:var(--red)">*</span></label>
-                        <select class="form-select" id="newLeadRegion" required>
-                            <option value="">지역 선택</option>
-                            <option>서울</option><option>경기</option><option>인천</option>
-                            <option>부산</option><option>대구</option><option>대전</option>
-                            <option>광주</option><option>울산</option><option>세종</option>
-                            <option>강원</option><option>충북</option><option>충남</option>
-                            <option>전북</option><option>전남</option><option>경북</option>
-                            <option>경남</option><option>제주</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">시군구</label>
-                        <input type="text" class="form-input" id="newLeadDistrict" placeholder="예: 강남구">
-                    </div>
-                </div>
-
-                <div class="form-row-2">
-                    <div class="form-group">
-                        <label class="form-label">공사 범위</label>
-                        <input type="text" class="form-input" id="newLeadScope" placeholder="예: 지하주차장 방수">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">예상 금액</label>
-                        <input type="text" class="form-input" id="newLeadValue" placeholder="예: 3,000만원">
-                    </div>
-                </div>
-
-                <div class="form-row-2">
-                    <div class="form-group">
-                        <label class="form-label">영업 단계</label>
-                        <select class="form-select" id="newLeadStage">
-                            <option value="lead">리드</option>
-                            <option value="contact">초기접촉</option>
-                            <option value="proposal">제안진행</option>
-                            <option value="quote">견적협의</option>
-                            <option value="contract">계약완료</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">우선순위</label>
-                        <select class="form-select" id="newLeadPriority">
-                            <option value="high">🔴 높음</option>
-                            <option value="mid" selected>🟡 보통</option>
-                            <option value="low">🟢 낮음</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">담당자 연락처</label>
-                    <input type="text" class="form-input" id="newLeadContact" placeholder="예: 홍길동 010-1234-5678">
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">다음 액션 예정일</label>
-                    <input type="date" class="form-input" id="newLeadNextDate">
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">메모</label>
-                    <textarea class="form-textarea" id="newLeadNote" placeholder="영업 관련 특이사항이나 메모를 입력하세요..."></textarea>
-                </div>
-            </form>
-        </div>
-        <div class="modal-footer">
-            <button class="btn btn-secondary" onclick="closeModal('newLeadModal')">취소</button>
-            <button class="btn btn-primary" onclick="document.getElementById('newLeadForm').requestSubmit()">등록하기</button>
-        </div>
-    </div>
-</div>
-
 <!-- New Site Modal -->
 <div class="modal-overlay" id="newSiteModal">
     <div class="modal modal-lg">
@@ -2888,6 +2691,10 @@ function handleCompanyLogin(e) {
     errEl.classList.remove('show');
     currentUser = companies[companyId];
     isAdmin = false;
+    // 자동 로그인 저장
+    if (document.getElementById('companyAutoLogin').checked) {
+        localStorage.setItem('pourAutoLogin', JSON.stringify({ type: 'company', companyId }));
+    }
     initDashboard();
 }
 
@@ -2902,11 +2709,16 @@ function handleAdminLogin(e) {
     errEl.classList.remove('show');
     currentUser = { id: 0, name: '관리자', manager: '관리자', phone: '-' };
     isAdmin = true;
+    // 자동 로그인 저장
+    if (document.getElementById('adminAutoLogin').checked) {
+        localStorage.setItem('pourAutoLogin', JSON.stringify({ type: 'admin' }));
+    }
     initDashboard();
 }
 
 function handleLogout() {
     currentUser = null; isAdmin = false; selectedLoginCompany = null;
+    localStorage.removeItem('pourAutoLogin');
     document.getElementById('companyPassword').value = '';
     document.getElementById('adminId').value = '';
     document.getElementById('adminPassword').value = '';
@@ -2915,6 +2727,23 @@ function handleLogout() {
     document.getElementById('appShell').classList.remove('active');
     switchSection('home');
 }
+
+// 자동 로그인 체크
+(function checkAutoLogin() {
+    try {
+        const saved = JSON.parse(localStorage.getItem('pourAutoLogin'));
+        if (!saved) return;
+        if (saved.type === 'company' && companies[saved.companyId]) {
+            currentUser = companies[saved.companyId];
+            isAdmin = false;
+            initDashboard();
+        } else if (saved.type === 'admin') {
+            currentUser = { id: 0, name: '관리자', manager: '관리자', phone: '-' };
+            isAdmin = true;
+            initDashboard();
+        }
+    } catch(e) { /* ignore */ }
+})();
 
 // ========== 대시보드 초기화 ==========
 function initDashboard() {
@@ -2946,7 +2775,6 @@ function initDashboard() {
     document.getElementById('adminCompanyFilter').className = isAdmin ? 'admin-company-filter show' : 'admin-company-filter';
 
     // Set admin company select in modals
-    document.getElementById('leadCompanyGroup').style.display = isAdmin ? 'flex' : 'none';
     document.getElementById('adminSiteCompanyGroup').style.display = isAdmin ? 'block' : 'none';
     
     // Unread badge
@@ -2957,7 +2785,6 @@ function initDashboard() {
     badge.textContent = unread;
 
     renderHome();
-    renderPipeline();
     renderSiteList();
     renderDocs();
     renderTickets();
@@ -2980,7 +2807,6 @@ function initDashboard() {
 // ========== 섹션 전환 ==========
 const sectionTitles = {
     home: ['홈', '대시보드 개요'],
-    pipeline: ['영업 파이프라인', '영업 리드 및 기회 관리'],
     sites: ['현장 관리', '진행중인 현장 목록'],
     docs: ['자료실', '시공 매뉴얼, 카탈로그, 계약서 다운로드'],
     comm: ['소통 창구', '요청, 문의 및 공지사항'],
@@ -3085,56 +2911,6 @@ function getStageColor(stage) {
 }
 
 // ========== PIPELINE ==========
-const pipelineStages = [
-    { key: 'lead', label: '리드', dotClass: 'lead' },
-    { key: 'contact', label: '초기접촉', dotClass: 'contact' },
-    { key: 'proposal', label: '제안진행', dotClass: 'proposal' },
-    { key: 'quote', label: '견적협의', dotClass: 'quote' },
-    { key: 'contract', label: '계약완료', dotClass: 'contract' },
-];
-
-function renderPipeline() {
-    const myLeads = isAdmin ? leads : leads.filter(l => l.companyId === currentUser.id);
-    const board = document.getElementById('pipelineBoard');
-
-    board.innerHTML = pipelineStages.map(stage => {
-        const stageLeads = myLeads.filter(l => l.stage === stage.key);
-        const cards = stageLeads.map(l => `
-            <div class="pipeline-card" onclick="openLeadDetail(${l.id})">
-                <div class="pipeline-card-top">
-                    <div class="pipeline-card-name">${l.building}</div>
-                    <span class="pipeline-priority ${l.priority}">${{high:'높음',mid:'보통',low:'낮음'}[l.priority]}</span>
-                </div>
-                <div class="pipeline-card-meta">📍 ${l.region} ${l.district} &nbsp;|&nbsp; ${l.scope}</div>
-                ${l.contact ? `<div class="pipeline-card-meta">👤 ${l.contact}</div>` : ''}
-                <div class="pipeline-card-bottom">
-                    <div class="pipeline-card-value">${l.value || '-'}</div>
-                    <div class="pipeline-card-date">📅 ${l.nextDate || '-'}</div>
-                </div>
-            </div>
-        `).join('');
-
-        return `
-            <div class="pipeline-col">
-                <div class="pipeline-col-header">
-                    <div class="pipeline-col-dot ${stage.dotClass}"></div>
-                    <div class="pipeline-col-name">${stage.label}</div>
-                    <div class="pipeline-col-count">${stageLeads.length}</div>
-                </div>
-                <div class="pipeline-cards">${cards}</div>
-                <button class="pipeline-add-btn" onclick="openNewLeadModal('${stage.key}')">+ 추가</button>
-            </div>
-        `;
-    }).join('');
-}
-
-function openLeadDetail(id) {
-    const lead = leads.find(l => l.id === id);
-    if (!lead) return;
-    const stageLabel = pipelineStages.find(s => s.key === lead.stage)?.label || lead.stage;
-    const prioLabel = {high:'🔴 높음',mid:'🟡 보통',low:'🟢 낮음'}[lead.priority];
-    showToast(`[${stageLabel}] ${lead.building} 상세보기`, '');
-}
 
 // ========== SITES ==========
 function renderSiteList() {
@@ -3525,42 +3301,6 @@ function getTicketRate(companyId) {
 }
 
 // ========== MODAL HANDLERS ==========
-function openNewLeadModal(defaultStage) {
-    if (defaultStage) document.getElementById('newLeadStage').value = defaultStage;
-    document.getElementById('newLeadModal').classList.add('active');
-}
-
-function openLeadModal() { showToast('목록 보기 준비 중입니다.', ''); }
-
-function handleNewLead(e) {
-    e.preventDefault();
-    const building = document.getElementById('newLeadBuilding').value;
-    const region = document.getElementById('newLeadRegion').value;
-    const stage = document.getElementById('newLeadStage').value;
-    const priority = document.getElementById('newLeadPriority').value;
-    const companyId = isAdmin ? parseInt(document.getElementById('newLeadCompany').value) : currentUser.id;
-
-    const newLead = {
-        id: Date.now(), companyId,
-        building, region,
-        district: document.getElementById('newLeadDistrict').value,
-        scope: document.getElementById('newLeadScope').value,
-        value: document.getElementById('newLeadValue').value,
-        stage, priority,
-        contact: document.getElementById('newLeadContact').value,
-        nextDate: document.getElementById('newLeadNextDate').value,
-        note: document.getElementById('newLeadNote').value,
-        createdAt: new Date().toLocaleDateString('ko-KR').replace(/\. /g, '.').replace('.', '.'),
-    };
-
-    leads.push(newLead);
-    closeModal('newLeadModal');
-    document.getElementById('newLeadForm').reset();
-    renderPipeline();
-    renderHome();
-    showToast(`${building} 리드가 등록되었습니다.`, 'success');
-}
-
 function openNewSiteModal() {
     document.getElementById('newSiteModal').classList.add('active');
 }
@@ -4916,7 +4656,7 @@ function attachListeners() {
     _unsubs.push(
         db.collection('leads').onSnapshot(snap => {
             leads = snap.docs.map(d => d.data());
-            renderPipeline();
+            renderHome();
         }, err => console.error('[Firebase] leads 리스너 오류:', err))
     );
     _unsubs.push(
