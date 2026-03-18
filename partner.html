@@ -1323,6 +1323,76 @@
             padding: 60px 20px; text-align: center;
         }
 
+        /* 미처리 알림 배너 */
+        .tq-overdue-alert {
+            display: none;
+            background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+            border: 1.5px solid var(--red);
+            border-radius: 12px;
+            padding: 14px 20px;
+            margin-bottom: 16px;
+            align-items: flex-start;
+            gap: 14px;
+        }
+        .tq-overdue-alert.show { display: flex; }
+        .tq-overdue-alert .dup-alert-list li::before { content: '•'; color: var(--red); font-weight: 700; }
+        .tq-overdue-alert .dup-alert-list li { color: #991b1b; }
+
+        /* AI 분석 패널 */
+        .ai-analysis-panel { display: flex; flex-direction: column; gap: 20px; }
+
+        .ai-summary-cards {
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px;
+        }
+        .ai-summary-card {
+            background: #fff; border-radius: 14px; border: 1px solid var(--gray-200);
+            padding: 20px; text-align: center;
+        }
+        .ai-summary-card .ai-card-value {
+            font-size: 28px; font-weight: 800; margin-bottom: 4px;
+        }
+        .ai-summary-card .ai-card-label {
+            font-size: 13px; color: var(--gray-500); font-weight: 500;
+        }
+
+        .ai-section-card {
+            background: #fff; border-radius: 14px; border: 1px solid var(--gray-200);
+            overflow: hidden;
+        }
+        .ai-section-header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 16px 20px; border-bottom: 1px solid var(--gray-100);
+        }
+        .ai-section-title { font-size: 15px; font-weight: 700; color: var(--gray-900); }
+
+        .ai-class-table { width: 100%; border-collapse: collapse; }
+        .ai-class-table th {
+            padding: 12px 16px; font-size: 12px; font-weight: 700; color: var(--gray-500);
+            background: var(--gray-50); text-align: left; border-bottom: 1px solid var(--gray-200);
+        }
+        .ai-class-table td {
+            padding: 12px 16px; font-size: 13px; color: var(--gray-700);
+            border-bottom: 1px solid var(--gray-100);
+        }
+        .ai-class-table tr:last-child td { border-bottom: none; }
+
+        .ai-insight-item {
+            padding: 16px 20px; border-bottom: 1px solid var(--gray-100);
+        }
+        .ai-insight-item:last-child { border-bottom: none; }
+        .ai-insight-tag {
+            display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 8px;
+            border-radius: 6px; margin-right: 8px;
+        }
+        .ai-insight-tag.warning { background: #fef3c7; color: #92400e; }
+        .ai-insight-tag.info { background: var(--blue-light); color: var(--blue); }
+        .ai-insight-tag.success { background: var(--green-light); color: var(--green); }
+        .ai-insight-title { font-size: 14px; font-weight: 600; color: var(--gray-900); margin-bottom: 6px; }
+        .ai-insight-desc { font-size: 13px; color: var(--gray-600); line-height: 1.6; }
+
+        .ai-bar { height: 8px; border-radius: 4px; background: var(--gray-100); overflow: hidden; }
+        .ai-bar-fill { height: 100%; border-radius: 4px; transition: width 0.5s ease; }
+
         .techqa-faq-card {
             background: #fff; border-radius: 14px;
             border: 1px solid var(--gray-200); overflow: hidden;
@@ -1863,8 +1933,23 @@
             <div class="section-page" id="section-techqa">
                 <div class="section-header">
                     <div class="section-title">기술문의</div>
+                    <div style="display:flex;gap:8px;">
+                        <button class="filter-tab active" id="tqTabMain" onclick="switchTechQATab('main')" style="padding:7px 16px;font-size:13px;">문의 관리</button>
+                        <button class="filter-tab" id="tqTabAI" onclick="switchTechQATab('ai')" style="padding:7px 16px;font-size:13px;">AI 분석</button>
+                    </div>
                 </div>
 
+                <!-- 관리자: 미처리 문의 알림 배너 -->
+                <div class="tq-overdue-alert" id="tqOverdueBanner">
+                    <div class="dup-alert-icon">🔔</div>
+                    <div class="dup-alert-content">
+                        <div class="dup-alert-title" style="color:#b91c1c;">미처리 문의 알림 — 영업일 기준 3일 이상 미답변 건이 있습니다</div>
+                        <ul class="dup-alert-list" id="tqOverdueList" style="margin-top:6px;"></ul>
+                    </div>
+                </div>
+
+                <!-- 탭 1: 문의 관리 -->
+                <div id="tqTabMainContent">
                 <div class="techqa-layout">
                     <div class="techqa-left">
                         <button class="comm-new-btn" onclick="openNewTechQAModal()">
@@ -1901,6 +1986,48 @@
                             <div class="empty-icon">📋</div>
                             <div class="empty-title">문의를 선택하세요</div>
                             <div class="empty-desc">왼쪽 목록에서 문의를 클릭하면 상세 내용과 답변을 확인할 수 있습니다.</div>
+                        </div>
+                    </div>
+                </div>
+                </div>
+
+                <!-- 탭 2: AI 분석 (관리자 전용) -->
+                <div id="tqTabAIContent" style="display:none;">
+                    <div class="ai-analysis-panel">
+                        <!-- 상단 요약 카드 -->
+                        <div class="ai-summary-cards" id="aiSummaryCards"></div>
+
+                        <!-- AI 분류 테이블 -->
+                        <div class="ai-section-card">
+                            <div class="ai-section-header">
+                                <div class="ai-section-title">📊 문의 유형별 분류 현황</div>
+                                <button class="btn btn-primary btn-sm" onclick="runAIAnalysis()" style="padding:6px 16px;">
+                                    🤖 AI 분석 실행
+                                </button>
+                            </div>
+                            <div id="aiClassificationBody"></div>
+                        </div>
+
+                        <!-- AI 인사이트 & 추천 -->
+                        <div class="ai-section-card">
+                            <div class="ai-section-header">
+                                <div class="ai-section-title">💡 AI 인사이트 & 개선 피드백</div>
+                            </div>
+                            <div id="aiInsightsBody">
+                                <div class="empty-state" style="padding:40px;">
+                                    <div class="empty-icon">🤖</div>
+                                    <div class="empty-title">AI 분석을 실행해주세요</div>
+                                    <div class="empty-desc">상단의 'AI 분석 실행' 버튼을 클릭하면 문의 데이터를 분석합니다.</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 자주 발생하는 문의 패턴 -->
+                        <div class="ai-section-card">
+                            <div class="ai-section-header">
+                                <div class="ai-section-title">🔁 반복 문의 패턴</div>
+                            </div>
+                            <div id="aiPatternsBody"></div>
                         </div>
                     </div>
                 </div>
@@ -2770,8 +2897,11 @@ function initDashboard() {
     if (isAdmin) {
         document.getElementById('ssCompanyFilter').style.display = 'block';
         checkDuplicates();
+        checkOverdueTechQAs();
     } else {
         document.getElementById('dupAlertBanner').classList.remove('show');
+        // AI 분석 탭은 관리자만 표시
+        document.getElementById('tqTabAI').style.display = 'none';
     }
 }
 
@@ -4288,6 +4418,7 @@ function submitTechReply(id) {
     renderTechQAList();
     showTechQADetail(id);
     updateBadges();
+    checkOverdueTechQAs();
     showToast('기술 답변이 저장되었습니다.', 'success');
 }
 
@@ -4301,6 +4432,7 @@ function markTechQADone(id) {
     renderTechQAList();
     showTechQADetail(id);
     updateBadges();
+    checkOverdueTechQAs();
     showToast('기술 문의가 완료 처리되었습니다.', 'success');
 }
 
@@ -4321,6 +4453,228 @@ function renderFAQ() {
 
 function toggleFAQ(i) {
     document.getElementById(`faq_${i}`).classList.toggle('open');
+}
+
+// ========== TECH QA: 탭 전환 ==========
+function switchTechQATab(tab) {
+    document.getElementById('tqTabMain').classList.toggle('active', tab === 'main');
+    document.getElementById('tqTabAI').classList.toggle('active', tab === 'ai');
+    document.getElementById('tqTabMainContent').style.display = tab === 'main' ? 'block' : 'none';
+    document.getElementById('tqTabAIContent').style.display = tab === 'ai' ? 'block' : 'none';
+    if (tab === 'ai') renderAISummary();
+}
+
+// ========== TECH QA: 미처리 알림 (영업일 3일) ==========
+function getBusinessDaysAgo(date, days) {
+    const d = new Date(date);
+    let count = 0;
+    while (count < days) {
+        d.setDate(d.getDate() - 1);
+        const dow = d.getDay();
+        if (dow !== 0 && dow !== 6) count++;
+    }
+    return d;
+}
+
+function checkOverdueTechQAs() {
+    if (!isAdmin) {
+        const banner = document.getElementById('tqOverdueBanner');
+        if (banner) banner.classList.remove('show');
+        return;
+    }
+    const now = new Date();
+    const threshold = getBusinessDaysAgo(now, 3);
+    const overdue = techQAs.filter(qa => {
+        if (qa.status === 'done') return false;
+        if (qa.reply) return false; // 답변이 있으면 미처리가 아님
+        const parts = qa.createdAt.replace(/\./g, '-').split('-');
+        const created = new Date(parts[0], parts[1] - 1, parts[2]);
+        return created <= threshold;
+    });
+
+    const banner = document.getElementById('tqOverdueBanner');
+    const list = document.getElementById('tqOverdueList');
+    if (overdue.length > 0) {
+        banner.classList.add('show');
+        list.innerHTML = overdue.map(qa => {
+            const co = companies[qa.companyId]?.name || qa.companyName || '';
+            return `<li><strong>${qa.title}</strong> &nbsp;— ${co} (${qa.createdAt} 접수)</li>`;
+        }).join('');
+    } else {
+        banner.classList.remove('show');
+    }
+}
+
+// ========== TECH QA: AI 분석 ==========
+function renderAISummary() {
+    const total = techQAs.length;
+    const receiving = techQAs.filter(t => t.status === 'receiving').length;
+    const processing = techQAs.filter(t => t.status === 'processing').length;
+    const done = techQAs.filter(t => t.status === 'done').length;
+
+    document.getElementById('aiSummaryCards').innerHTML = `
+        <div class="ai-summary-card">
+            <div class="ai-card-value" style="color:var(--gray-900);">${total}</div>
+            <div class="ai-card-label">전체 문의</div>
+        </div>
+        <div class="ai-summary-card">
+            <div class="ai-card-value" style="color:var(--orange);">${receiving}</div>
+            <div class="ai-card-label">접수 대기</div>
+        </div>
+        <div class="ai-summary-card">
+            <div class="ai-card-value" style="color:var(--blue);">${processing}</div>
+            <div class="ai-card-label">처리 중</div>
+        </div>
+        <div class="ai-summary-card">
+            <div class="ai-card-value" style="color:var(--green);">${done}</div>
+            <div class="ai-card-label">완료</div>
+        </div>
+    `;
+
+    // 분류 테이블 기본 렌더링
+    renderAIClassification();
+    renderAIPatterns();
+}
+
+function renderAIClassification() {
+    const typeIcons = { 시공:'🔨', 자재:'🧪', 하자:'⚠️', 품질:'✅', 안전:'🦺', 기타:'💬' };
+    const types = ['시공', '자재', '하자', '품질', '안전', '기타'];
+    const total = techQAs.length || 1;
+
+    const rows = types.map(type => {
+        const items = techQAs.filter(t => t.type === type);
+        const cnt = items.length;
+        const pct = Math.round((cnt / total) * 100);
+        const doneCount = items.filter(t => t.status === 'done').length;
+        const avgStr = cnt > 0 ? `${doneCount}/${cnt} 완료` : '-';
+        const colors = { 시공:'var(--blue)', 자재:'var(--purple)', 하자:'var(--orange)', 품질:'var(--green)', 안전:'#b45309', 기타:'var(--gray-500)' };
+        return `<tr>
+            <td>${typeIcons[type]} ${type}</td>
+            <td><strong>${cnt}</strong>건</td>
+            <td>
+                <div class="ai-bar" style="width:120px;display:inline-block;vertical-align:middle;">
+                    <div class="ai-bar-fill" style="width:${pct}%;background:${colors[type]};"></div>
+                </div>
+                <span style="margin-left:8px;font-size:12px;color:var(--gray-400);">${pct}%</span>
+            </td>
+            <td>${avgStr}</td>
+        </tr>`;
+    }).join('');
+
+    document.getElementById('aiClassificationBody').innerHTML = `
+        <table class="ai-class-table">
+            <thead><tr><th>유형</th><th>건수</th><th>비율</th><th>처리현황</th></tr></thead>
+            <tbody>${rows}</tbody>
+        </table>
+    `;
+}
+
+function renderAIPatterns() {
+    const body = document.getElementById('aiPatternsBody');
+    if (techQAs.length < 2) {
+        body.innerHTML = '<div style="padding:30px;text-align:center;font-size:13px;color:var(--gray-400);">분석할 데이터가 부족합니다.</div>';
+        return;
+    }
+    // 키워드 빈도 분석
+    const keywords = {};
+    const stopwords = new Set(['및','의','에','를','을','이','가','은','는','로','에서','등','후','시','수','있','합니다','것','됩니다','입니다']);
+    techQAs.forEach(qa => {
+        const words = (qa.title + ' ' + qa.content).replace(/[^가-힣a-zA-Z0-9\s]/g, '').split(/\s+/);
+        words.forEach(w => {
+            if (w.length >= 2 && !stopwords.has(w)) {
+                keywords[w] = (keywords[w] || 0) + 1;
+            }
+        });
+    });
+    const sorted = Object.entries(keywords).sort((a, b) => b[1] - a[1]).slice(0, 10);
+    const maxCnt = sorted[0]?.[1] || 1;
+
+    body.innerHTML = `
+        <div style="padding:20px;">
+            <div style="font-size:13px;color:var(--gray-500);margin-bottom:14px;">자주 언급되는 키워드 TOP 10</div>
+            ${sorted.map(([word, cnt]) => `
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
+                    <span style="min-width:80px;font-size:13px;font-weight:600;color:var(--gray-700);">${word}</span>
+                    <div class="ai-bar" style="flex:1;">
+                        <div class="ai-bar-fill" style="width:${Math.round(cnt / maxCnt * 100)}%;background:var(--blue);"></div>
+                    </div>
+                    <span style="font-size:12px;color:var(--gray-400);min-width:30px;text-align:right;">${cnt}회</span>
+                </div>
+            `).join('')}
+        </div>
+    `;
+}
+
+function runAIAnalysis() {
+    const btn = event.target;
+    btn.disabled = true;
+    btn.textContent = '🤖 분석 중...';
+
+    setTimeout(() => {
+        renderAISummary();
+
+        // AI 인사이트 생성
+        const receiving = techQAs.filter(t => t.status === 'receiving');
+        const typeCount = {};
+        techQAs.forEach(t => { typeCount[t.type] = (typeCount[t.type] || 0) + 1; });
+        const topType = Object.entries(typeCount).sort((a, b) => b[1] - a[1])[0];
+
+        const companyCount = {};
+        techQAs.forEach(t => {
+            const name = companies[t.companyId]?.name || '기타';
+            companyCount[name] = (companyCount[name] || 0) + 1;
+        });
+        const topCompany = Object.entries(companyCount).sort((a, b) => b[1] - a[1])[0];
+
+        const insights = [];
+
+        if (receiving.length > 0) {
+            insights.push({
+                tag: 'warning', tagLabel: '주의',
+                title: `미답변 문의 ${receiving.length}건 대기 중`,
+                desc: `현재 접수 후 답변되지 않은 문의가 ${receiving.length}건 있습니다. 신속한 답변이 시공사 만족도 향상에 중요합니다.`
+            });
+        }
+
+        if (topType) {
+            insights.push({
+                tag: 'info', tagLabel: '분석',
+                title: `'${topType[0]}' 유형 문의가 가장 많습니다 (${topType[1]}건)`,
+                desc: `전체 문의의 ${Math.round(topType[1] / techQAs.length * 100)}%가 '${topType[0]}' 관련입니다. 해당 분야의 FAQ를 보강하면 문의 감소 효과를 기대할 수 있습니다.`
+            });
+        }
+
+        if (topCompany) {
+            insights.push({
+                tag: 'info', tagLabel: '분석',
+                title: `${topCompany[0]}에서 가장 많은 문의 발생 (${topCompany[1]}건)`,
+                desc: `해당 시공사의 주요 문의 패턴을 파악하여 선제적 기술 지원을 제공하면 효과적입니다.`
+            });
+        }
+
+        const done = techQAs.filter(t => t.status === 'done').length;
+        if (done > 0) {
+            insights.push({
+                tag: 'success', tagLabel: '성과',
+                title: `문의 처리 완료율 ${Math.round(done / techQAs.length * 100)}%`,
+                desc: `총 ${techQAs.length}건 중 ${done}건이 완료되었습니다. 완료된 답변 데이터는 자동으로 FAQ 후보로 활용됩니다.`
+            });
+        }
+
+        document.getElementById('aiInsightsBody').innerHTML = insights.map(i => `
+            <div class="ai-insight-item">
+                <div class="ai-insight-title">
+                    <span class="ai-insight-tag ${i.tag}">${i.tagLabel}</span>
+                    ${i.title}
+                </div>
+                <div class="ai-insight-desc">${i.desc}</div>
+            </div>
+        `).join('');
+
+        btn.disabled = false;
+        btn.textContent = '🤖 AI 분석 실행';
+        showToast('AI 분석이 완료되었습니다.', 'success');
+    }, 1200);
 }
 
 // ========== TOAST ==========
