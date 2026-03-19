@@ -4117,9 +4117,10 @@ function checkDuplicates() {
         listEl.innerHTML = unconfirmedDups.map(d => {
             const names = d.entries.map(e => {
                 const co = companies[e.companyId]?.name || '-';
-                return `${e.building}(${co})`;
+                return `${e.scope}(${co})`;
             }).join(', ');
-            return `<li><strong>${d.address}</strong> &nbsp;— ${names}</li>`;
+            const building = d.entries[0]?.building || '-';
+            return `<li><strong>${building}</strong> &nbsp;/ ${d.address} &nbsp;/ ${names}</li>`;
         }).join('');
     } else {
         banner.classList.remove('show');
