@@ -1437,8 +1437,10 @@
         }
         loadScript('https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js', function() {
             loadScript('https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js', function() {
-                window._firebaseSDKReady = true;
-                if (typeof initFirebase === 'function') initFirebase();
+                loadScript('https://www.gstatic.com/firebasejs/9.22.2/firebase-storage-compat.js', function() {
+                    window._firebaseSDKReady = true;
+                    if (typeof initFirebase === 'function') initFirebase();
+                });
             });
         });
     })();
@@ -1584,6 +1586,16 @@
                 <span class="nav-item-icon">🔧</span>
                 <span class="nav-item-text">기술문의</span>
                 <span class="nav-badge" id="techBadge" style="display:none">0</span>
+            </div>
+
+            <div class="nav-section-label" style="margin-top: 8px;">업무</div>
+            <div class="nav-item" data-section="orders" onclick="switchSection('orders')">
+                <span class="nav-item-icon">📦</span>
+                <span class="nav-item-text">자재발주</span>
+            </div>
+            <div class="nav-item" data-section="forms" onclick="switchSection('forms')">
+                <span class="nav-item-icon">📋</span>
+                <span class="nav-item-text">각종양식</span>
             </div>
 
             <div class="nav-section-label" style="margin-top: 8px;">설정</div>
@@ -2001,6 +2013,48 @@
                             </div>
                             <div id="aiPatternsBody"></div>
                         </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ========== ORDERS (자재발주) ========== -->
+            <div class="section-page" id="section-orders">
+                <div class="section-header">
+                    <div class="section-title">자재발주</div>
+                </div>
+                <div class="card" style="padding:32px;">
+                    <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+                        <span style="font-size:28px;">📦</span>
+                        <div>
+                            <div style="font-size:16px;font-weight:600;color:var(--gray-900);">POUR공법 자재 단가표</div>
+                            <div style="font-size:13px;color:var(--gray-500);">자재 발주 시 아래 단가표를 참고하세요.</div>
+                        </div>
+                    </div>
+                    <a href="file:///C:/Users/Administrator/Downloads/POUR_%EB%8B%A8%EA%B0%80%ED%91%9C_v10.html" target="_blank" style="display:inline-flex;align-items:center;gap:8px;padding:12px 24px;background:var(--primary);color:#fff;border-radius:8px;font-size:14px;font-weight:600;text-decoration:none;cursor:pointer;">
+                        📄 단가표 열기 (POUR_단가표_v10)
+                    </a>
+                </div>
+            </div>
+
+            <!-- ========== FORMS (각종양식) ========== -->
+            <div class="section-page" id="section-forms">
+                <div class="section-header">
+                    <div class="section-title">각종양식</div>
+                    <div>
+                        <button class="btn btn-primary btn-sm admin-only" onclick="openFormUploadModal()">📤 양식 업로드</button>
+                    </div>
+                </div>
+
+                <div class="form-category-tabs" style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;">
+                    <button class="filter-tab active" data-formcat="all" onclick="filterFormFiles(this,'all')" style="padding:6px 14px;font-size:13px;">전체</button>
+                    <button class="filter-tab" data-formcat="agreement" onclick="filterFormFiles(this,'agreement')" style="padding:6px 14px;font-size:13px;">📝 협약서 요청서식</button>
+                    <button class="filter-tab" data-formcat="unitprice" onclick="filterFormFiles(this,'unitprice')" style="padding:6px 14px;font-size:13px;">📊 일위대가</button>
+                    <button class="filter-tab" data-formcat="pricelist" onclick="filterFormFiles(this,'pricelist')" style="padding:6px 14px;font-size:13px;">💰 단가표</button>
+                </div>
+
+                <div id="formFileGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;">
+                    <div class="card" style="padding:40px;text-align:center;grid-column:1/-1;">
+                        <div style="color:var(--gray-400);font-size:14px;">등록된 양식이 없습니다.</div>
                     </div>
                 </div>
             </div>
@@ -2496,6 +2550,63 @@
     </div>
 </div>
 
+<!-- Form File Upload Modal -->
+<div class="modal-overlay" id="formUploadModal">
+    <div class="modal">
+        <div class="modal-header">
+            <div class="modal-title">📤 양식 파일 업로드</div>
+            <button class="modal-close" onclick="closeModal('formUploadModal')">×</button>
+        </div>
+        <div class="modal-body">
+            <form class="modal-form" id="formUploadForm" onsubmit="handleFormFileUpload(event)">
+                <div class="form-group">
+                    <label class="form-label">파일명 (표시용)</label>
+                    <input type="text" class="form-input" id="formFileName" required placeholder="예: POUR공법 협약서 요청서식 v2">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">분류</label>
+                    <select class="form-select" id="formFileCat" required>
+                        <option value="agreement">📝 협약서 요청서식</option>
+                        <option value="unitprice">📊 일위대가</option>
+                        <option value="pricelist">💰 단가표</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">설명 (선택)</label>
+                    <input type="text" class="form-input" id="formFileDesc" placeholder="간단한 설명">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">파일 첨부</label>
+                    <div class="file-upload-area" id="formFileUploadArea">
+                        <label class="file-upload-placeholder" for="formFileInput" style="cursor:pointer;">
+                            <div class="file-upload-icon">📎</div>
+                            <div class="file-upload-text">클릭하여 파일 선택</div>
+                            <div class="file-upload-hint">HWP, PDF, Excel, Word, ZIP 등 모든 형식 지원</div>
+                        </label>
+                        <input type="file" id="formFileInput" style="display:none" onchange="handleFormFileSelect(event)">
+                    </div>
+                    <div id="formFileSelected" style="display:none;align-items:center;gap:8px;padding:10px 14px;background:var(--gray-50);border-radius:8px;margin-top:8px;">
+                        <span>📄</span>
+                        <span id="formFileSelectedName" style="flex:1;font-size:13px;color:var(--gray-700);"></span>
+                        <span id="formFileSelectedSize" style="font-size:12px;color:var(--gray-400);margin-right:8px;"></span>
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="removeFormFile()" style="padding:4px 10px;font-size:12px;">✕</button>
+                    </div>
+                </div>
+                <div id="formUploadProgress" style="display:none;margin-top:8px;">
+                    <div style="font-size:13px;color:var(--gray-600);margin-bottom:6px;">업로드 중... <span id="formUploadPercent">0</span>%</div>
+                    <div style="height:6px;background:var(--gray-100);border-radius:3px;overflow:hidden;">
+                        <div id="formUploadBar" style="height:100%;width:0%;background:var(--primary);border-radius:3px;transition:width 0.3s;"></div>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeModal('formUploadModal')">취소</button>
+            <button class="btn btn-primary" id="formUploadSubmitBtn" onclick="document.getElementById('formUploadForm').requestSubmit()">업로드</button>
+        </div>
+    </div>
+</div>
+
 <!-- Toast -->
 <div class="toast" id="toast"></div>
 
@@ -2812,6 +2923,8 @@ const sectionTitles = {
     comm: ['소통 창구', '요청, 문의 및 공지사항'],
     salesites: ['기술사용등록', 'POUR공법 기술 사용 단지 목록'],
     techqa: ['기술문의', 'POUR공법 기술 지원 및 Q&A'],
+    orders: ['자재발주', '자재 발주 및 입고 관리'],
+    forms: ['각종양식', '업무 양식 다운로드'],
     myinfo: ['내 정보', '회사 정보 및 계정 설정'],
 };
 
@@ -2821,6 +2934,159 @@ function switchSection(name) {
     document.querySelectorAll('.nav-item').forEach(item => item.classList.toggle('active', item.dataset.section === name));
     document.getElementById('topbarTitle').textContent = sectionTitles[name][0];
     document.getElementById('topbarSubtitle').textContent = sectionTitles[name][1];
+}
+
+// ========== FORMS (각종양식) 파일 관리 ==========
+let selectedFormFile = null;
+let currentFormCat = 'all';
+const formCatLabels = { agreement: '협약서 요청서식', unitprice: '일위대가', pricelist: '단가표' };
+const formCatIcons = { agreement: '📝', unitprice: '📊', pricelist: '💰' };
+
+function openFormUploadModal() {
+    document.getElementById('formUploadModal').classList.add('active');
+    document.getElementById('formUploadForm').reset();
+    removeFormFile();
+    document.getElementById('formUploadProgress').style.display = 'none';
+    document.getElementById('formUploadSubmitBtn').disabled = false;
+}
+
+function handleFormFileSelect(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    selectedFormFile = file;
+    document.getElementById('formFileSelected').style.display = 'flex';
+    document.getElementById('formFileSelectedName').textContent = file.name;
+    const sizeMB = (file.size / 1024 / 1024).toFixed(1);
+    document.getElementById('formFileSelectedSize').textContent = sizeMB + 'MB';
+    document.getElementById('formFileUploadArea').style.display = 'none';
+}
+
+function removeFormFile() {
+    selectedFormFile = null;
+    document.getElementById('formFileSelected').style.display = 'none';
+    document.getElementById('formFileUploadArea').style.display = 'block';
+    document.getElementById('formFileInput').value = '';
+}
+
+async function handleFormFileUpload(e) {
+    e.preventDefault();
+    if (!selectedFormFile) { showToast('파일을 선택해주세요.', 'error'); return; }
+    if (!storage || !db) { showToast('Firebase가 아직 연결되지 않았습니다.', 'error'); return; }
+
+    const name = document.getElementById('formFileName').value.trim();
+    const cat = document.getElementById('formFileCat').value;
+    const desc = document.getElementById('formFileDesc').value.trim();
+    const file = selectedFormFile;
+
+    document.getElementById('formUploadSubmitBtn').disabled = true;
+    document.getElementById('formUploadProgress').style.display = 'block';
+
+    const timestamp = Date.now();
+    const safeName = file.name.replace(/[^a-zA-Z0-9가-힣._-]/g, '_');
+    const storagePath = 'forms/' + timestamp + '_' + safeName;
+    const ref = storage.ref(storagePath);
+
+    const uploadTask = ref.put(file);
+    uploadTask.on('state_changed',
+        function(snapshot) {
+            const pct = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
+            document.getElementById('formUploadPercent').textContent = pct;
+            document.getElementById('formUploadBar').style.width = pct + '%';
+        },
+        function(error) {
+            console.error('[Forms] 업로드 실패:', error);
+            showToast('파일 업로드에 실패했습니다: ' + error.message, 'error');
+            document.getElementById('formUploadSubmitBtn').disabled = false;
+            document.getElementById('formUploadProgress').style.display = 'none';
+        },
+        async function() {
+            const downloadURL = await uploadTask.snapshot.ref.getDownloadURL();
+            const sizeMB = (file.size / 1024 / 1024).toFixed(1) + 'MB';
+            const docData = {
+                name: name,
+                category: cat,
+                desc: desc,
+                fileName: file.name,
+                storagePath: storagePath,
+                downloadURL: downloadURL,
+                size: sizeMB,
+                uploadDate: new Date().toLocaleDateString('ko-KR').replace(/\. /g, '.').replace(/\.$/, ''),
+                uploadedBy: currentUser ? currentUser.name : '관리자',
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            };
+            await db.collection('formFiles').add(docData);
+            closeModal('formUploadModal');
+            showToast(name + ' 파일이 업로드되었습니다.', 'success');
+            document.getElementById('formUploadSubmitBtn').disabled = false;
+            document.getElementById('formUploadProgress').style.display = 'none';
+        }
+    );
+}
+
+function filterFormFiles(btn, cat) {
+    currentFormCat = cat;
+    document.querySelectorAll('[data-formcat]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderFormFiles();
+}
+
+let _formFiles = [];
+
+function attachFormFilesListener() {
+    if (!db) return;
+    const unsub = db.collection('formFiles').orderBy('createdAt', 'desc').onSnapshot(function(snap) {
+        _formFiles = [];
+        snap.forEach(function(doc) { _formFiles.push({ id: doc.id, ...doc.data() }); });
+        renderFormFiles();
+    }, function(err) {
+        console.error('[Forms] 리스너 오류:', err);
+    });
+    _unsubs.push(unsub);
+}
+
+function renderFormFiles() {
+    const filtered = currentFormCat === 'all' ? _formFiles : _formFiles.filter(f => f.category === currentFormCat);
+    const grid = document.getElementById('formFileGrid');
+    if (!filtered.length) {
+        grid.innerHTML = '<div class="card" style="padding:40px;text-align:center;grid-column:1/-1;"><div style="color:var(--gray-400);font-size:14px;">등록된 양식이 없습니다.</div></div>';
+        return;
+    }
+    grid.innerHTML = filtered.map(function(f) {
+        const icon = formCatIcons[f.category] || '📄';
+        const label = formCatLabels[f.category] || f.category;
+        const ext = f.fileName ? f.fileName.split('.').pop().toUpperCase() : '';
+        const deleteBtn = isAdmin
+            ? '<button class="btn btn-secondary btn-sm" onclick="deleteFormFile(\'' + f.id + '\',\'' + f.storagePath.replace(/'/g, "\\'") + '\',\'' + f.name.replace(/'/g, "\\'") + '\')" style="padding:4px 10px;font-size:12px;color:#dc2626;">🗑 삭제</button>'
+            : '';
+        return '<div class="card" style="padding:20px;">' +
+            '<div style="display:flex;align-items:flex-start;gap:14px;">' +
+                '<div style="width:48px;height:48px;border-radius:10px;background:var(--gray-50);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;">' + icon + '</div>' +
+                '<div style="flex:1;min-width:0;">' +
+                    '<div style="font-size:15px;font-weight:600;color:var(--gray-900);margin-bottom:2px;word-break:break-word;">' + f.name + '</div>' +
+                    '<div style="font-size:12px;color:var(--gray-400);margin-bottom:6px;">' + label + ' · ' + ext + ' · ' + (f.size || '-') + ' · ' + (f.uploadDate || '') + '</div>' +
+                    (f.desc ? '<div style="font-size:13px;color:var(--gray-500);margin-bottom:10px;">' + f.desc + '</div>' : '') +
+                    '<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">' +
+                        '<a href="' + f.downloadURL + '" target="_blank" download="' + (f.fileName || '') + '" class="btn btn-primary btn-sm" style="padding:6px 14px;font-size:13px;text-decoration:none;">📥 다운로드</a>' +
+                        deleteBtn +
+                    '</div>' +
+                '</div>' +
+            '</div>' +
+        '</div>';
+    }).join('');
+}
+
+async function deleteFormFile(docId, storagePath, name) {
+    if (!confirm('"' + name + '" 파일을 삭제하시겠습니까?\n삭제된 파일은 복구할 수 없습니다.')) return;
+    try {
+        await storage.ref(storagePath).delete();
+    } catch(e) { console.warn('Storage 삭제 실패 (이미 없을 수 있음):', e); }
+    try {
+        await db.collection('formFiles').doc(docId).delete();
+        showToast(name + ' 파일이 삭제되었습니다.', 'success');
+    } catch(e) {
+        console.error('Firestore 삭제 실패:', e);
+        showToast('삭제에 실패했습니다.', 'error');
+    }
 }
 
 // ========== HOME ==========
@@ -4540,6 +4806,7 @@ const FIREBASE_CONFIG = {
 };
 
 let db = null;
+let storage = null;
 let _fbReady = false;
 const _unsubs = [];   // 실시간 리스너 해제용
 
@@ -4564,6 +4831,7 @@ function initFirebase() {
     try {
         if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
         db = firebase.firestore();
+        storage = firebase.storage();
 
         // 연결 테스트: 실제 쓰기 권한 확인
         db.collection('_ping').doc('test').set({ t: Date.now() })
@@ -4667,6 +4935,8 @@ function attachListeners() {
             renderHome();
         }, err => console.error('[Firebase] sites 리스너 오류:', err))
     );
+
+    attachFormFilesListener();
 }
 
 function updateBadges() {
