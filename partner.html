@@ -2971,56 +2971,68 @@ function removeFormFile() {
 async function handleFormFileUpload(e) {
     e.preventDefault();
     if (!selectedFormFile) { showToast('파일을 선택해주세요.', 'error'); return; }
-    if (!storage || !db) { showToast('Firebase가 아직 연결되지 않았습니다.', 'error'); return; }
+    if (!db) { showToast('Firebase가 아직 연결되지 않았습니다.', 'error'); return; }
+
+    const file = selectedFormFile;
+    const MAX_SIZE = 20 * 1024 * 1024; // 20MB
+    if (file.size > MAX_SIZE) { showToast('파일 크기가 20MB를 초과합니다.', 'error'); return; }
 
     const name = document.getElementById('formFileName').value.trim();
     const cat = document.getElementById('formFileCat').value;
     const desc = document.getElementById('formFileDesc').value.trim();
-    const file = selectedFormFile;
 
     document.getElementById('formUploadSubmitBtn').disabled = true;
     document.getElementById('formUploadProgress').style.display = 'block';
+    document.getElementById('formUploadPercent').textContent = '0';
+    document.getElementById('formUploadBar').style.width = '0%';
 
-    const timestamp = Date.now();
-    const safeName = file.name.replace(/[^a-zA-Z0-9가-힣._-]/g, '_');
-    const storagePath = 'forms/' + timestamp + '_' + safeName;
-    const ref = storage.ref(storagePath);
+    try {
+        // 파일을 Base64로 변환
+        document.getElementById('formUploadPercent').textContent = '30';
+        document.getElementById('formUploadBar').style.width = '30%';
 
-    const uploadTask = ref.put(file);
-    uploadTask.on('state_changed',
-        function(snapshot) {
-            const pct = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
-            document.getElementById('formUploadPercent').textContent = pct;
-            document.getElementById('formUploadBar').style.width = pct + '%';
-        },
-        function(error) {
-            console.error('[Forms] 업로드 실패:', error);
-            showToast('파일 업로드에 실패했습니다: ' + error.message, 'error');
-            document.getElementById('formUploadSubmitBtn').disabled = false;
-            document.getElementById('formUploadProgress').style.display = 'none';
-        },
-        async function() {
-            const downloadURL = await uploadTask.snapshot.ref.getDownloadURL();
-            const sizeMB = (file.size / 1024 / 1024).toFixed(1) + 'MB';
-            const docData = {
-                name: name,
-                category: cat,
-                desc: desc,
-                fileName: file.name,
-                storagePath: storagePath,
-                downloadURL: downloadURL,
-                size: sizeMB,
-                uploadDate: new Date().toLocaleDateString('ko-KR').replace(/\. /g, '.').replace(/\.$/, ''),
-                uploadedBy: currentUser ? currentUser.name : '관리자',
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
-            };
-            await db.collection('formFiles').add(docData);
-            closeModal('formUploadModal');
-            showToast(name + ' 파일이 업로드되었습니다.', 'success');
-            document.getElementById('formUploadSubmitBtn').disabled = false;
-            document.getElementById('formUploadProgress').style.display = 'none';
-        }
-    );
+        const base64Data = await fileToBase64(file);
+
+        document.getElementById('formUploadPercent').textContent = '60';
+        document.getElementById('formUploadBar').style.width = '60%';
+
+        const sizeMB = (file.size / 1024 / 1024).toFixed(1) + 'MB';
+        const docData = {
+            name: name,
+            category: cat,
+            desc: desc,
+            fileName: file.name,
+            fileData: base64Data,
+            mimeType: file.type || 'application/octet-stream',
+            size: sizeMB,
+            uploadDate: new Date().toLocaleDateString('ko-KR').replace(/\. /g, '.').replace(/\.$/, ''),
+            uploadedBy: currentUser ? currentUser.name : '관리자',
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        };
+
+        await db.collection('formFiles').add(docData);
+
+        document.getElementById('formUploadPercent').textContent = '100';
+        document.getElementById('formUploadBar').style.width = '100%';
+
+        closeModal('formUploadModal');
+        showToast(name + ' 파일이 업로드되었습니다.', 'success');
+    } catch (error) {
+        console.error('[Forms] 업로드 실패:', error);
+        showToast('파일 업로드에 실패했습니다: ' + error.message, 'error');
+    } finally {
+        document.getElementById('formUploadSubmitBtn').disabled = false;
+        document.getElementById('formUploadProgress').style.display = 'none';
+    }
+}
+
+function fileToBase64(file) {
+    return new Promise(function(resolve, reject) {
+        const reader = new FileReader();
+        reader.onload = function() { resolve(reader.result); };
+        reader.onerror = function() { reject(new Error('파일 읽기 실패')); };
+        reader.readAsDataURL(file);
+    });
 }
 
 function filterFormFiles(btn, cat) {
@@ -3056,7 +3068,7 @@ function renderFormFiles() {
         const label = formCatLabels[f.category] || f.category;
         const ext = f.fileName ? f.fileName.split('.').pop().toUpperCase() : '';
         const deleteBtn = isAdmin
-            ? '<button class="btn btn-secondary btn-sm" onclick="deleteFormFile(\'' + f.id + '\',\'' + f.storagePath.replace(/'/g, "\\'") + '\',\'' + f.name.replace(/'/g, "\\'") + '\')" style="padding:4px 10px;font-size:12px;color:#dc2626;">🗑 삭제</button>'
+            ? '<button class="btn btn-secondary btn-sm" onclick="deleteFormFile(\'' + f.id + '\',\'' + f.name.replace(/'/g, "\\'") + '\')" style="padding:4px 10px;font-size:12px;color:#dc2626;">🗑 삭제</button>'
             : '';
         return '<div class="card" style="padding:20px;">' +
             '<div style="display:flex;align-items:flex-start;gap:14px;">' +
@@ -3066,7 +3078,7 @@ function renderFormFiles() {
                     '<div style="font-size:12px;color:var(--gray-400);margin-bottom:6px;">' + label + ' · ' + ext + ' · ' + (f.size || '-') + ' · ' + (f.uploadDate || '') + '</div>' +
                     (f.desc ? '<div style="font-size:13px;color:var(--gray-500);margin-bottom:10px;">' + f.desc + '</div>' : '') +
                     '<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">' +
-                        '<a href="' + f.downloadURL + '" target="_blank" download="' + (f.fileName || '') + '" class="btn btn-primary btn-sm" style="padding:6px 14px;font-size:13px;text-decoration:none;">📥 다운로드</a>' +
+                        '<button onclick="downloadFormFile(\'' + f.id + '\')" class="btn btn-primary btn-sm" style="padding:6px 14px;font-size:13px;">📥 다운로드</button>' +
                         deleteBtn +
                     '</div>' +
                 '</div>' +
@@ -3075,11 +3087,20 @@ function renderFormFiles() {
     }).join('');
 }
 
-async function deleteFormFile(docId, storagePath, name) {
+function downloadFormFile(docId) {
+    const f = _formFiles.find(function(x) { return x.id === docId; });
+    if (!f || !f.fileData) { showToast('파일 데이터를 찾을 수 없습니다.', 'error'); return; }
+    const link = document.createElement('a');
+    link.href = f.fileData;
+    link.download = f.fileName || f.name;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    showToast(f.fileName + ' 다운로드를 시작합니다.', 'success');
+}
+
+async function deleteFormFile(docId, name) {
     if (!confirm('"' + name + '" 파일을 삭제하시겠습니까?\n삭제된 파일은 복구할 수 없습니다.')) return;
-    try {
-        await storage.ref(storagePath).delete();
-    } catch(e) { console.warn('Storage 삭제 실패 (이미 없을 수 있음):', e); }
     try {
         await db.collection('formFiles').doc(docId).delete();
         showToast(name + ' 파일이 삭제되었습니다.', 'success');
