@@ -1564,22 +1564,26 @@
                 <span class="nav-item-text">홈</span>
             </div>
 
-            <div class="nav-section-label" style="margin-top: 8px;">영업 & 현장</div>
+            <div class="nav-section-label" style="margin-top: 8px;">현장</div>
             <div class="nav-item" data-section="sites" onclick="switchSection('sites')">
                 <span class="nav-item-icon">🏗️</span>
                 <span class="nav-item-text">현장 관리</span>
             </div>
-
-            <div class="nav-section-label" style="margin-top: 8px;">자료 & 소통</div>
-            <div class="nav-item" data-section="docs" onclick="switchSection('docs')">
-                <span class="nav-item-icon">📁</span>
-                <span class="nav-item-text">자료실</span>
-            </div>
-
             <div class="nav-item" data-section="salesites" onclick="switchSection('salesites')">
                 <span class="nav-item-icon">📍</span>
                 <span class="nav-item-text">기술사용등록</span>
                 <span class="nav-badge" id="dupBadge" style="display:none">!</span>
+            </div>
+            <div class="nav-item" data-section="ptrequest" onclick="switchSection('ptrequest')">
+                <span class="nav-item-icon">🎤</span>
+                <span class="nav-item-text">PT요청</span>
+                <span class="nav-badge" id="ptBadge" style="display:none">0</span>
+            </div>
+
+            <div class="nav-section-label" style="margin-top: 8px;">업무</div>
+            <div class="nav-item" onclick="openMaterialCalcPage()">
+                <span class="nav-item-icon">📦</span>
+                <span class="nav-item-text">자재발주 및 소모량 계산</span>
             </div>
             <div class="nav-item" data-section="techqa" onclick="switchSection('techqa')">
                 <span class="nav-item-icon">🔧</span>
@@ -1592,19 +1596,14 @@
                 <span class="nav-badge" id="unreadBadge" style="display:none">2</span>
             </div>
 
-            <div class="nav-section-label" style="margin-top: 8px;">업무</div>
-            <div class="nav-item" onclick="openMaterialCalcPage()">
-                <span class="nav-item-icon">📦</span>
-                <span class="nav-item-text">자재발주 및 소모량 계산</span>
+            <div class="nav-section-label" style="margin-top: 8px;">자료</div>
+            <div class="nav-item" data-section="docs" onclick="switchSection('docs')">
+                <span class="nav-item-icon">📁</span>
+                <span class="nav-item-text">자료실</span>
             </div>
             <div class="nav-item" data-section="forms" onclick="switchSection('forms')">
                 <span class="nav-item-icon">📋</span>
                 <span class="nav-item-text">각종양식</span>
-            </div>
-            <div class="nav-item" data-section="ptrequest" onclick="switchSection('ptrequest')">
-                <span class="nav-item-icon">🎤</span>
-                <span class="nav-item-text">PT요청</span>
-                <span class="nav-badge" id="ptBadge" style="display:none">0</span>
             </div>
 
             <div class="nav-section-label" style="margin-top: 8px;">설정</div>
@@ -2767,7 +2766,20 @@
                 </div>
                 <div class="form-group">
                     <label class="form-label">주소</label>
-                    <input type="text" class="form-input" id="ptAddress" placeholder="예: 서울 구로구 디지털로31길 85">
+                    <div style="display:flex; gap:8px; margin-bottom:8px;">
+                        <input type="text" id="ptPostcode" class="form-input" placeholder="우편번호" readonly
+                               style="width:120px; flex-shrink:0; background:var(--gray-50);">
+                        <button type="button" onclick="openPtAddressPopup()"
+                                style="flex-shrink:0; padding:0 16px; height:44px; border:none; border-radius:11px; background:var(--blue); color:#fff; font-size:14px; font-weight:700; cursor:pointer; font-family:inherit; white-space:nowrap;">
+                            🔍 주소 검색
+                        </button>
+                        <button type="button" id="ptFoldBtn" onclick="foldPtAddressEmbed()" style="display:none; flex-shrink:0; padding:0 14px; height:44px; border:none; border-radius:11px; background:var(--gray-200); color:var(--gray-700); font-size:14px; font-weight:700; cursor:pointer; font-family:inherit; white-space:nowrap;">
+                            ✕ 닫기
+                        </button>
+                    </div>
+                    <input type="text" id="ptAddress" class="form-input" placeholder="도로명 주소 (위 버튼을 눌러 검색)" readonly
+                           style="background:var(--gray-50);">
+                    <div id="ptDaumPostcodeWrap" style="display:none; margin-top:8px; border:1px solid var(--gray-200); border-radius:11px; overflow:hidden; width:100%; height:400px;"></div>
                 </div>
                 <div class="form-group">
                     <label class="form-label">요청자 / 업체 <span style="color:var(--red)">*</span></label>
@@ -3490,6 +3502,9 @@ let ptRequests = [];
 function openPtRequestModal() {
     document.getElementById('ptRequestModal').classList.add('active');
     document.getElementById('ptRequestForm').reset();
+    document.getElementById('ptPostcode').value = '';
+    document.getElementById('ptAddress').value = '';
+    foldPtAddressEmbed();
 }
 
 async function handlePtRequest(e) {
@@ -4766,6 +4781,39 @@ function foldAddressEmbed() {
     var sb = document.getElementById('ssSearchBtn');
     var fb = document.getElementById('ssFoldBtn');
     if (sb) sb.style.display = '';
+    if (fb) fb.style.display = 'none';
+}
+
+// PT요청 주소검색 (카카오맵)
+function openPtAddressPopup() {
+    var wrap = document.getElementById('ptDaumPostcodeWrap');
+    if (!wrap) return;
+    if (wrap.style.display !== 'none') { foldPtAddressEmbed(); return; }
+    document.getElementById('ptFoldBtn').style.display = '';
+    wrap.style.display = 'block';
+    wrap.innerHTML = '';
+    var W = wrap.offsetWidth || 500;
+    new kakao.Postcode({
+        oncomplete: function(data) {
+            var addr = data.roadAddress || data.autoRoadAddress || data.jibunAddress || data.autoJibunAddress || '';
+            var code = data.zonecode || '';
+            document.getElementById('ptPostcode').value = code;
+            document.getElementById('ptAddress').value = addr;
+            var adVis = document.getElementById('ptAddress');
+            if (adVis) { adVis.style.borderColor = '#00c853'; adVis.style.background = '#e6f9f0';
+                setTimeout(function() { adVis.style.borderColor = ''; adVis.style.background = 'var(--gray-50)'; }, 1600); }
+            foldPtAddressEmbed();
+        },
+        onresize: function(size) { wrap.style.height = size.height + 'px'; },
+        width: W, height: 400,
+    }).embed(wrap);
+    setTimeout(function() { wrap.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }, 100);
+}
+
+function foldPtAddressEmbed() {
+    var wrap = document.getElementById('ptDaumPostcodeWrap');
+    if (wrap) { wrap.style.display = 'none'; wrap.innerHTML = ''; }
+    var fb = document.getElementById('ptFoldBtn');
     if (fb) fb.style.display = 'none';
 }
 
