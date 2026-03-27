@@ -587,68 +587,71 @@
             border: 1px solid var(--gray-200); overflow: hidden;
         }
 
-        .list-header {
-            display: grid;
-            grid-template-columns: 2fr 1fr 1.1fr 1.4fr 90px;
-            padding: 14px 24px; background: var(--gray-50);
-            border-bottom: 1px solid var(--gray-200);
-            font-size: 12px; font-weight: 700; color: var(--gray-500);
+        .site-table { width: 100%; border-collapse: collapse; }
+        .site-table thead { background: var(--gray-50); }
+        .site-table th {
+            padding: 12px 14px; font-size: 12px; font-weight: 700; color: var(--gray-500);
+            text-align: left; border-bottom: 2px solid var(--gray-200); white-space: nowrap;
         }
-
-        .site-item {
-            display: grid;
-            grid-template-columns: 2fr 1fr 1.1fr 1.4fr 90px;
-            padding: 18px 24px; border-bottom: 1px solid var(--gray-100);
-            align-items: center; transition: background 0.15s; cursor: pointer;
+        .site-table th:first-child { padding-left: 20px; }
+        .site-table td {
+            padding: 14px 14px; font-size: 13px; color: var(--gray-700);
+            border-bottom: 1px solid var(--gray-100); vertical-align: middle;
         }
+        .site-table td:first-child { padding-left: 20px; }
+        .site-table tbody tr { transition: background 0.15s; cursor: pointer; }
+        .site-table tbody tr:hover { background: var(--gray-50); }
+        .site-table tbody tr:last-child td { border-bottom: none; }
 
-        .site-item:hover { background: var(--gray-50); }
-        .site-item:last-child { border-bottom: none; }
+        .site-name-link { font-weight: 600; color: var(--blue); cursor: pointer; }
+        .site-name-link:hover { text-decoration: underline; }
 
-        .site-info { display: flex; flex-direction: column; gap: 4px; }
-
-        .site-name {
-            font-size: 14px; font-weight: 600; color: var(--gray-900);
-            display: flex; align-items: center; gap: 7px; flex-wrap: wrap;
+        .site-type-badge {
+            display: inline-block; padding: 3px 10px; border-radius: 12px;
+            font-size: 11px; font-weight: 600; white-space: nowrap;
         }
+        .site-type-badge.direct { background: #dbeafe; color: #2563eb; }
+        .site-type-badge.consulting { background: #fef3c7; color: #d97706; }
 
-        .site-type {
-            display: inline-block; padding: 2px 7px; border-radius: 4px;
-            font-size: 11px; font-weight: 600;
+        .progress-bar-wrap {
+            width: 60px; height: 6px; background: var(--gray-200); border-radius: 3px; overflow: hidden; display: inline-block; vertical-align: middle; margin-right: 6px;
         }
+        .progress-bar-fill { height: 100%; border-radius: 3px; transition: width 0.3s; }
 
-        .site-type.direct { background: var(--blue-light); color: var(--blue); }
-        .site-type.consulting { background: var(--orange-light); color: var(--orange); }
-        .site-company { display: inline-block; padding: 2px 7px; border-radius: 4px; font-size: 11px; font-weight: 600; background: var(--purple-light); color: var(--purple); }
+        .site-company-badge { display: inline-block; padding: 2px 7px; border-radius: 4px; font-size: 11px; font-weight: 600; background: var(--purple-light); color: var(--purple); }
 
-        .site-meta { font-size: 12px; color: var(--gray-400); }
+        /* Detail view */
+        .site-detail-page { background: #fff; border-radius: 14px; border: 1px solid var(--gray-200); }
+        .site-detail-back { display: inline-flex; align-items: center; gap: 4px; font-size: 13px; color: var(--gray-500); cursor: pointer; margin-bottom: 16px; }
+        .site-detail-back:hover { color: var(--blue); }
+        .site-detail-header { padding: 24px 28px; border-bottom: 1px solid var(--gray-100); }
+        .site-detail-title { font-size: 20px; font-weight: 700; color: var(--gray-900); margin-bottom: 4px; }
+        .site-detail-sub { font-size: 13px; color: var(--gray-400); margin-bottom: 12px; }
+        .site-detail-badges { display: flex; gap: 6px; flex-wrap: wrap; }
 
-        .stage-cell { display: flex; flex-direction: column; gap: 7px; }
-        .stage-progress { display: flex; gap: 3px; }
-        .stage-dot { width: 30px; height: 5px; border-radius: 3px; background: var(--gray-200); }
-        .stage-dot.completed { background: var(--green); }
-        .stage-dot.current { background: var(--blue); }
-        .stage-label { font-size: 13px; font-weight: 600; color: var(--gray-900); }
+        .site-detail-tabs { display: flex; border-bottom: 2px solid var(--gray-100); padding: 0 28px; background: var(--gray-50); }
+        .site-detail-tab {
+            padding: 12px 18px; font-size: 13px; font-weight: 600; color: var(--gray-500);
+            cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all 0.15s;
+        }
+        .site-detail-tab.active { color: var(--blue); border-bottom-color: var(--blue); }
+        .site-detail-tab:hover:not(.active) { color: var(--gray-700); }
 
-        .material-cell { display: flex; flex-direction: column; gap: 3px; }
-        .material-status { display: flex; align-items: center; gap: 5px; font-size: 13px; font-weight: 600; }
-        .status-dot { width: 7px; height: 7px; border-radius: 50%; }
-        .status-dot.ordered { background: var(--green); }
-        .status-dot.pending { background: var(--orange); }
-        .status-dot.not-ordered { background: var(--gray-400); }
-        .material-date { font-size: 11px; color: var(--gray-400); }
+        .site-detail-body { padding: 24px 28px; }
+        .detail-info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0; }
+        .detail-info-row { display: flex; padding: 12px 0; border-bottom: 1px solid var(--gray-100); }
+        .detail-info-label { width: 120px; font-size: 13px; font-weight: 600; color: var(--gray-500); flex-shrink: 0; }
+        .detail-info-value { font-size: 13px; color: var(--gray-900); flex: 1; }
 
-        .payment-cell { display: flex; flex-direction: column; gap: 3px; }
-        .payment-row { display: flex; align-items: center; gap: 5px; font-size: 12px; }
-        .payment-label { color: var(--gray-400); min-width: 38px; font-weight: 500; }
-        .payment-value { color: var(--gray-900); font-weight: 500; }
-        .payment-badge { padding: 2px 7px; border-radius: 4px; font-size: 11px; font-weight: 600; }
-        .payment-badge.paid { background: var(--green-light); color: var(--green); }
-        .payment-badge.pending { background: var(--orange-light); color: var(--orange); }
-        .payment-badge.waiting { background: var(--gray-100); color: var(--gray-500); }
         .payment-check { display: inline-flex; align-items: center; gap: 2px; font-size: 11px; font-weight: 600; }
         .payment-check.confirmed { color: var(--green); }
         .payment-check.unconfirmed { color: var(--gray-400); }
+
+        /* For legacy compat */
+        .status-dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
+        .status-dot.ordered { background: var(--green); }
+        .status-dot.pending { background: var(--orange); }
+        .status-dot.not-ordered { background: var(--gray-400); }
 
         /* ========== DOCUMENT LIBRARY ========== */
         .doc-categories {
@@ -1137,6 +1140,7 @@
         /* Admin only */
         .admin-only { display: none !important; }
         .admin-only.show { display: flex !important; }
+        th.admin-only.show, td.admin-only.show { display: table-cell !important; }
 
         /* Lead input form specific */
         .new-lead-btn {
@@ -1573,7 +1577,7 @@
             </div>
             <div class="nav-item" data-section="comm" onclick="switchSection('comm')">
                 <span class="nav-item-icon">💬</span>
-                <span class="nav-item-text">소통 창구</span>
+                <span class="nav-item-text">기타문의</span>
                 <span class="nav-badge" id="unreadBadge" style="display:none">2</span>
             </div>
 
@@ -1728,46 +1732,73 @@
 
             <!-- ========== SITES ========== -->
             <div class="section-page" id="section-sites">
-                <div class="section-header">
-                    <div class="section-title">현장 관리</div>
-                    <div style="display:flex; gap:10px; align-items:center;">
-                        <select class="admin-company-filter" id="adminCompanyFilter" onchange="applyFilters()">
-                            <option value="">전체 시공사</option>
-                            <option value="1">석민이앤씨</option>
-                            <option value="2">기림이앤씨</option>
-                            <option value="3">엘케이개발</option>
-                        </select>
-                        <button class="new-site-btn admin-only" id="newSiteBtn" onclick="openNewSiteModal()">
-                            ➕ 현장 등록
-                        </button>
+                <!-- 목록 뷰 -->
+                <div id="siteListView">
+                    <div class="section-header">
+                        <div>
+                            <div class="section-title">현장 관리</div>
+                            <div style="font-size:13px;color:var(--gray-400);margin-top:2px;">등록된 현장 전체 목록</div>
+                        </div>
+                        <div style="display:flex; gap:10px; align-items:center;">
+                            <select class="admin-company-filter" id="adminCompanyFilter" onchange="applyFilters()">
+                                <option value="">전체 시공사</option>
+                                <option value="1">석민이앤씨</option>
+                                <option value="2">기림이앤씨</option>
+                                <option value="3">엘케이개발</option>
+                            </select>
+                            <button class="new-site-btn admin-only" id="newSiteBtn" onclick="openNewSiteModal()">
+                                ➕ 현장 등록
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="filter-bar">
+                        <div class="filter-tabs" id="stageTabs">
+                            <button class="filter-tab active" data-filter="all">전체<span class="count" id="countAll">0</span></button>
+                            <button class="filter-tab" data-filter="견적">견적<span class="count" id="countEstimate">0</span></button>
+                            <button class="filter-tab" data-filter="발주">발주<span class="count" id="countOrder">0</span></button>
+                            <button class="filter-tab" data-filter="시공">시공<span class="count" id="countConstruction">0</span></button>
+                            <button class="filter-tab" data-filter="정산">정산<span class="count" id="countSettlement">0</span></button>
+                        </div>
+                        <div class="search-box">
+                            <select class="type-select" id="typeFilter" onchange="applyFilters()">
+                                <option value="">공사유형 전체</option>
+                                <option value="direct">직영공사</option>
+                                <option value="consulting">컨설팅공사</option>
+                            </select>
+                            <input type="text" class="search-input" id="searchInput" placeholder="현장명, 주소, 시공사, 현장소장 검색..." oninput="applyFilters()">
+                        </div>
+                    </div>
+
+                    <div class="site-list" id="siteList">
+                        <table class="site-table">
+                            <thead>
+                                <tr>
+                                    <th>번호</th>
+                                    <th>현장명</th>
+                                    <th>주소</th>
+                                    <th>공사유형</th>
+                                    <th>시공사</th>
+                                    <th>현장소장</th>
+                                    <th>공정률</th>
+                                    <th>착공일</th>
+                                    <th>준공일</th>
+                                    <th class="admin-only">관리</th>
+                                </tr>
+                            </thead>
+                            <tbody id="siteTableBody">
+                            </tbody>
+                        </table>
                     </div>
                 </div>
 
-                <div class="filter-bar">
-                    <div class="filter-tabs" id="stageTabs">
-                        <button class="filter-tab active" data-filter="all">전체<span class="count" id="countAll">0</span></button>
-                        <button class="filter-tab" data-filter="견적">견적<span class="count" id="countEstimate">0</span></button>
-                        <button class="filter-tab" data-filter="발주">발주<span class="count" id="countOrder">0</span></button>
-                        <button class="filter-tab" data-filter="시공">시공<span class="count" id="countConstruction">0</span></button>
-                        <button class="filter-tab" data-filter="정산">정산<span class="count" id="countSettlement">0</span></button>
-                    </div>
-                    <div class="search-box">
-                        <select class="type-select" id="typeFilter" onchange="applyFilters()">
-                            <option value="">공사유형 전체</option>
-                            <option value="direct">직영공사</option>
-                            <option value="consulting">컨설팅공사</option>
-                        </select>
-                        <input type="text" class="search-input" id="searchInput" placeholder="현장명 검색..." oninput="applyFilters()">
-                    </div>
-                </div>
-
-                <div class="site-list" id="siteList">
-                    <div class="list-header">
-                        <div>현장정보</div>
-                        <div>진행단계</div>
-                        <div>자재현황</div>
-                        <div>대금현황</div>
-                        <div></div>
+                <!-- 상세 뷰 -->
+                <div id="siteDetailView" style="display:none;">
+                    <div class="site-detail-back" onclick="closeSiteDetail()">← 목록으로</div>
+                    <div class="site-detail-page">
+                        <div class="site-detail-header" id="siteDetailHeader"></div>
+                        <div class="site-detail-tabs" id="siteDetailTabs"></div>
+                        <div class="site-detail-body" id="siteDetailBody"></div>
                     </div>
                 </div>
             </div>
@@ -1804,7 +1835,7 @@
             <!-- ========== COMM ========== -->
             <div class="section-page" id="section-comm">
                 <div class="section-header">
-                    <div class="section-title">소통 창구</div>
+                    <div class="section-title">기타문의</div>
                 </div>
 
                 <div class="comm-layout">
@@ -2118,6 +2149,11 @@
                     </div>
                 </div>
 
+                <div class="form-group">
+                    <label class="form-label">주소</label>
+                    <input type="text" class="form-input" id="newSiteAddress" placeholder="예: 서울특별시 강남구 테헤란로 123">
+                </div>
+
                 <div class="form-row-2">
                     <div class="form-group">
                         <label class="form-label">구/군</label>
@@ -2129,14 +2165,48 @@
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <label class="form-label">현재 단계</label>
-                    <select class="form-select" id="newSiteStage">
-                        <option value="견적">견적</option>
-                        <option value="발주">발주</option>
-                        <option value="시공">시공</option>
-                        <option value="정산">정산</option>
-                    </select>
+                <div class="form-row-2">
+                    <div class="form-group">
+                        <label class="form-label">현재 단계</label>
+                        <select class="form-select" id="newSiteStage">
+                            <option value="견적">견적</option>
+                            <option value="발주">발주</option>
+                            <option value="시공">시공</option>
+                            <option value="정산">정산</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">현장소장</label>
+                        <input type="text" class="form-input" id="newSiteManager" placeholder="예: 홍길동">
+                    </div>
+                </div>
+
+                <div class="form-section-title">📅 공사 일정</div>
+
+                <div class="form-row-2">
+                    <div class="form-group">
+                        <label class="form-label">착공일</label>
+                        <input type="date" class="form-input" id="newSiteConstructionStart">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">준공일</label>
+                        <input type="date" class="form-input" id="newSiteConstructionEnd">
+                    </div>
+                </div>
+
+                <div class="form-row-2">
+                    <div class="form-group">
+                        <label class="form-label">하자마감일</label>
+                        <input type="date" class="form-input" id="newSiteDefectDeadline">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">하자년수</label>
+                        <select class="form-select" id="newSiteDefectYears">
+                            <option value="3">3년</option>
+                            <option value="5">5년</option>
+                            <option value="10">10년</option>
+                        </select>
+                    </div>
                 </div>
 
                 <div class="form-group">
@@ -2623,30 +2693,112 @@ const companiesArray = Object.values(companies);
 const adminAccount = { id: 'netformrnd', password: '13546', name: '관리자' };
 
 let sites = [
-    { id: 1, companyId: 1, type: 'consulting', region: '서울', district: '강남구', building: '래미안 퍼스티지', scope: '지하주차장 방수', stage: '시공', progress: 70,
-      material: { status: 'ordered', date: '12.15 입고완료' },
-      payment: { advance: { amount: '3,000만원', due: '12.05', confirmed: true }, middle: { amount: '5,000만원', due: '12.25', confirmed: false }, balance: { amount: '2,000만원', due: '완료후', confirmed: false } },
-      estimate: { fileName: '래미안퍼스티지_견적서.pdf', uploadDate: '2024.12.01' }, startDate: '2024.12.01' },
-    { id: 2, companyId: 1, type: 'direct', region: '경기', district: '수원시', building: '힐스테이트 광교', scope: '옥상 방수보수', stage: '발주', progress: 0,
-      material: { status: 'pending', date: '예상입고 12.28' },
-      payment: { advance: { amount: '2,000만원', due: '12.20', confirmed: false }, middle: { amount: '3,000만원', due: '-', confirmed: false }, balance: { amount: '1,500만원', due: '-', confirmed: false } },
-      estimate: { fileName: '힐스테이트광교_견적서.xlsx', uploadDate: '2024.12.10' }, startDate: '2024.12.10' },
-    { id: 3, companyId: 2, type: 'consulting', region: '서울', district: '송파구', building: '헬리오시티', scope: '지하층 누수보수', stage: '정산', progress: 100,
-      material: { status: 'ordered', date: '11.28 입고완료' },
-      payment: { advance: { amount: '4,000만원', due: '11.25', confirmed: true }, middle: { amount: '6,000만원', due: '12.10', confirmed: true }, balance: { amount: '3,000만원', due: '12.20', confirmed: false } },
-      estimate: { fileName: '헬리오시티_견적서.pdf', uploadDate: '2024.11.20' }, startDate: '2024.11.20' },
-    { id: 4, companyId: 2, type: 'direct', region: '인천', district: '연수구', building: '송도 더샵', scope: '외벽 실링', stage: '견적', progress: 0,
-      material: { status: 'not-ordered', date: '견적 확정 후' },
+    // ── 컨설팅 현장 (현장투입O) ──
+    { id: 1, companyId: 1, type: 'consulting', region: '서울', district: '', building: '강서힐스테이트', address: '서울특별시 강서구 우장산로', scope: '슬-3,079㎡ + 벤트 / 합부목 철거', stage: '시공', progress: 90, siteManager: '이성수/장진호',
+      constructionStart: '2025-01-15', constructionEnd: '', defectDeadline: '', defectYears: 3, memo: '3월 말 준공예정',
+      material: { status: 'ordered', date: '입고완료' },
+      payment: { advance: { amount: '3,000만원', due: '01.15', confirmed: true }, middle: { amount: '5,000만원', due: '02.20', confirmed: true }, balance: { amount: '2,000만원', due: '완료후', confirmed: false } },
+      estimate: { fileName: '강서힐스테이트_내역서.pdf', uploadDate: '2025.01.10' }, contract: { fileName: '강서힐스테이트_계약서.pdf', uploadDate: '2025.01.12' }, startDate: '2025.01.10' },
+    { id: 2, companyId: 1, type: 'consulting', region: '용인', district: '', building: '평원마을동아솔레시티', address: '경기 용인시 기흥구', scope: '슬-9,338㎡(36개동) / PVC 철거', stage: '시공', progress: 60, siteManager: '조종억',
+      constructionStart: '2024-10-31', constructionEnd: '', defectDeadline: '', defectYears: 3, memo: '4월 말 준공예정',
+      material: { status: 'ordered', date: '입고완료' },
+      payment: { advance: { amount: '5,000만원', due: '11.05', confirmed: true }, middle: { amount: '8,000만원', due: '01.15', confirmed: true }, balance: { amount: '4,000만원', due: '완료후', confirmed: false } },
+      estimate: { fileName: '평원마을_내역서.pdf', uploadDate: '2024.10.28' }, contract: { fileName: '평원마을_계약서.pdf', uploadDate: '2024.10.29' }, startDate: '2024.10.28' },
+    { id: 3, companyId: 1, type: 'consulting', region: '김포', district: '', building: 'e편한세상한강시티2차', address: '경기 김포시 한강로', scope: '슬-4,977㎡ + 두겹시트', stage: '시공', progress: 65, siteManager: '정오연',
+      constructionStart: '2024-11-20', constructionEnd: '', defectDeadline: '', defectYears: 3, memo: '4월 말 준공예정',
+      material: { status: 'ordered', date: '입고완료' },
+      payment: { advance: { amount: '3,500만원', due: '11.25', confirmed: true }, middle: { amount: '5,500만원', due: '01.10', confirmed: true }, balance: { amount: '2,500만원', due: '완료후', confirmed: false } },
+      estimate: { fileName: 'e편한세상_내역서.pdf', uploadDate: '2024.11.18' }, contract: null, startDate: '2024.11.18' },
+    { id: 4, companyId: 1, type: 'consulting', region: '화성', district: '', building: '동탄역시범한화꿈에그린프레스티지', address: '경기 화성시 동탄', scope: '슬-2,363㎡ + 벤트 + 트랩', stage: '시공', progress: 65, siteManager: '조재부/조병철',
+      constructionStart: '2024-11-14', constructionEnd: '', defectDeadline: '', defectYears: 3, memo: '03/31(월) 준공예정',
+      material: { status: 'ordered', date: '입고완료' },
+      payment: { advance: { amount: '2,000만원', due: '11.20', confirmed: true }, middle: { amount: '3,500만원', due: '12.30', confirmed: true }, balance: { amount: '1,800만원', due: '완료후', confirmed: false } },
+      estimate: null, contract: null, startDate: '2024.11.14' },
+    { id: 5, companyId: 2, type: 'consulting', region: '구리', district: '', building: '갈매스타필드', address: '경기 구리시 갈매동', scope: 'PVC-7,408㎡ + 벤트 + 트랩', stage: '시공', progress: 45, siteManager: '이준경',
+      constructionStart: '2024-09-03', constructionEnd: '', defectDeadline: '', defectYears: 3, memo: '04/22(수) 준공예정',
+      material: { status: 'ordered', date: '입고완료' },
+      payment: { advance: { amount: '5,000만원', due: '09.10', confirmed: true }, middle: { amount: '8,000만원', due: '12.15', confirmed: true }, balance: { amount: '4,000만원', due: '완료후', confirmed: false } },
+      estimate: { fileName: '갈매스타필드_내역서.pdf', uploadDate: '2024.09.01' }, contract: { fileName: '갈매스타필드_계약서.pdf', uploadDate: '2024.09.02' }, startDate: '2024.09.01' },
+    { id: 6, companyId: 2, type: 'consulting', region: '원주', district: '', building: '원주코오롱아파트', address: '강원 원주시', scope: '슬-4,183㎡ + 슬-658㎡ + 부대시설', stage: '시공', progress: 30, siteManager: '이동학',
+      constructionStart: '2025-01-06', constructionEnd: '', defectDeadline: '', defectYears: 3, memo: '4월 중순 준공예정',
+      material: { status: 'ordered', date: '입고완료' },
+      payment: { advance: { amount: '3,000만원', due: '01.10', confirmed: true }, middle: { amount: '4,500만원', due: '02.28', confirmed: false }, balance: { amount: '2,000만원', due: '완료후', confirmed: false } },
+      estimate: null, contract: null, startDate: '2025.01.06' },
+    { id: 7, companyId: 3, type: 'consulting', region: '이천', district: '', building: '이천수림1차아파트', address: '경기 이천시', scope: '슬-2,871㎡ + 슬-1,278㎡(DO공법)', stage: '시공', progress: 40, siteManager: '김대현',
+      constructionStart: '2024-11-21', constructionEnd: '', defectDeadline: '', defectYears: 3, memo: '04/10(금) 준공예정',
+      material: { status: 'ordered', date: '입고완료' },
+      payment: { advance: { amount: '2,500만원', due: '11.25', confirmed: true }, middle: { amount: '4,000만원', due: '01.20', confirmed: true }, balance: { amount: '2,000만원', due: '완료후', confirmed: false } },
+      estimate: null, contract: null, startDate: '2024.11.21' },
+    { id: 8, companyId: 1, type: 'consulting', region: '대구', district: '', building: '산격대우', address: '대구 북구 산격동', scope: '슬-6,069㎡ + 슬-1,326㎡ + 캐노피 + 루커', stage: '시공', progress: 25, siteManager: '신현덕/윤성인',
+      constructionStart: '2024-09-24', constructionEnd: '', defectDeadline: '', defectYears: 3, memo: '4월 중 준공예정',
+      material: { status: 'ordered', date: '입고완료' },
+      payment: { advance: { amount: '4,500만원', due: '10.01', confirmed: true }, middle: { amount: '7,000만원', due: '01.15', confirmed: false }, balance: { amount: '3,500만원', due: '완료후', confirmed: false } },
+      estimate: null, contract: null, startDate: '2024.09.24' },
+    { id: 9, companyId: 3, type: 'consulting', region: '구로', district: '', building: '고척파크푸르지오', address: '서울 구로구 고척동', scope: '슬-2,415㎡ + 벽-3,512㎡ + 벽트 + 트랩', stage: '시공', progress: 15, siteManager: '박주엽',
+      constructionStart: '2024-11-21', constructionEnd: '', defectDeadline: '', defectYears: 3, memo: '04/03(목) 준공예정',
+      material: { status: 'ordered', date: '입고완료' },
+      payment: { advance: { amount: '3,000만원', due: '11.25', confirmed: true }, middle: { amount: '5,000만원', due: '02.10', confirmed: false }, balance: { amount: '2,500만원', due: '완료후', confirmed: false } },
+      estimate: null, contract: null, startDate: '2024.11.21' },
+    { id: 10, companyId: 2, type: 'consulting', region: '천안', district: '', building: '두정이편한세상자이아파트', address: '충남 천안시 서북구', scope: '슬-6,602㎡ + 벽체-1,267㎡(2회도포) + 부대시설', stage: '시공', progress: 10, siteManager: '김원근',
+      constructionStart: '2025-02-10', constructionEnd: '', defectDeadline: '', defectYears: 3, memo: '',
+      material: { status: 'pending', date: '일부 입고' },
+      payment: { advance: { amount: '4,000만원', due: '02.15', confirmed: true }, middle: { amount: '6,000만원', due: '04.01', confirmed: false }, balance: { amount: '3,000만원', due: '완료후', confirmed: false } },
+      estimate: null, contract: null, startDate: '2025.02.10' },
+    { id: 11, companyId: 3, type: 'consulting', region: '부산', district: '', building: '덕천롯데아파트', address: '부산 북구 덕천동', scope: '슬-2,880㎡', stage: '시공', progress: 20, siteManager: '박성은',
+      constructionStart: '2025-01-06', constructionEnd: '', defectDeadline: '', defectYears: 3, memo: '3월 말 준공예정',
+      material: { status: 'ordered', date: '입고완료' },
+      payment: { advance: { amount: '2,000만원', due: '01.10', confirmed: true }, middle: { amount: '3,000만원', due: '02.20', confirmed: false }, balance: { amount: '1,500만원', due: '완료후', confirmed: false } },
+      estimate: null, contract: null, startDate: '2025.01.06' },
+    { id: 12, companyId: 1, type: 'consulting', region: '천안', district: '', building: '삼원휠양아파트', address: '충남 천안시', scope: '슬-1,377㎡ + 벽-246㎡(1회도포)', stage: '시공', progress: 40, siteManager: '이용일',
+      constructionStart: '2025-02-03', constructionEnd: '', defectDeadline: '', defectYears: 3, memo: '',
+      material: { status: 'ordered', date: '입고완료' },
+      payment: { advance: { amount: '1,200만원', due: '02.05', confirmed: true }, middle: { amount: '1,800만원', due: '03.10', confirmed: false }, balance: { amount: '800만원', due: '완료후', confirmed: false } },
+      estimate: null, contract: null, startDate: '2025.02.03' },
+    { id: 13, companyId: 2, type: 'consulting', region: '부산', district: '', building: '해운대센텀트루엘1,2단지', address: '부산 해운대구', scope: '슬-2,571㎡ + 우레탄-436㎡', stage: '시공', progress: 45, siteManager: '김홍기',
+      constructionStart: '2024-11-21', constructionEnd: '', defectDeadline: '', defectYears: 3, memo: '4월 중순 준공예정',
+      material: { status: 'ordered', date: '입고완료' },
+      payment: { advance: { amount: '2,200만원', due: '11.25', confirmed: true }, middle: { amount: '3,500만원', due: '01.30', confirmed: true }, balance: { amount: '1,800만원', due: '완료후', confirmed: false } },
+      estimate: null, contract: null, startDate: '2024.11.21' },
+    { id: 14, companyId: 3, type: 'consulting', region: '창원', district: '', building: '성원아파트 2단지', address: '경남 창원시', scope: '슬-6,729㎡ + 벽-1,316㎡ + 관리동 230㎡', stage: '시공', progress: 35, siteManager: '정성일',
+      constructionStart: '2024-09-24', constructionEnd: '', defectDeadline: '', defectYears: 3, memo: '04/22(수) 준공예정',
+      material: { status: 'ordered', date: '입고완료' },
+      payment: { advance: { amount: '5,000만원', due: '10.01', confirmed: true }, middle: { amount: '8,000만원', due: '01.15', confirmed: true }, balance: { amount: '4,000만원', due: '완료후', confirmed: false } },
+      estimate: null, contract: null, startDate: '2024.09.24' },
+    // ── 직영 현장 ──
+    { id: 15, companyId: 1, type: 'direct', region: '울산', district: '', building: '크로바아파트', address: '울산 남구', scope: '슬-2,004㎡ + 트랩', stage: '시공', progress: 40, siteManager: '장영수',
+      constructionStart: '2025-01-20', constructionEnd: '', defectDeadline: '', defectYears: 3, memo: '',
+      material: { status: 'ordered', date: '입고완료', orders: [{ item: 'POUR슬라브 방수재', qty: '2,004㎡', date: '2025-01-18', status: '입고완료' }] },
       payment: { advance: { amount: '-', due: '-', confirmed: false }, middle: { amount: '-', due: '-', confirmed: false }, balance: { amount: '-', due: '-', confirmed: false } },
-      estimate: null, startDate: '2024.12.18' },
-    { id: 5, companyId: 3, type: 'consulting', region: '서울', district: '서초구', building: '삼성타운', scope: '주차장 방수', stage: '시공', progress: 45,
-      material: { status: 'ordered', date: '12.12 입고완료' },
-      payment: { advance: { amount: '5,000만원', due: '12.08', confirmed: true }, middle: { amount: '7,000만원', due: '12.30', confirmed: false }, balance: { amount: '3,000만원', due: '완료후', confirmed: false } },
-      estimate: { fileName: '삼성타운_견적서.pdf', uploadDate: '2024.12.05' }, startDate: '2024.12.05' },
-    { id: 6, companyId: 3, type: 'direct', region: '경기', district: '성남시', building: '판교 테크노밸리', scope: '옥상 우레탄', stage: '견적', progress: 0,
-      material: { status: 'not-ordered', date: '견적 확정 후' },
+      purchases: [{ item: 'POUR슬라브 방수재', qty: '2,004㎡', price: '1,200만원', date: '2025-01-18' }],
+      estimate: null, contract: null, startDate: '2025.01.20' },
+    { id: 16, companyId: 2, type: 'direct', region: '의정부', district: '', building: '금오주공그린빌4단지', address: '경기 의정부시', scope: '슬-3,769㎡ + 슬-868㎡', stage: '시공', progress: 30, siteManager: '김병석',
+      constructionStart: '2025-02-01', constructionEnd: '', defectDeadline: '', defectYears: 3, memo: '',
+      material: { status: 'ordered', date: '입고완료', orders: [{ item: 'POUR슬라브 방수재', qty: '4,637㎡', date: '2025-01-28', status: '입고완료' }] },
       payment: { advance: { amount: '-', due: '-', confirmed: false }, middle: { amount: '-', due: '-', confirmed: false }, balance: { amount: '-', due: '-', confirmed: false } },
-      estimate: null, startDate: '2024.12.20' },
+      purchases: [{ item: 'POUR슬라브 방수재', qty: '4,637㎡', price: '2,800만원', date: '2025-01-28' }],
+      estimate: null, contract: null, startDate: '2025.02.01' },
+    // ── 준공 현장 ──
+    { id: 17, companyId: 2, type: 'consulting', region: '수원', district: '', building: '성균관대역서희스타힐스1,2단지', address: '경기 수원시 장안구', scope: '슬-1,722㎡', stage: '정산', progress: 100, siteManager: '김원규',
+      constructionStart: '2024-09-03', constructionEnd: '2025-03-24', defectDeadline: '2030-03-24', defectYears: 5, memo: '준공완료',
+      material: { status: 'ordered', date: '입고완료' },
+      payment: { advance: { amount: '1,500만원', due: '09.10', confirmed: true }, middle: { amount: '2,000만원', due: '12.01', confirmed: true }, balance: { amount: '1,000만원', due: '03.24', confirmed: true } },
+      estimate: null, contract: null, startDate: '2024.09.03' },
+    // ── 착공예정 현장 ──
+    { id: 18, companyId: 1, type: 'consulting', region: '용인', district: '', building: '대지마을현대타운3차단지', address: '경기 용인시 처인구', scope: '슬-5,430㎡', stage: '발주', progress: 0, siteManager: '이상돈',
+      constructionStart: '', constructionEnd: '', defectDeadline: '', defectYears: 3, memo: '04/02(수) 착공예정',
+      material: { status: 'pending', date: '자재 수배중' },
+      payment: { advance: { amount: '3,500만원', due: '03.28', confirmed: false }, middle: { amount: '5,500만원', due: '-', confirmed: false }, balance: { amount: '2,800만원', due: '완료후', confirmed: false } },
+      estimate: null, contract: null, startDate: '2025.03.20' },
+    { id: 19, companyId: 3, type: 'consulting', region: '남양주', district: '', building: '오남신동아파밀리에아파트', address: '경기 남양주시 오남읍', scope: '슬-1,918㎡', stage: '발주', progress: 0, siteManager: '',
+      constructionStart: '', constructionEnd: '', defectDeadline: '', defectYears: 3, memo: '04/07(월) 착공예정',
+      material: { status: 'not-ordered', date: '발주 예정' },
+      payment: { advance: { amount: '1,500만원', due: '04.01', confirmed: false }, middle: { amount: '2,000만원', due: '-', confirmed: false }, balance: { amount: '1,000만원', due: '완료후', confirmed: false } },
+      estimate: null, contract: null, startDate: '2025.03.25' },
+    { id: 20, companyId: 2, type: 'consulting', region: '여수', district: '', building: '우미이노스빌', address: '전남 여수시', scope: '슬-3,852㎡ + 슬-1,632㎡ + 부대시설', stage: '발주', progress: 0, siteManager: '',
+      constructionStart: '', constructionEnd: '', defectDeadline: '', defectYears: 3, memo: '04/07(월) 착공예정',
+      material: { status: 'not-ordered', date: '발주 예정' },
+      payment: { advance: { amount: '3,500만원', due: '04.01', confirmed: false }, middle: { amount: '5,500만원', due: '-', confirmed: false }, balance: { amount: '2,800만원', due: '완료후', confirmed: false } },
+      estimate: null, contract: null, startDate: '2025.03.22' },
 ];
 
 let leads = [
@@ -2920,7 +3072,7 @@ const sectionTitles = {
     home: ['홈', '대시보드 개요'],
     sites: ['현장 관리', '진행중인 현장 목록'],
     docs: ['자료실', '시공 매뉴얼, 카탈로그, 계약서 다운로드'],
-    comm: ['소통 창구', '요청, 문의 및 공지사항'],
+    comm: ['기타문의', '요청, 문의 및 공지사항'],
     salesites: ['기술사용등록', 'POUR공법 기술 사용 단지 목록'],
     techqa: ['기술문의', 'POUR공법 기술 지원 및 Q&A'],
     orders: ['자재발주', '자재 발주 및 입고 관리'],
@@ -3171,7 +3323,7 @@ function renderHome() {
         <div class="recent-item" onclick="switchSection('sites')">
             <div class="recent-item-icon" style="background:var(--blue-light)">🏗️</div>
             <div class="recent-item-info">
-                <div class="recent-item-title">${s.region} ${s.district} ${s.building}</div>
+                <div class="recent-item-title">${s.building}</div>
                 <div class="recent-item-meta">${s.scope} · ${s.stage}</div>
             </div>
             <span class="status-badge ${getStageColor(s.stage)}">${s.stage}</span>
@@ -3213,7 +3365,10 @@ function renderSiteList() {
     if (typeFilter) mySites = mySites.filter(s => s.type === typeFilter);
 
     const search = document.getElementById('searchInput').value.toLowerCase();
-    if (search) mySites = mySites.filter(s => `${s.region} ${s.district} ${s.building} ${s.scope}`.toLowerCase().includes(search));
+    if (search) mySites = mySites.filter(s => {
+        const company = companies[s.companyId];
+        return `${s.region} ${s.district} ${s.building} ${s.scope} ${s.address || ''} ${company ? company.name : ''} ${s.siteManager || ''}`.toLowerCase().includes(search);
+    });
 
     // Update counts
     const allSites = isAdmin ? sites : sites.filter(s => s.companyId === currentUser.id);
@@ -3223,76 +3378,48 @@ function renderSiteList() {
     document.getElementById('countConstruction').textContent = allSites.filter(s => s.stage === '시공').length;
     document.getElementById('countSettlement').textContent = allSites.filter(s => s.stage === '정산').length;
 
-    const list = document.getElementById('siteList');
-    const existingHeader = list.querySelector('.list-header');
-
-    // Remove old items
-    list.querySelectorAll('.site-item, .empty-state').forEach(el => el.remove());
-
+    const tbody = document.getElementById('siteTableBody');
     if (!mySites.length) {
-        list.insertAdjacentHTML('beforeend', `
-            <div class="empty-state">
-                <div class="empty-icon">🏗️</div>
-                <div class="empty-title">현장이 없습니다</div>
-                <div class="empty-desc">검색 조건을 변경하거나 새 현장을 등록해보세요.</div>
-            </div>
-        `);
+        tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;padding:60px 20px;color:var(--gray-400);">
+            <div style="font-size:32px;margin-bottom:10px;">🏗️</div>
+            <div style="font-size:15px;font-weight:600;margin-bottom:4px;">현장이 없습니다</div>
+            <div style="font-size:13px;">검색 조건을 변경하거나 새 현장을 등록해보세요.</div>
+        </td></tr>`;
         return;
     }
 
-    mySites.forEach(site => {
+    tbody.innerHTML = mySites.map((site, idx) => {
         const company = companies[site.companyId];
-        const stages = ['견적', '발주', '시공', '정산'];
-        const stageIdx = stages.indexOf(site.stage);
-        const stageDots = stages.map((s, i) => `<div class="stage-dot ${i < stageIdx ? 'completed' : i === stageIdx ? 'current' : ''}"></div>`).join('');
-
-        const matClass = { ordered: 'ordered', pending: 'pending', 'not-ordered': 'not-ordered' }[site.material.status];
-        const matLabel = { ordered: '✓ 발주완료', pending: '⏳ 진행중', 'not-ordered': '— 미발주' }[site.material.status];
-
-        const item = document.createElement('div');
-        item.className = 'site-item';
-        item.onclick = () => openDetailModal(site.id);
-        item.innerHTML = `
-            <div class="site-info">
-                <div class="site-name">
-                    ${site.region} ${site.district || ''} ${site.building}
-                    <span class="site-type ${site.type}">${site.type === 'direct' ? '직영' : '컨설팅'}</span>
-                    ${isAdmin ? `<span class="site-company">${company.name}</span>` : ''}
+        const typeLabel = site.type === 'direct' ? '직영' : '컨설팅';
+        const typeCls = site.type;
+        const progressColor = site.progress >= 100 ? 'var(--green)' : site.progress >= 50 ? 'var(--blue)' : 'var(--orange)';
+        const startD = site.constructionStart || '-';
+        const endD = site.constructionEnd || '-';
+        const adminBtns = isAdmin ? `
+            <td>
+                <div style="display:flex;gap:4px;">
+                    <button class="action-btn" onclick="event.stopPropagation(); openEditSiteModal('${site.id}')" style="color:var(--blue);border-color:#bfdbfe;padding:5px 10px;font-size:12px;">수정</button>
+                    <button class="action-btn" onclick="event.stopPropagation(); deleteSite('${site.id}')" style="color:#fff;background:#ef4444;border-color:#ef4444;padding:5px 10px;font-size:12px;">삭제</button>
                 </div>
-                <div class="site-meta">${site.scope} | ${site.startDate}</div>
-            </div>
-            <div class="stage-cell">
-                <div class="stage-progress">${stageDots}</div>
-                <div class="stage-label">${site.stage}</div>
-            </div>
-            <div class="material-cell">
-                <div class="material-status">
-                    <div class="status-dot ${matClass}"></div>
-                    ${matLabel}
+            </td>` : '';
+        return `<tr onclick="openSiteDetail('${site.id}')">
+            <td style="color:var(--gray-400);font-size:12px;">${idx + 1}</td>
+            <td><span class="site-name-link">${site.building}</span></td>
+            <td style="font-size:12px;color:var(--gray-500);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${site.address || (site.region + ' ' + (site.district || ''))}</td>
+            <td><span class="site-type-badge ${typeCls}">${typeLabel}</span></td>
+            <td style="font-size:12px;">${company ? company.name : '-'}</td>
+            <td style="font-size:12px;">${site.siteManager || '-'}</td>
+            <td>
+                <div style="display:flex;align-items:center;gap:6px;">
+                    <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:${site.progress}%;background:${progressColor};"></div></div>
+                    <span style="font-size:12px;font-weight:600;color:var(--gray-700);">${site.progress}%</span>
                 </div>
-                <div class="material-date">${site.material.date}</div>
-            </div>
-            <div class="payment-cell">
-                <div class="payment-row">
-                    <span class="payment-label">착수금</span>
-                    <span class="payment-value">${site.payment.advance.amount}</span>
-                    <span class="payment-check ${site.payment.advance.confirmed ? 'confirmed' : 'unconfirmed'}">${site.payment.advance.confirmed ? '✓' : '○'}</span>
-                </div>
-                <div class="payment-row">
-                    <span class="payment-label">중도금</span>
-                    <span class="payment-value">${site.payment.middle.amount}</span>
-                    <span class="payment-check ${site.payment.middle.confirmed ? 'confirmed' : 'unconfirmed'}">${site.payment.middle.confirmed ? '✓' : '○'}</span>
-                </div>
-                <div class="payment-row">
-                    <span class="payment-label">잔금</span>
-                    <span class="payment-value">${site.payment.balance.amount}</span>
-                    <span class="payment-check ${site.payment.balance.confirmed ? 'confirmed' : 'unconfirmed'}">${site.payment.balance.confirmed ? '✓' : '○'}</span>
-                </div>
-            </div>
-            <button class="action-btn" onclick="event.stopPropagation(); openDetailModal(${site.id})">상세보기</button>
-        `;
-        list.appendChild(item);
-    });
+            </td>
+            <td style="font-size:12px;">${startD}</td>
+            <td style="font-size:12px;">${endD}</td>
+            ${adminBtns}
+        </tr>`;
+    }).join('');
 }
 
 function applyFilters() { renderSiteList(); }
@@ -3306,70 +3433,222 @@ document.getElementById('stageTabs').addEventListener('click', function(e) {
     renderSiteList();
 });
 
-// ========== SITE DETAIL MODAL ==========
-function openDetailModal(siteId) {
-    const site = sites.find(s => s.id === siteId);
+// ========== SITE DETAIL (인라인 뷰) ==========
+let _currentDetailTab = 'basic';
+let _currentDetailSiteId = null;
+
+function openSiteDetail(siteId) {
+    _currentDetailSiteId = siteId;
+    _currentDetailTab = 'basic';
+    document.getElementById('siteListView').style.display = 'none';
+    document.getElementById('siteDetailView').style.display = 'block';
+    renderSiteDetail();
+}
+
+function closeSiteDetail() {
+    document.getElementById('siteDetailView').style.display = 'none';
+    document.getElementById('siteListView').style.display = 'block';
+    _currentDetailSiteId = null;
+}
+
+function switchDetailTab(tab) {
+    _currentDetailTab = tab;
+    renderSiteDetail();
+}
+
+function renderSiteDetail() {
+    const site = sites.find(s => String(s.id) === String(_currentDetailSiteId));
     if (!site) return;
     const company = companies[site.companyId];
     const typeLabel = site.type === 'direct' ? '직영공사' : '컨설팅공사';
-    const stages = ['견적', '발주', '시공', '정산'];
-    const stageIndex = stages.indexOf(site.stage);
+    const stageLabel = site.stage;
+    const stageCls = { '견적': 'orange', '발주': 'blue', '시공': 'purple', '정산': 'green' }[stageLabel] || 'gray';
 
-    let timelineHtml = stages.map((s, i) => {
-        let dotClass = i < stageIndex ? 'completed' : i === stageIndex ? 'current' : '';
-        return `<div class="timeline-item">
-            <div class="timeline-dot ${dotClass}"></div>
-            <div class="timeline-content">
-                <div class="timeline-title">${s}</div>
-                <div class="timeline-date">${i <= stageIndex ? '완료' : '예정'}</div>
-            </div>
-        </div>`;
-    }).join('');
-
-    document.getElementById('detailModalBody').innerHTML = `
-        <div class="detail-section">
-            <div class="detail-section-title">📍 기본정보</div>
-            <div class="detail-grid">
-                <div class="detail-item"><div class="detail-label">현장명</div><div class="detail-value">${site.region} ${site.district || ''} ${site.building}</div></div>
-                <div class="detail-item"><div class="detail-label">시공 범위</div><div class="detail-value">${site.scope}</div></div>
-                <div class="detail-item"><div class="detail-label">공사유형</div><div class="detail-value">${typeLabel}</div></div>
-                <div class="detail-item"><div class="detail-label">협력시공사</div><div class="detail-value">${company.name}</div></div>
-                <div class="detail-item"><div class="detail-label">담당자</div><div class="detail-value">${company.manager} (${company.phone})</div></div>
-                <div class="detail-item"><div class="detail-label">등록일</div><div class="detail-value">${site.startDate}</div></div>
-            </div>
-        </div>
-        <div class="detail-section">
-            <div class="detail-section-title">📄 견적서</div>
-            <div class="detail-grid">
-                <div class="detail-item" style="grid-column:span 2;"><div class="detail-label">첨부파일</div><div class="detail-value">
-                    ${site.estimate ? `<span class="file-link" onclick="event.stopPropagation(); openFilePreview('${site.estimate.fileName}', ${site.id})">📎 ${site.estimate.fileName}</span> <span style="color:var(--gray-400);font-size:12px;">(${site.estimate.uploadDate})</span>` : '<span style="color:var(--gray-400);">미등록</span>'}
-                </div></div>
-            </div>
-        </div>
-        <div class="detail-section">
-            <div class="detail-section-title">📊 진행현황</div>
-            <div class="timeline">${timelineHtml}</div>
-        </div>
-        <div class="detail-section">
-            <div class="detail-section-title">📦 자재현황</div>
-            <div class="detail-grid">
-                <div class="detail-item"><div class="detail-label">발주상태</div><div class="detail-value" style="color:${site.material.status==='ordered'?'var(--green)':site.material.status==='pending'?'var(--orange)':'var(--gray-400)'}">${{ordered:'✓ 발주완료',pending:'⏳ 진행중','not-ordered':'— 미발주'}[site.material.status]}</div></div>
-                <div class="detail-item"><div class="detail-label">입고일</div><div class="detail-value">${site.material.date}</div></div>
-            </div>
-        </div>
-        <div class="detail-section">
-            <div class="detail-section-title">💰 대금현황</div>
-            <div class="detail-grid">
-                <div class="detail-item"><div class="detail-label">착수금</div><div class="detail-value">${site.payment.advance.amount}</div></div>
-                <div class="detail-item"><div class="detail-label">착수금 기한 / 입금</div><div class="detail-value">${site.payment.advance.due} <span class="payment-check ${site.payment.advance.confirmed?'confirmed':'unconfirmed'} " style="margin-left:8px;">${site.payment.advance.confirmed?'✓ 입금완료':'○ 미입금'}</span></div></div>
-                <div class="detail-item"><div class="detail-label">중도금</div><div class="detail-value">${site.payment.middle.amount}</div></div>
-                <div class="detail-item"><div class="detail-label">중도금 기한 / 입금</div><div class="detail-value">${site.payment.middle.due} <span class="payment-check ${site.payment.middle.confirmed?'confirmed':'unconfirmed'}" style="margin-left:8px;">${site.payment.middle.confirmed?'✓ 입금완료':'○ 미입금'}</span></div></div>
-                <div class="detail-item"><div class="detail-label">잔금</div><div class="detail-value">${site.payment.balance.amount}</div></div>
-                <div class="detail-item"><div class="detail-label">잔금 기한 / 입금</div><div class="detail-value">${site.payment.balance.due} <span class="payment-check ${site.payment.balance.confirmed?'confirmed':'unconfirmed'}" style="margin-left:8px;">${site.payment.balance.confirmed?'✓ 입금완료':'○ 미입금'}</span></div></div>
-            </div>
+    // Header
+    document.getElementById('siteDetailHeader').innerHTML = `
+        <div class="site-detail-title">${site.building}</div>
+        <div class="site-detail-sub">${site.address || (site.region + ' ' + (site.district || ''))}</div>
+        <div class="site-detail-badges">
+            <span class="site-type-badge ${site.type}">${typeLabel}</span>
+            <span class="status-badge ${stageCls}">${stageLabel}</span>
+            ${isAdmin ? `<div style="margin-left:auto;display:flex;gap:6px;">
+                <button class="action-btn" onclick="openEditSiteModal('${site.id}')" style="color:var(--blue);border-color:#bfdbfe;">✏️ 수정</button>
+                <button class="action-btn" onclick="closeSiteDetail(); deleteSite('${site.id}');" style="color:var(--red);border-color:var(--red-light);">🗑 삭제</button>
+            </div>` : ''}
         </div>
     `;
-    document.getElementById('detailModal').classList.add('active');
+
+    // Tabs - 컨설팅 vs 직영
+    let tabs;
+    if (site.type === 'consulting') {
+        tabs = [
+            { id: 'basic', label: '기본정보' },
+            { id: 'contract', label: '내역서/계약서' },
+            { id: 'material', label: '자재발주서' },
+            { id: 'payment', label: '입금현황' },
+            { id: 'progress', label: '공정률' },
+        ];
+    } else {
+        tabs = [
+            { id: 'basic', label: '기본정보' },
+            { id: 'material', label: '자재발주' },
+            { id: 'purchase', label: '구매이력' },
+        ];
+    }
+
+    document.getElementById('siteDetailTabs').innerHTML = tabs.map(t =>
+        `<div class="site-detail-tab ${_currentDetailTab === t.id ? 'active' : ''}" onclick="switchDetailTab('${t.id}')">${t.label}</div>`
+    ).join('');
+
+    // Body
+    const body = document.getElementById('siteDetailBody');
+
+    if (_currentDetailTab === 'basic') {
+        body.innerHTML = `
+            <div class="detail-info-grid">
+                <div style="border-right:1px solid var(--gray-100);padding-right:24px;">
+                    <div class="detail-info-row"><div class="detail-info-label">현장명</div><div class="detail-info-value">${site.building}</div></div>
+                    <div class="detail-info-row"><div class="detail-info-label">주소</div><div class="detail-info-value">${site.address || (site.region + ' ' + (site.district || ''))}</div></div>
+                    <div class="detail-info-row"><div class="detail-info-label">공사 유형</div><div class="detail-info-value">${typeLabel}</div></div>
+                    <div class="detail-info-row"><div class="detail-info-label">시공 범위</div><div class="detail-info-value">${site.scope}</div></div>
+                    <div class="detail-info-row"><div class="detail-info-label">시공사</div><div class="detail-info-value">${company ? company.name : '-'}</div></div>
+                    <div class="detail-info-row"><div class="detail-info-label">현장소장</div><div class="detail-info-value">${site.siteManager || '<span style="color:var(--red);">미배정</span>'}</div></div>
+                </div>
+                <div style="padding-left:24px;">
+                    <div class="detail-info-row"><div class="detail-info-label">착공일</div><div class="detail-info-value" style="color:var(--blue);font-weight:600;">${site.constructionStart || '-'}</div></div>
+                    <div class="detail-info-row"><div class="detail-info-label">준공일</div><div class="detail-info-value">${site.constructionEnd || '-'}</div></div>
+                    <div class="detail-info-row"><div class="detail-info-label">하자마감일</div><div class="detail-info-value">${site.defectDeadline || '-'}</div></div>
+                    <div class="detail-info-row"><div class="detail-info-label">하자년수</div><div class="detail-info-value">${site.defectYears || 3}년</div></div>
+                    <div class="detail-info-row"><div class="detail-info-label">담당자</div><div class="detail-info-value">${company ? company.manager : '-'}</div></div>
+                    <div class="detail-info-row"><div class="detail-info-label">메모</div><div class="detail-info-value">${site.memo || '-'}</div></div>
+                </div>
+            </div>
+        `;
+    } else if (_currentDetailTab === 'contract') {
+        body.innerHTML = `
+            <div style="margin-bottom:24px;">
+                <h4 style="font-size:15px;font-weight:700;margin-bottom:16px;">📄 내역서</h4>
+                <div style="background:var(--gray-50);border-radius:10px;padding:16px 20px;">
+                    ${site.estimate ? `
+                        <div style="display:flex;align-items:center;gap:12px;">
+                            <span style="font-size:24px;">📋</span>
+                            <div style="flex:1;">
+                                <div style="font-size:14px;font-weight:600;">${site.estimate.fileName}</div>
+                                <div style="font-size:12px;color:var(--gray-400);">업로드: ${site.estimate.uploadDate}</div>
+                            </div>
+                            <button class="btn btn-primary btn-sm" style="font-size:12px;">📥 다운로드</button>
+                        </div>
+                    ` : '<div style="color:var(--gray-400);text-align:center;padding:20px;">등록된 내역서가 없습니다.</div>'}
+                </div>
+            </div>
+            <div>
+                <h4 style="font-size:15px;font-weight:700;margin-bottom:16px;">📝 계약서</h4>
+                <div style="background:var(--gray-50);border-radius:10px;padding:16px 20px;">
+                    ${site.contract ? `
+                        <div style="display:flex;align-items:center;gap:12px;">
+                            <span style="font-size:24px;">📄</span>
+                            <div style="flex:1;">
+                                <div style="font-size:14px;font-weight:600;">${site.contract.fileName}</div>
+                                <div style="font-size:12px;color:var(--gray-400);">업로드: ${site.contract.uploadDate}</div>
+                            </div>
+                            <button class="btn btn-primary btn-sm" style="font-size:12px;">📥 다운로드</button>
+                        </div>
+                    ` : '<div style="color:var(--gray-400);text-align:center;padding:20px;">등록된 계약서가 없습니다.</div>'}
+                </div>
+            </div>
+        `;
+    } else if (_currentDetailTab === 'material') {
+        const matStatusLabel = { ordered: '✓ 발주완료', pending: '⏳ 진행중', 'not-ordered': '— 미발주' }[site.material.status];
+        const matStatusColor = site.material.status === 'ordered' ? 'var(--green)' : site.material.status === 'pending' ? 'var(--orange)' : 'var(--gray-400)';
+        const orders = (site.material.orders || []);
+        body.innerHTML = `
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;padding:16px;background:var(--gray-50);border-radius:10px;">
+                <div style="font-size:14px;font-weight:600;">자재 발주 상태:</div>
+                <span style="color:${matStatusColor};font-weight:700;">${matStatusLabel}</span>
+                <span style="color:var(--gray-400);font-size:13px;margin-left:auto;">${site.material.date}</span>
+            </div>
+            ${orders.length ? `
+                <table class="site-table" style="border:1px solid var(--gray-200);border-radius:10px;overflow:hidden;">
+                    <thead><tr><th>자재명</th><th>수량</th><th>발주일</th><th>상태</th></tr></thead>
+                    <tbody>
+                        ${orders.map(o => `<tr style="cursor:default;">
+                            <td>${o.item}</td><td>${o.qty}</td><td>${o.date}</td>
+                            <td><span style="color:${o.status === '입고완료' ? 'var(--green)' : 'var(--orange)'};font-weight:600;">${o.status}</span></td>
+                        </tr>`).join('')}
+                    </tbody>
+                </table>
+            ` : '<div style="color:var(--gray-400);text-align:center;padding:30px;">자재 발주 상세 내역이 없습니다.</div>'}
+        `;
+    } else if (_currentDetailTab === 'payment') {
+        body.innerHTML = `
+            <table class="site-table" style="border:1px solid var(--gray-200);border-radius:10px;overflow:hidden;">
+                <thead><tr><th>구분</th><th>금액</th><th>납입기한</th><th>입금여부</th></tr></thead>
+                <tbody>
+                    <tr style="cursor:default;">
+                        <td style="font-weight:600;">착수금</td>
+                        <td>${site.payment.advance.amount}</td>
+                        <td>${site.payment.advance.due}</td>
+                        <td><span class="payment-check ${site.payment.advance.confirmed ? 'confirmed' : 'unconfirmed'}" style="font-size:13px;">${site.payment.advance.confirmed ? '✓ 입금완료' : '○ 미입금'}</span></td>
+                    </tr>
+                    <tr style="cursor:default;">
+                        <td style="font-weight:600;">중도금</td>
+                        <td>${site.payment.middle.amount}</td>
+                        <td>${site.payment.middle.due}</td>
+                        <td><span class="payment-check ${site.payment.middle.confirmed ? 'confirmed' : 'unconfirmed'}" style="font-size:13px;">${site.payment.middle.confirmed ? '✓ 입금완료' : '○ 미입금'}</span></td>
+                    </tr>
+                    <tr style="cursor:default;">
+                        <td style="font-weight:600;">잔금</td>
+                        <td>${site.payment.balance.amount}</td>
+                        <td>${site.payment.balance.due}</td>
+                        <td><span class="payment-check ${site.payment.balance.confirmed ? 'confirmed' : 'unconfirmed'}" style="font-size:13px;">${site.payment.balance.confirmed ? '✓ 입금완료' : '○ 미입금'}</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        `;
+    } else if (_currentDetailTab === 'progress') {
+        const stages = ['견적', '발주', '시공', '정산'];
+        const stageIndex = stages.indexOf(site.stage);
+        body.innerHTML = `
+            <div style="margin-bottom:24px;">
+                <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px;">
+                    <div style="font-size:15px;font-weight:700;">전체 공정률</div>
+                    <div style="flex:1;height:10px;background:var(--gray-200);border-radius:5px;overflow:hidden;">
+                        <div style="height:100%;width:${site.progress}%;background:${site.progress >= 100 ? 'var(--green)' : 'var(--blue)'};border-radius:5px;transition:width 0.5s;"></div>
+                    </div>
+                    <div style="font-size:18px;font-weight:800;color:${site.progress >= 100 ? 'var(--green)' : 'var(--blue)'};">${site.progress}%</div>
+                </div>
+                <div style="display:flex;gap:12px;">
+                    ${stages.map((s, i) => `
+                        <div style="flex:1;padding:16px;border-radius:10px;text-align:center;background:${i <= stageIndex ? (i === stageIndex ? 'var(--blue-light)' : 'var(--green-light)') : 'var(--gray-50)'};">
+                            <div style="font-size:13px;font-weight:700;color:${i <= stageIndex ? (i === stageIndex ? 'var(--blue)' : 'var(--green)') : 'var(--gray-400)'};">${s}</div>
+                            <div style="font-size:11px;color:var(--gray-400);margin-top:4px;">${i < stageIndex ? '완료' : i === stageIndex ? '진행중' : '예정'}</div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+    } else if (_currentDetailTab === 'purchase') {
+        const purchases = site.purchases || [];
+        body.innerHTML = `
+            <h4 style="font-size:15px;font-weight:700;margin-bottom:16px;">구매 이력</h4>
+            ${purchases.length ? `
+                <table class="site-table" style="border:1px solid var(--gray-200);border-radius:10px;overflow:hidden;">
+                    <thead><tr><th>자재명</th><th>수량</th><th>금액</th><th>구매일</th></tr></thead>
+                    <tbody>
+                        ${purchases.map(p => `<tr style="cursor:default;">
+                            <td>${p.item}</td><td>${p.qty}</td><td>${p.price}</td><td>${p.date}</td>
+                        </tr>`).join('')}
+                    </tbody>
+                </table>
+            ` : '<div style="color:var(--gray-400);text-align:center;padding:30px;">구매 이력이 없습니다.</div>'}
+        `;
+    }
+}
+
+// Legacy compat - openDetailModal redirects to inline detail view
+function openDetailModal(siteId) {
+    switchSection('sites');
+    openSiteDetail(siteId);
 }
 
 // ========== DOCS ==========
@@ -3589,25 +3868,72 @@ function getTicketRate(companyId) {
 
 // ========== MODAL HANDLERS ==========
 function openNewSiteModal() {
+    resetSiteModal();
     document.getElementById('newSiteModal').classList.add('active');
+}
+
+function _getFormSiteFields() {
+    return {
+        building: document.getElementById('newSiteBuilding').value,
+        region: document.getElementById('newSiteRegion').value,
+        district: document.getElementById('newSiteDistrict').value,
+        address: document.getElementById('newSiteAddress').value,
+        scope: document.getElementById('newSiteScope').value,
+        stage: document.getElementById('newSiteStage').value,
+        siteManager: document.getElementById('newSiteManager').value,
+        constructionStart: document.getElementById('newSiteConstructionStart').value,
+        constructionEnd: document.getElementById('newSiteConstructionEnd').value,
+        defectDeadline: document.getElementById('newSiteDefectDeadline').value,
+        defectYears: parseInt(document.getElementById('newSiteDefectYears').value) || 3,
+        memo: document.getElementById('newSiteNote').value,
+    };
 }
 
 function handleNewSite(e) {
     e.preventDefault();
-    const building = document.getElementById('newSiteBuilding').value;
-    const region = document.getElementById('newSiteRegion').value;
     const companyId = isAdmin ? parseInt(document.getElementById('newSiteCompany').value) : currentUser.id;
     const typeEl = document.querySelector('input[name="newProjectType"]:checked');
-
     if (!typeEl) { showToast('공사 유형을 선택해주세요.', 'error'); return; }
+
+    const f = _getFormSiteFields();
+
+    // 수정 모드
+    if (_editingSiteId) {
+        const existingSite = sites.find(s => String(s.id) === String(_editingSiteId));
+        if (!existingSite) { showToast('현장 정보를 찾을 수 없습니다.', 'error'); return; }
+
+        const updated = Object.assign({}, existingSite, f, {
+            companyId, type: typeEl.value,
+            payment: {
+                advance: { amount: document.getElementById('newSiteAdvance').value || '-', due: document.getElementById('newSiteAdvanceDue').value || '-', confirmed: existingSite.payment.advance.confirmed },
+                middle: { amount: document.getElementById('newSiteMiddle').value || '-', due: document.getElementById('newSiteMiddleDue').value || '-', confirmed: existingSite.payment.middle.confirmed },
+                balance: { amount: document.getElementById('newSiteBalance').value || '-', due: document.getElementById('newSiteBalanceDue').value || '-', confirmed: existingSite.payment.balance.confirmed },
+            },
+        });
+        if (selectedSiteFile) {
+            updated.estimate = { fileName: selectedSiteFile.name, uploadDate: new Date().toLocaleDateString('ko-KR') };
+        }
+
+        closeModal('newSiteModal');
+        resetSiteModal();
+        showToast(`${f.building} 현장이 수정되었습니다.`, 'success');
+
+        if (_fbReady) {
+            fbSet('sites', _editingSiteId, updated).catch(err => console.error('[Firebase] site 수정 실패', err));
+        } else {
+            const idx = sites.findIndex(s => String(s.id) === String(_editingSiteId));
+            if (idx >= 0) sites[idx] = updated;
+            renderSiteList();
+            renderHome();
+        }
+        _editingSiteId = null;
+        return;
+    }
+
+    // 등록 모드
     const newId = _fbReady ? fbGenId() : String(Date.now());
 
-    const newSite = {
-        id: newId, companyId,
-        type: typeEl.value,
-        region, district: document.getElementById('newSiteDistrict').value,
-        building, scope: document.getElementById('newSiteScope').value,
-        stage: document.getElementById('newSiteStage').value, progress: 0,
+    const newSite = Object.assign({ id: newId, companyId, type: typeEl.value, progress: 0,
         material: { status: 'not-ordered', date: '견적 확정 후' },
         payment: {
             advance: { amount: document.getElementById('newSiteAdvance').value || '-', due: document.getElementById('newSiteAdvanceDue').value || '-', confirmed: false },
@@ -3615,13 +3941,13 @@ function handleNewSite(e) {
             balance: { amount: document.getElementById('newSiteBalance').value || '-', due: document.getElementById('newSiteBalanceDue').value || '-', confirmed: false },
         },
         estimate: selectedSiteFile ? { fileName: selectedSiteFile.name, uploadDate: new Date().toLocaleDateString('ko-KR') } : null,
+        contract: null,
         startDate: new Date().toLocaleDateString('ko-KR').replace(/\. /g, '.'),
-    };
+    }, f);
 
     closeModal('newSiteModal');
-    document.getElementById('newSiteForm').reset();
-    removeSiteFile();
-    showToast(`${building} 현장이 등록되었습니다.`, 'success');
+    resetSiteModal();
+    showToast(`${f.building} 현장이 등록되었습니다.`, 'success');
 
     if (_fbReady) {
         fbSet('sites', newId, newSite).catch(err => console.error('[Firebase] site 저장 실패', err));
@@ -3630,6 +3956,69 @@ function handleNewSite(e) {
         renderSiteList();
         renderHome();
     }
+}
+
+// ========== 현장 삭제 (관리자) ==========
+async function deleteSite(siteId) {
+    if (!isAdmin) return;
+    const site = sites.find(s => String(s.id) === String(siteId));
+    if (!site) return;
+    const name = site.building;
+    if (!confirm(`"${name}" 현장을 삭제하시겠습니까?\n삭제된 현장은 복구할 수 없습니다.`)) return;
+    if (_fbReady) {
+        await fbDelete('sites', siteId);
+    } else {
+        const idx = sites.findIndex(s => String(s.id) === String(siteId));
+        if (idx >= 0) sites.splice(idx, 1);
+        renderSiteList();
+        renderHome();
+    }
+    showToast(`${name} 현장이 삭제되었습니다.`, 'success');
+}
+
+// ========== 현장 수정 (관리자) ==========
+let _editingSiteId = null;
+
+function openEditSiteModal(siteId) {
+    if (!isAdmin) return;
+    const site = sites.find(s => String(s.id) === String(siteId));
+    if (!site) return;
+    _editingSiteId = siteId;
+
+    document.querySelector('#newSiteModal .modal-title').textContent = '✏️ 현장 수정';
+    document.querySelector('#newSiteModal .modal-footer .btn-primary').textContent = '수정하기';
+
+    document.getElementById('newSiteCompany').value = site.companyId;
+    const typeRadio = document.querySelector(`input[name="newProjectType"][value="${site.type}"]`);
+    if (typeRadio) typeRadio.checked = true;
+    document.getElementById('newSiteRegion').value = site.region;
+    document.getElementById('newSiteBuilding').value = site.building;
+    document.getElementById('newSiteAddress').value = site.address || '';
+    document.getElementById('newSiteDistrict').value = site.district || '';
+    document.getElementById('newSiteScope').value = site.scope;
+    document.getElementById('newSiteStage').value = site.stage;
+    document.getElementById('newSiteManager').value = site.siteManager || '';
+    document.getElementById('newSiteConstructionStart').value = site.constructionStart || '';
+    document.getElementById('newSiteConstructionEnd').value = site.constructionEnd || '';
+    document.getElementById('newSiteDefectDeadline').value = site.defectDeadline || '';
+    document.getElementById('newSiteDefectYears').value = site.defectYears || 3;
+    document.getElementById('newSiteAdvance').value = site.payment.advance.amount === '-' ? '' : site.payment.advance.amount;
+    document.getElementById('newSiteAdvanceDue').value = site.payment.advance.due === '-' ? '' : site.payment.advance.due;
+    document.getElementById('newSiteMiddle').value = site.payment.middle.amount === '-' ? '' : site.payment.middle.amount;
+    document.getElementById('newSiteMiddleDue').value = site.payment.middle.due === '-' ? '' : site.payment.middle.due;
+    document.getElementById('newSiteBalance').value = site.payment.balance.amount === '-' ? '' : site.payment.balance.amount;
+    document.getElementById('newSiteBalanceDue').value = site.payment.balance.due === '-' ? '' : site.payment.balance.due;
+    document.getElementById('newSiteNote').value = site.memo || '';
+
+    document.getElementById('newSiteModal').classList.add('active');
+}
+
+function resetSiteModal() {
+    _editingSiteId = null;
+    document.querySelector('#newSiteModal .modal-title').textContent = '🏗️ 새 현장 등록';
+    document.querySelector('#newSiteModal .modal-footer .btn-primary').textContent = '등록하기';
+    document.getElementById('newSiteForm').reset();
+    removeSiteFile();
 }
 
 function handleNewTicket(e) {
@@ -3783,6 +4172,10 @@ function closeModal(id) {
         if (titleEl) titleEl.textContent = '📍 기술사용단지 추가';
         const submitBtn = document.querySelector('#newSaleSiteForm button[type="submit"]');
         if (submitBtn) submitBtn.textContent = '등록하기';
+    }
+    // 현장 모달 닫힐 때 수정 모드 초기화
+    if (id === 'newSiteModal' && _editingSiteId !== null) {
+        resetSiteModal();
     }
 }
 
@@ -4961,7 +5354,7 @@ function attachListeners() {
 }
 
 function updateBadges() {
-    // 소통창구 뱃지
+    // 기타문의 뱃지
     if (currentUser || isAdmin) {
         const myTickets = isAdmin ? tickets : tickets.filter(t => t.companyId === currentUser?.id);
         const unread = myTickets.filter(t => t.status === 'receiving').length;
