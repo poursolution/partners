@@ -3289,7 +3289,11 @@ function renderSiteList() {
                     <span class="payment-check ${site.payment.balance.confirmed ? 'confirmed' : 'unconfirmed'}">${site.payment.balance.confirmed ? '✓' : '○'}</span>
                 </div>
             </div>
-            <button class="action-btn" onclick="event.stopPropagation(); openDetailModal(${site.id})">상세보기</button>
+            <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+                <button class="action-btn" onclick="event.stopPropagation(); openDetailModal('${site.id}')">상세보기</button>
+                ${isAdmin ? `<button class="action-btn" onclick="event.stopPropagation(); openEditSiteModal('${site.id}')" style="color:var(--blue);border-color:#bfdbfe;">✏️ 수정</button>` : ''}
+                ${isAdmin ? `<button class="action-btn" onclick="event.stopPropagation(); deleteSite('${site.id}')" style="color:var(--red);border-color:var(--red-light);">🗑 삭제</button>` : ''}
+            </div>
         `;
         list.appendChild(item);
     });
@@ -3308,7 +3312,7 @@ document.getElementById('stageTabs').addEventListener('click', function(e) {
 
 // ========== SITE DETAIL MODAL ==========
 function openDetailModal(siteId) {
-    const site = sites.find(s => s.id === siteId);
+    const site = sites.find(s => String(s.id) === String(siteId));
     if (!site) return;
     const company = companies[site.companyId];
     const typeLabel = site.type === 'direct' ? '직영공사' : '컨설팅공사';
@@ -3369,6 +3373,14 @@ function openDetailModal(siteId) {
             </div>
         </div>
     `;
+    if (isAdmin) {
+        document.getElementById('detailModalBody').innerHTML += `
+            <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px;padding-top:16px;border-top:1px solid var(--gray-100);">
+                <button class="btn btn-outline btn-sm" onclick="closeModal('detailModal'); openEditSiteModal('${siteId}');" style="color:var(--blue);">✏️ 수정</button>
+                <button class="btn btn-outline btn-sm" onclick="closeModal('detailModal'); deleteSite('${siteId}');" style="color:var(--red);">🗑 삭제</button>
+            </div>
+        `;
+    }
     document.getElementById('detailModal').classList.add('active');
 }
 
@@ -3589,6 +3601,7 @@ function getTicketRate(companyId) {
 
 // ========== MODAL HANDLERS ==========
 function openNewSiteModal() {
+    resetSiteModal();
     document.getElementById('newSiteModal').classList.add('active');
 }
 
@@ -3600,6 +3613,45 @@ function handleNewSite(e) {
     const typeEl = document.querySelector('input[name="newProjectType"]:checked');
 
     if (!typeEl) { showToast('공사 유형을 선택해주세요.', 'error'); return; }
+
+    // 수정 모드
+    if (_editingSiteId) {
+        const existingSite = sites.find(s => String(s.id) === String(_editingSiteId));
+        if (!existingSite) { showToast('현장 정보를 찾을 수 없습니다.', 'error'); return; }
+
+        const updated = Object.assign({}, existingSite, {
+            companyId,
+            type: typeEl.value,
+            region, district: document.getElementById('newSiteDistrict').value,
+            building, scope: document.getElementById('newSiteScope').value,
+            stage: document.getElementById('newSiteStage').value,
+            payment: {
+                advance: { amount: document.getElementById('newSiteAdvance').value || '-', due: document.getElementById('newSiteAdvanceDue').value || '-', confirmed: existingSite.payment.advance.confirmed },
+                middle: { amount: document.getElementById('newSiteMiddle').value || '-', due: document.getElementById('newSiteMiddleDue').value || '-', confirmed: existingSite.payment.middle.confirmed },
+                balance: { amount: document.getElementById('newSiteBalance').value || '-', due: document.getElementById('newSiteBalanceDue').value || '-', confirmed: existingSite.payment.balance.confirmed },
+            },
+        });
+        if (selectedSiteFile) {
+            updated.estimate = { fileName: selectedSiteFile.name, uploadDate: new Date().toLocaleDateString('ko-KR') };
+        }
+
+        closeModal('newSiteModal');
+        resetSiteModal();
+        showToast(`${building} 현장이 수정되었습니다.`, 'success');
+
+        if (_fbReady) {
+            fbSet('sites', _editingSiteId, updated).catch(err => console.error('[Firebase] site 수정 실패', err));
+        } else {
+            const idx = sites.findIndex(s => String(s.id) === String(_editingSiteId));
+            if (idx >= 0) sites[idx] = updated;
+            renderSiteList();
+            renderHome();
+        }
+        _editingSiteId = null;
+        return;
+    }
+
+    // 등록 모드
     const newId = _fbReady ? fbGenId() : String(Date.now());
 
     const newSite = {
@@ -3619,8 +3671,7 @@ function handleNewSite(e) {
     };
 
     closeModal('newSiteModal');
-    document.getElementById('newSiteForm').reset();
-    removeSiteFile();
+    resetSiteModal();
     showToast(`${building} 현장이 등록되었습니다.`, 'success');
 
     if (_fbReady) {
@@ -3630,6 +3681,64 @@ function handleNewSite(e) {
         renderSiteList();
         renderHome();
     }
+}
+
+// ========== 현장 삭제 (관리자) ==========
+async function deleteSite(siteId) {
+    if (!isAdmin) return;
+    const site = sites.find(s => String(s.id) === String(siteId));
+    if (!site) return;
+    const name = `${site.region} ${site.district || ''} ${site.building}`.trim();
+    if (!confirm(`"${name}" 현장을 삭제하시겠습니까?\n삭제된 현장은 복구할 수 없습니다.`)) return;
+    if (_fbReady) {
+        await fbDelete('sites', siteId);
+    } else {
+        const idx = sites.findIndex(s => String(s.id) === String(siteId));
+        if (idx >= 0) sites.splice(idx, 1);
+        renderSiteList();
+        renderHome();
+    }
+    showToast(`${name} 현장이 삭제되었습니다.`, 'success');
+}
+
+// ========== 현장 수정 (관리자) ==========
+let _editingSiteId = null;
+
+function openEditSiteModal(siteId) {
+    if (!isAdmin) return;
+    const site = sites.find(s => String(s.id) === String(siteId));
+    if (!site) return;
+    _editingSiteId = siteId;
+
+    // 모달 타이틀 변경
+    document.querySelector('#newSiteModal .modal-title').textContent = '✏️ 현장 수정';
+    document.querySelector('#newSiteModal .modal-footer .btn-primary').textContent = '수정하기';
+
+    // 값 채우기
+    document.getElementById('newSiteCompany').value = site.companyId;
+    const typeRadio = document.querySelector(`input[name="newProjectType"][value="${site.type}"]`);
+    if (typeRadio) typeRadio.checked = true;
+    document.getElementById('newSiteRegion').value = site.region;
+    document.getElementById('newSiteBuilding').value = site.building;
+    document.getElementById('newSiteDistrict').value = site.district || '';
+    document.getElementById('newSiteScope').value = site.scope;
+    document.getElementById('newSiteStage').value = site.stage;
+    document.getElementById('newSiteAdvance').value = site.payment.advance.amount === '-' ? '' : site.payment.advance.amount;
+    document.getElementById('newSiteAdvanceDue').value = site.payment.advance.due === '-' ? '' : site.payment.advance.due;
+    document.getElementById('newSiteMiddle').value = site.payment.middle.amount === '-' ? '' : site.payment.middle.amount;
+    document.getElementById('newSiteMiddleDue').value = site.payment.middle.due === '-' ? '' : site.payment.middle.due;
+    document.getElementById('newSiteBalance').value = site.payment.balance.amount === '-' ? '' : site.payment.balance.amount;
+    document.getElementById('newSiteBalanceDue').value = site.payment.balance.due === '-' ? '' : site.payment.balance.due;
+
+    document.getElementById('newSiteModal').classList.add('active');
+}
+
+function resetSiteModal() {
+    _editingSiteId = null;
+    document.querySelector('#newSiteModal .modal-title').textContent = '🏗️ 새 현장 등록';
+    document.querySelector('#newSiteModal .modal-footer .btn-primary').textContent = '등록하기';
+    document.getElementById('newSiteForm').reset();
+    removeSiteFile();
 }
 
 function handleNewTicket(e) {
@@ -3783,6 +3892,10 @@ function closeModal(id) {
         if (titleEl) titleEl.textContent = '📍 기술사용단지 추가';
         const submitBtn = document.querySelector('#newSaleSiteForm button[type="submit"]');
         if (submitBtn) submitBtn.textContent = '등록하기';
+    }
+    // 현장 모달 닫힐 때 수정 모드 초기화
+    if (id === 'newSiteModal' && _editingSiteId !== null) {
+        resetSiteModal();
     }
 }
 
