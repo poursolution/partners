@@ -1601,6 +1601,11 @@
                 <span class="nav-item-icon">📋</span>
                 <span class="nav-item-text">각종양식</span>
             </div>
+            <div class="nav-item" data-section="ptrequest" onclick="switchSection('ptrequest')">
+                <span class="nav-item-icon">🎤</span>
+                <span class="nav-item-text">PT요청</span>
+                <span class="nav-badge" id="ptBadge" style="display:none">0</span>
+            </div>
 
             <div class="nav-section-label" style="margin-top: 8px;">설정</div>
             <div class="nav-item" data-section="myinfo" onclick="switchSection('myinfo')">
@@ -1915,9 +1920,9 @@
                 <div class="filter-bar" id="saleSiteFilterBar">
                     <div class="filter-tabs" id="saleSiteTabs">
                         <button class="filter-tab active" data-ssfilter="all" onclick="filterSaleSites(this,'all')">전체<span class="count" id="ssCountAll">0</span></button>
-                        <button class="filter-tab" data-ssfilter="영업중" onclick="filterSaleSites(this,'영업중')">영업중<span class="count" id="ssCountActive">0</span></button>
+                        <button class="filter-tab" data-ssfilter="접수" onclick="filterSaleSites(this,'접수')">접수<span class="count" id="ssCountActive">0</span></button>
                         <button class="filter-tab" data-ssfilter="확정" onclick="filterSaleSites(this,'확정')">확정<span class="count" id="ssCountDone">0</span></button>
-                        <button class="filter-tab" data-ssfilter="미정" onclick="filterSaleSites(this,'미정')">미정<span class="count" id="ssCountHold">0</span></button>
+                        <button class="filter-tab" data-ssfilter="취소" onclick="filterSaleSites(this,'취소')">취소<span class="count" id="ssCountHold">0</span></button>
                         <button class="filter-tab" data-ssfilter="dup" onclick="filterSaleSites(this,'dup')" style="color:var(--orange);border-color:var(--orange);">중복<span class="count" id="ssCountDup">0</span></button>
                     </div>
                     <div class="search-box">
@@ -2094,6 +2099,35 @@
                     <div class="card" style="padding:40px;text-align:center;grid-column:1/-1;">
                         <div style="color:var(--gray-400);font-size:14px;">등록된 양식이 없습니다.</div>
                     </div>
+                </div>
+            </div>
+
+            <!-- ========== PT요청 ========== -->
+            <div class="section-page" id="section-ptrequest">
+                <div class="section-header">
+                    <div>
+                        <div class="section-title">PT요청</div>
+                        <div style="font-size:13px;color:var(--gray-400);margin-top:2px;">PT 요청 접수 및 배정 현황</div>
+                    </div>
+                    <button class="btn btn-primary btn-sm" onclick="openPtRequestModal()">📤 PT요청 접수</button>
+                </div>
+                <div class="site-list" id="ptRequestList">
+                    <table class="site-table">
+                        <thead>
+                            <tr>
+                                <th>번호</th>
+                                <th>현장명</th>
+                                <th>주소</th>
+                                <th>요청자</th>
+                                <th>공종</th>
+                                <th>접수일</th>
+                                <th>배정담당자</th>
+                                <th>상태</th>
+                                <th class="admin-only">관리</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ptRequestTableBody"></tbody>
+                    </table>
                 </div>
             </div>
 
@@ -2518,7 +2552,7 @@
                 </div>
                 <div class="form-group" id="ssScopeSubGroup" style="display:none;">
                     <label class="form-label">공종 (세부) <span style="color:var(--red)">*</span></label>
-                    <select class="form-select" id="ssScopeSub" required>
+                    <select class="form-select" id="ssScopeSub">
                         <option value="">선택하세요</option>
                     </select>
                 </div>
@@ -2527,17 +2561,17 @@
                     <input type="text" class="form-input" id="ssManager" placeholder="예: 홍길동" required>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">담당자 연락처</label>
-                    <input type="text" class="form-input" id="ssPhone" placeholder="예: 010-1234-5678">
+                    <label class="form-label">담당자 연락처 <span style="color:var(--red)">*</span></label>
+                    <input type="text" class="form-input" id="ssPhone" placeholder="예: 010-1234-5678" required>
                 </div>
 
                 <!-- 영업 상태: 관리자만 표시 -->
                 <div class="form-group" id="ssStatusGroup" style="display:none;">
                     <label class="form-label">영업 상태</label>
                     <select class="form-select" id="ssStatus">
-                        <option value="영업중">영업중</option>
+                        <option value="접수">접수</option>
                         <option value="확정">확정</option>
-                        <option value="미정">미정</option>
+                        <option value="취소">취소</option>
                     </select>
                 </div>
 
@@ -2714,6 +2748,60 @@
         <div class="modal-footer">
             <button class="btn btn-secondary" onclick="closeModal('materialUploadModal')">취소</button>
             <button class="btn btn-primary" id="materialUploadSubmitBtn" onclick="document.getElementById('materialUploadForm').requestSubmit()">업로드</button>
+        </div>
+    </div>
+</div>
+
+<!-- PT Request Modal -->
+<div class="modal-overlay" id="ptRequestModal">
+    <div class="modal" style="max-width:520px;">
+        <div class="modal-header">
+            <div class="modal-title">📤 PT요청 접수</div>
+            <button class="modal-close" onclick="closeModal('ptRequestModal')">×</button>
+        </div>
+        <div class="modal-body">
+            <form class="modal-form" id="ptRequestForm" onsubmit="handlePtRequest(event)">
+                <div class="form-group">
+                    <label class="form-label">현장명 <span style="color:var(--red)">*</span></label>
+                    <input type="text" class="form-input" id="ptSiteName" placeholder="예: 구로두산위브" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">주소</label>
+                    <input type="text" class="form-input" id="ptAddress" placeholder="예: 서울 구로구 디지털로31길 85">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">요청자 / 업체 <span style="color:var(--red)">*</span></label>
+                    <input type="text" class="form-input" id="ptRequester" placeholder="예: (주)방수준건설 김기효 과장" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">연락처</label>
+                    <input type="text" class="form-input" id="ptPhone" placeholder="예: 010-1234-5678">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">공종 <span style="color:var(--red)">*</span></label>
+                    <input type="text" class="form-input" id="ptScope" placeholder="예: 옥상슬라브방수공사" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">희망 일시</label>
+                    <input type="datetime-local" class="form-input" id="ptDateTime">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">참석 인원</label>
+                    <input type="text" class="form-input" id="ptAttendees" placeholder="예: 10명내외">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">첨부파일</label>
+                    <input type="file" class="form-input" id="ptFileInput" accept=".pdf,.xlsx,.xls,.docx,.doc,.hwp,.pptx,.ppt,.zip,.jpg,.png">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">기타사항</label>
+                    <textarea class="form-textarea" id="ptMemo" placeholder="경쟁사, 특이사항 등"></textarea>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeModal('ptRequestModal')">취소</button>
+            <button class="btn btn-primary" onclick="document.getElementById('ptRequestForm').requestSubmit()">접수하기</button>
         </div>
     </div>
 </div>
@@ -3097,6 +3185,7 @@ function initDashboard() {
     renderSaleSiteList();
     renderTechQAList();
     renderFAQ();
+    renderPtRequests();
     if (isAdmin) {
         document.getElementById('ssCompanyFilter').style.display = 'block';
         checkDuplicates();
@@ -3118,6 +3207,7 @@ const sectionTitles = {
     techqa: ['기술문의', 'POUR공법 기술 지원 및 Q&A'],
     orders: ['자재발주 및 소모량 계산', '단가표 및 소모량 계산'],
     forms: ['각종양식', '업무 양식 다운로드'],
+    ptrequest: ['PT요청', 'PT 요청 접수 및 배정 현황'],
     myinfo: ['내 정보', '회사 정보 및 계정 설정'],
 };
 
@@ -3394,6 +3484,118 @@ function loadMaterialCalcFile() {
     }, err => console.warn('단가표 파일 로드 실패:', err));
 }
 
+// ========== PT요청 ==========
+let ptRequests = [];
+
+function openPtRequestModal() {
+    document.getElementById('ptRequestModal').classList.add('active');
+    document.getElementById('ptRequestForm').reset();
+}
+
+async function handlePtRequest(e) {
+    e.preventDefault();
+    const newId = _fbReady ? fbGenId() : String(Date.now());
+    const entry = {
+        id: newId,
+        siteName: document.getElementById('ptSiteName').value.trim(),
+        address: document.getElementById('ptAddress').value.trim(),
+        requester: document.getElementById('ptRequester').value.trim(),
+        phone: document.getElementById('ptPhone').value.trim(),
+        scope: document.getElementById('ptScope').value.trim(),
+        dateTime: document.getElementById('ptDateTime').value,
+        attendees: document.getElementById('ptAttendees').value.trim(),
+        memo: document.getElementById('ptMemo').value.trim(),
+        assignedTo: '',
+        status: '접수',
+        companyId: isAdmin ? 0 : currentUser.id,
+        companyName: isAdmin ? '관리자' : currentUser.name,
+        createdAt: new Date().toLocaleDateString('ko-KR').replace(/\. /g, '.').slice(0,-1),
+    };
+
+    // 파일 첨부 처리
+    const fileInput = document.getElementById('ptFileInput');
+    if (fileInput.files.length > 0) {
+        const file = fileInput.files[0];
+        const reader = new FileReader();
+        reader.onload = async function(ev) {
+            entry.fileName = file.name;
+            entry.fileData = ev.target.result;
+            savePtRequest(entry);
+        };
+        reader.readAsDataURL(file);
+    } else {
+        savePtRequest(entry);
+    }
+}
+
+async function savePtRequest(entry) {
+    closeModal('ptRequestModal');
+    showToast(`${entry.siteName} PT요청이 접수되었습니다.`, 'success');
+    if (_fbReady) {
+        fbSet('ptRequests', entry.id, entry).catch(err => console.error('PT요청 저장 실패:', err));
+    } else {
+        ptRequests.push(entry);
+        renderPtRequests();
+    }
+}
+
+function renderPtRequests() {
+    const myData = isAdmin ? ptRequests : ptRequests.filter(p => p.companyId === currentUser?.id);
+    const tbody = document.getElementById('ptRequestTableBody');
+    if (!tbody) return;
+    if (!myData.length) {
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:40px;color:var(--gray-400);">접수된 PT요청이 없습니다.</td></tr>';
+        return;
+    }
+    tbody.innerHTML = myData.map((p, idx) => {
+        const statusCls = { '접수': 'color:var(--orange)', '진행중': 'color:var(--blue)', '완료': 'color:var(--green)' }[p.status] || '';
+        const adminBtns = isAdmin ? `<td>
+            <div style="display:flex;gap:4px;">
+                <button class="action-btn" onclick="event.stopPropagation(); assignPtRequest('${p.id}')" style="color:var(--blue);border-color:#bfdbfe;padding:4px 8px;font-size:11px;">배정</button>
+                <button class="action-btn" onclick="event.stopPropagation(); completePtRequest('${p.id}')" style="color:var(--green);border-color:#bbf7d0;padding:4px 8px;font-size:11px;">완료</button>
+            </div>
+        </td>` : '';
+        const dateDisplay = p.dateTime ? new Date(p.dateTime).toLocaleString('ko-KR', {month:'2-digit',day:'2-digit',weekday:'short',hour:'2-digit',minute:'2-digit'}) : p.createdAt;
+        return `<tr>
+            <td style="font-size:12px;color:var(--gray-400);">${idx+1}</td>
+            <td style="font-weight:600;">${p.siteName}${p.attendees ? ` <span style="color:var(--gray-400);font-size:12px;">(${p.attendees})</span>` : ''}</td>
+            <td style="font-size:12px;color:var(--gray-500);">${p.address || '-'}</td>
+            <td style="font-size:12px;">${p.requester}${p.phone ? `<div style="font-size:11px;color:var(--gray-400);">${p.phone}</div>` : ''}</td>
+            <td style="font-size:12px;">${p.scope}</td>
+            <td style="font-size:12px;">${dateDisplay}</td>
+            <td style="font-size:12px;font-weight:600;">${p.assignedTo || '<span style="color:var(--red);">미배정</span>'}</td>
+            <td><span style="font-size:12px;font-weight:600;${statusCls}">${p.status}</span></td>
+            ${adminBtns}
+        </tr>`;
+    }).join('');
+
+    // Badge
+    const badge = document.getElementById('ptBadge');
+    const pending = ptRequests.filter(p => p.status === '접수').length;
+    if (badge) { badge.style.display = pending > 0 ? 'inline' : 'none'; badge.textContent = pending; }
+}
+
+function assignPtRequest(id) {
+    const name = prompt('배정할 담당자 이름을 입력하세요:');
+    if (!name) return;
+    const p = ptRequests.find(x => String(x.id) === String(id));
+    if (!p) return;
+    p.assignedTo = name;
+    p.status = '진행중';
+    if (_fbReady) { fbSet('ptRequests', p.id, p); }
+    renderPtRequests();
+    showToast(`${p.siteName} → ${name} 배정 완료`, 'success');
+}
+
+function completePtRequest(id) {
+    const p = ptRequests.find(x => String(x.id) === String(id));
+    if (!p) return;
+    p.status = '완료';
+    if (_fbReady) { fbSet('ptRequests', p.id, p); }
+    renderPtRequests();
+    showToast(`${p.siteName} PT 완료 처리`, 'success');
+}
+
 // ========== HOME ==========
 function renderHome() {
     const mySites = isAdmin ? sites : sites.filter(s => s.companyId === currentUser.id);
@@ -3619,6 +3821,7 @@ function renderSiteDetail() {
             { id: 'material', label: '자재발주서' },
             { id: 'payment', label: '입금현황' },
             { id: 'progress', label: '공정률' },
+            { id: 'photos', label: '준공사진첩' },
         ];
     } else {
         tabs = [
@@ -3636,6 +3839,29 @@ function renderSiteDetail() {
     const body = document.getElementById('siteDetailBody');
 
     if (_currentDetailTab === 'basic') {
+        // 하자마감일 자동계산
+        const defectYears = site.defectYears || 3;
+        let autoDefectDeadline = site.defectDeadline || '';
+        if (site.constructionEnd && !autoDefectDeadline) {
+            const d = new Date(site.constructionEnd);
+            d.setFullYear(d.getFullYear() + defectYears);
+            autoDefectDeadline = d.toISOString().split('T')[0];
+        }
+
+        // 준공일: 시공사가 입력 가능
+        const endDateHtml = (!isAdmin && site.companyId === currentUser?.id)
+            ? `<input type="date" class="form-input" value="${site.constructionEnd || ''}" style="width:160px;padding:6px 10px;font-size:13px;" onchange="saveSiteEndDate('${site.id}', this.value)">`
+            : `<span>${site.constructionEnd || '-'}</span>`;
+
+        // 하자년수: 관리자만 수정 가능
+        const defectYearsHtml = isAdmin
+            ? `<select class="form-select" style="width:80px;padding:4px 8px;font-size:13px;" onchange="saveSiteDefectYears('${site.id}', this.value)">
+                <option value="3" ${defectYears===3?'selected':''}>3년</option>
+                <option value="5" ${defectYears===5?'selected':''}>5년</option>
+                <option value="10" ${defectYears===10?'selected':''}>10년</option>
+               </select>`
+            : `${defectYears}년`;
+
         body.innerHTML = `
             <div class="detail-info-grid">
                 <div style="border-right:1px solid var(--gray-100);padding-right:24px;">
@@ -3648,9 +3874,9 @@ function renderSiteDetail() {
                 </div>
                 <div style="padding-left:24px;">
                     <div class="detail-info-row"><div class="detail-info-label">착공일</div><div class="detail-info-value" style="color:var(--blue);font-weight:600;">${site.constructionStart || '-'}</div></div>
-                    <div class="detail-info-row"><div class="detail-info-label">준공일</div><div class="detail-info-value">${site.constructionEnd || '-'}</div></div>
-                    <div class="detail-info-row"><div class="detail-info-label">하자마감일</div><div class="detail-info-value">${site.defectDeadline || '-'}</div></div>
-                    <div class="detail-info-row"><div class="detail-info-label">하자년수</div><div class="detail-info-value">${site.defectYears || 3}년</div></div>
+                    <div class="detail-info-row"><div class="detail-info-label">준공일</div><div class="detail-info-value">${endDateHtml}</div></div>
+                    <div class="detail-info-row"><div class="detail-info-label">하자년수</div><div class="detail-info-value">${defectYearsHtml}</div></div>
+                    <div class="detail-info-row"><div class="detail-info-label">하자마감일</div><div class="detail-info-value" style="color:${autoDefectDeadline ? 'var(--green)' : 'var(--gray-400)'}; font-weight:600;">${autoDefectDeadline || '준공일 입력 시 자동계산'}</div></div>
                     <div class="detail-info-row"><div class="detail-info-label">담당자</div><div class="detail-info-value">${company ? company.manager : '-'}</div></div>
                     <div class="detail-info-row"><div class="detail-info-label">메모</div><div class="detail-info-value">${site.memo || '-'}</div></div>
                 </div>
@@ -3712,28 +3938,33 @@ function renderSiteDetail() {
             ` : '<div style="color:var(--gray-400);text-align:center;padding:30px;">자재 발주 상세 내역이 없습니다.</div>'}
         `;
     } else if (_currentDetailTab === 'payment') {
+        const tc = site.techConsulting || { advance: {amount:'-',due:'-',confirmed:false}, middle: {amount:'-',due:'-',confirmed:false}, balance: {amount:'-',due:'-',confirmed:false} };
+        function payRow(label, p, field, section) {
+            const editHtml = isAdmin ? `<input type="text" class="form-input" value="${p.amount === '-' ? '' : p.amount}" placeholder="금액"
+                style="width:100px;padding:4px 8px;font-size:12px;display:inline-block;"
+                onchange="saveSitePayment('${site.id}','${section}','${field}','amount',this.value)">` : p.amount;
+            const confirmHtml = isAdmin
+                ? `<label style="cursor:pointer;" onclick="event.stopPropagation();"><input type="checkbox" ${p.confirmed?'checked':''} onchange="saveSitePayment('${site.id}','${section}','${field}','confirmed',this.checked)" style="display:none;"> ${p.confirmed?'✅ 입금완료':'⬜ 미입금'}</label>`
+                : `<span class="payment-check ${p.confirmed?'confirmed':'unconfirmed'}" style="font-size:13px;">${p.confirmed?'✓ 입금완료':'○ 미입금'}</span>`;
+            return `<tr style="cursor:default;"><td style="font-weight:600;">${label}</td><td>${editHtml}</td><td>${p.due}</td><td>${confirmHtml}</td></tr>`;
+        }
         body.innerHTML = `
+            <h4 style="font-size:15px;font-weight:700;margin-bottom:12px;">💰 컨설팅 비용</h4>
+            <table class="site-table" style="border:1px solid var(--gray-200);border-radius:10px;overflow:hidden;margin-bottom:24px;">
+                <thead><tr><th>구분</th><th>금액</th><th>납입기한</th><th>입금여부</th></tr></thead>
+                <tbody>
+                    ${payRow('착수금', site.payment.advance, 'advance', 'payment')}
+                    ${payRow('중도금', site.payment.middle, 'middle', 'payment')}
+                    ${payRow('잔금', site.payment.balance, 'balance', 'payment')}
+                </tbody>
+            </table>
+            <h4 style="font-size:15px;font-weight:700;margin-bottom:12px;">👷 기술인력 컨설팅</h4>
             <table class="site-table" style="border:1px solid var(--gray-200);border-radius:10px;overflow:hidden;">
                 <thead><tr><th>구분</th><th>금액</th><th>납입기한</th><th>입금여부</th></tr></thead>
                 <tbody>
-                    <tr style="cursor:default;">
-                        <td style="font-weight:600;">착수금</td>
-                        <td>${site.payment.advance.amount}</td>
-                        <td>${site.payment.advance.due}</td>
-                        <td><span class="payment-check ${site.payment.advance.confirmed ? 'confirmed' : 'unconfirmed'}" style="font-size:13px;">${site.payment.advance.confirmed ? '✓ 입금완료' : '○ 미입금'}</span></td>
-                    </tr>
-                    <tr style="cursor:default;">
-                        <td style="font-weight:600;">중도금</td>
-                        <td>${site.payment.middle.amount}</td>
-                        <td>${site.payment.middle.due}</td>
-                        <td><span class="payment-check ${site.payment.middle.confirmed ? 'confirmed' : 'unconfirmed'}" style="font-size:13px;">${site.payment.middle.confirmed ? '✓ 입금완료' : '○ 미입금'}</span></td>
-                    </tr>
-                    <tr style="cursor:default;">
-                        <td style="font-weight:600;">잔금</td>
-                        <td>${site.payment.balance.amount}</td>
-                        <td>${site.payment.balance.due}</td>
-                        <td><span class="payment-check ${site.payment.balance.confirmed ? 'confirmed' : 'unconfirmed'}" style="font-size:13px;">${site.payment.balance.confirmed ? '✓ 입금완료' : '○ 미입금'}</span></td>
-                    </tr>
+                    ${payRow('착수금', tc.advance, 'advance', 'techConsulting')}
+                    ${payRow('중도금', tc.middle, 'middle', 'techConsulting')}
+                    ${payRow('잔금', tc.balance, 'balance', 'techConsulting')}
                 </tbody>
             </table>
         `;
@@ -3774,7 +4005,114 @@ function renderSiteDetail() {
                 </table>
             ` : '<div style="color:var(--gray-400);text-align:center;padding:30px;">구매 이력이 없습니다.</div>'}
         `;
+    } else if (_currentDetailTab === 'photos') {
+        const photos = site.completionPhotos || [];
+        body.innerHTML = `
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+                <h4 style="font-size:15px;font-weight:700;">📷 준공사진첩</h4>
+                ${isAdmin ? `<button class="btn btn-primary btn-sm" onclick="uploadCompletionPhoto('${site.id}')">📤 사진 업로드</button>` : ''}
+            </div>
+            ${photos.length ? `
+                <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;">
+                    ${photos.map((p,i) => `
+                        <div style="border:1px solid var(--gray-200);border-radius:10px;overflow:hidden;">
+                            <div style="height:140px;background:var(--gray-50);display:flex;align-items:center;justify-content:center;font-size:48px;">📷</div>
+                            <div style="padding:10px;">
+                                <div style="font-size:13px;font-weight:600;word-break:break-all;">${p.fileName}</div>
+                                <div style="font-size:11px;color:var(--gray-400);margin-top:2px;">${p.uploadDate || ''}</div>
+                                <button class="btn btn-primary btn-sm" style="margin-top:8px;width:100%;font-size:12px;" onclick="downloadCompletionPhoto('${site.id}',${i})">📥 다운로드</button>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            ` : '<div style="color:var(--gray-400);text-align:center;padding:40px;">등록된 준공사진이 없습니다.</div>'}
+        `;
     }
+}
+
+// 준공일 저장 (시공사)
+async function saveSiteEndDate(siteId, value) {
+    const site = sites.find(s => String(s.id) === String(siteId));
+    if (!site) return;
+    site.constructionEnd = value;
+    // 하자마감일 자동계산
+    if (value) {
+        const d = new Date(value);
+        d.setFullYear(d.getFullYear() + (site.defectYears || 3));
+        site.defectDeadline = d.toISOString().split('T')[0];
+    }
+    if (_fbReady) { fbSet('sites', siteId, site); }
+    renderSiteDetail();
+    showToast('준공일이 저장되었습니다.', 'success');
+}
+
+// 하자년수 저장 (관리자)
+async function saveSiteDefectYears(siteId, years) {
+    const site = sites.find(s => String(s.id) === String(siteId));
+    if (!site) return;
+    site.defectYears = parseInt(years);
+    if (site.constructionEnd) {
+        const d = new Date(site.constructionEnd);
+        d.setFullYear(d.getFullYear() + site.defectYears);
+        site.defectDeadline = d.toISOString().split('T')[0];
+    }
+    if (_fbReady) { fbSet('sites', siteId, site); }
+    renderSiteDetail();
+    showToast('하자년수가 변경되었습니다.', 'success');
+}
+
+// 입금현황 저장 (관리자)
+async function saveSitePayment(siteId, section, field, prop, value) {
+    const site = sites.find(s => String(s.id) === String(siteId));
+    if (!site) return;
+    if (!site[section]) {
+        site[section] = { advance: {amount:'-',due:'-',confirmed:false}, middle: {amount:'-',due:'-',confirmed:false}, balance: {amount:'-',due:'-',confirmed:false} };
+    }
+    if (prop === 'amount') { site[section][field].amount = value || '-'; }
+    else if (prop === 'confirmed') { site[section][field].confirmed = value; }
+    if (_fbReady) { fbSet('sites', siteId, site); }
+    renderSiteDetail();
+}
+
+// 준공사진 업로드 (관리자)
+function uploadCompletionPhoto(siteId) {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*,.pdf,.zip';
+    input.multiple = true;
+    input.onchange = async function() {
+        const site = sites.find(s => String(s.id) === String(siteId));
+        if (!site) return;
+        if (!site.completionPhotos) site.completionPhotos = [];
+        for (const file of input.files) {
+            const reader = new FileReader();
+            reader.onload = async function(ev) {
+                site.completionPhotos.push({
+                    fileName: file.name,
+                    fileData: ev.target.result,
+                    uploadDate: new Date().toLocaleDateString('ko-KR'),
+                });
+                if (_fbReady) { fbSet('sites', siteId, site); }
+                renderSiteDetail();
+            };
+            reader.readAsDataURL(file);
+        }
+        showToast('사진이 업로드되었습니다.', 'success');
+    };
+    input.click();
+}
+
+// 준공사진 다운로드
+function downloadCompletionPhoto(siteId, idx) {
+    const site = sites.find(s => String(s.id) === String(siteId));
+    if (!site || !site.completionPhotos || !site.completionPhotos[idx]) return;
+    const p = site.completionPhotos[idx];
+    const link = document.createElement('a');
+    link.href = p.fileData;
+    link.download = p.fileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
 }
 
 // Legacy compat - openDetailModal redirects to inline detail view
@@ -4645,7 +4983,8 @@ async function handleNewSaleSite(e) {
         scope:    document.getElementById('ssScope').value.trim(),
         manager:  document.getElementById('ssManager').value.trim(),
         phone:    document.getElementById('ssPhone').value.trim(),
-        status:   isAdmin ? (document.getElementById('ssStatus')?.value || '영업중') : '영업중',
+        status:   isAdmin ? (document.getElementById('ssStatus')?.value || '접수') : '접수',
+        adminConfirmed: false,
         memo:     document.getElementById('ssMemo')?.value.trim() || '',
         createdAt: new Date().toLocaleDateString('ko-KR').replace(/\. /g, '.').slice(0,-1),
     };
@@ -4699,47 +5038,70 @@ function renderSingleSaleSiteItem(s, dupKeys, statusColors) {
     const companyChipStyle = `background:${cc.bg};color:${cc.fg}`;
     const memoVal = (s.memo || '').replace(/"/g, '&quot;');
     const idArg = typeof s.id === 'string' ? `'${s.id}'` : s.id;
-    const adminCols = isAdmin ? `<div>
-        <span class="salesite-company-chip" style="${companyChipStyle}">${displayCompanyName}</span>
-        <input type="text" class="salesite-inline-memo" value="${memoVal}"
-               placeholder="메모" title="메모 입력"
-               onchange="updateSaleSiteMemo(${idArg}, this.value)"
-               onclick="event.stopPropagation()">
-    </div>` : '';
-    const gridStyle = isAdmin
-        ? 'grid-template-columns:1.3fr 1.6fr 1fr 1fr 1.4fr 80px 100px;'
-        : 'grid-template-columns:1.6fr 2fr 1.2fr 1.2fr 100px;';
+    const displayStatus = s.status === '영업중' ? '접수' : s.status;
+    const statusCls = { '접수': 'blue', '영업중': 'blue', '확정': 'green', '취소': 'gray', '미정': 'gray' }[s.status] || 'gray';
+    const confirmed = s.adminConfirmed;
 
-    const actionBtns = isAdmin ? `
-        <div style="display:flex;gap:6px;flex-wrap:wrap;">
-            <button class="action-btn" onclick="editSaleSite(${idArg})" style="color:var(--blue);border-color:#bfdbfe;">✏️ 수정</button>
-            <button class="action-btn" onclick="deleteSaleSite(${idArg})" style="color:var(--red);border-color:var(--red-light);">🗑 삭제</button>
-        </div>` : '';
-
-    return `
+    if (isAdmin) {
+        // 관리자 뷰: 시공사, 확인체크, 상태변경, 수정/삭제
+        const gridStyle = 'grid-template-columns:1.3fr 1.4fr 1fr 1fr 1.2fr 80px 60px 110px;';
+        return `
         <div class="salesite-item${isDup ? ' dup-item' : ''}" style="${gridStyle}">
             <div>
-                <div class="salesite-name">
-                    ${s.building}
-                    ${isDup ? `<span class="dup-badge" title="중복 등록 감지">⚠️ 중복</span>` : ''}
-                </div>
+                <div class="salesite-name">${s.building}${isDup ? ' <span class="dup-badge">⚠️ 중복</span>' : ''}</div>
             </div>
-            <div>
-                <div style="font-size:13px;color:var(--gray-700);">${s.address}</div>
-            </div>
+            <div style="font-size:13px;color:var(--gray-700);">${s.address}</div>
             <div style="font-size:13px;color:var(--gray-700);">${s.scope}</div>
             <div>
-                <div style="font-size:13px;font-weight:600;color:var(--gray-900);">${s.manager}</div>
+                <div style="font-size:13px;font-weight:600;">${s.manager}</div>
                 ${s.phone ? `<div style="font-size:12px;color:var(--gray-400);">${s.phone}</div>` : ''}
             </div>
-            ${adminCols}
+            <div>
+                <span class="salesite-company-chip" style="${companyChipStyle}">${displayCompanyName}</span>
+                <input type="text" class="salesite-inline-memo" value="${memoVal}" placeholder="메모"
+                       onchange="updateSaleSiteMemo(${idArg}, this.value)" onclick="event.stopPropagation()">
+            </div>
             <div>
                 <div style="font-size:12px;color:var(--gray-400);">${s.createdAt}</div>
-                <span class="status-badge ${statusColors[s.status]}" style="margin-top:4px;">${s.status}</span>
+                <select class="form-select" style="font-size:11px;padding:3px 6px;margin-top:4px;border-radius:6px;"
+                        onchange="updateSaleSiteStatus(${idArg}, this.value)" onclick="event.stopPropagation()">
+                    <option value="접수" ${displayStatus === '접수' ? 'selected' : ''}>접수</option>
+                    <option value="확정" ${s.status === '확정' ? 'selected' : ''}>확정</option>
+                    <option value="취소" ${s.status === '취소' ? 'selected' : ''}>취소</option>
+                </select>
             </div>
-            ${actionBtns}
-        </div>
-    `;
+            <div style="text-align:center;">
+                <label style="cursor:pointer;font-size:18px;" onclick="event.stopPropagation();" title="${confirmed ? '확인완료' : '미확인'}">
+                    <input type="checkbox" ${confirmed ? 'checked' : ''} onchange="toggleSaleSiteConfirm(${idArg}, this.checked)" style="display:none;">
+                    ${confirmed ? '✅' : '⬜'}
+                </label>
+            </div>
+            <div style="display:flex;gap:4px;flex-wrap:wrap;">
+                <button class="action-btn" onclick="editSaleSite(${idArg})" style="color:var(--blue);border-color:#bfdbfe;padding:4px 8px;font-size:11px;">✏️</button>
+                <button class="action-btn" onclick="deleteSaleSite(${idArg})" style="color:var(--red);border-color:var(--red-light);padding:4px 8px;font-size:11px;">🗑</button>
+            </div>
+        </div>`;
+    } else {
+        // 시공사 뷰: 등록일 + 확인상태만
+        const gridStyle = 'grid-template-columns:1.6fr 2fr 1.2fr 1.2fr 120px;';
+        const confirmLabel = confirmed
+            ? '<span style="color:var(--green);font-size:12px;font-weight:600;">✅ 확인완료</span>'
+            : '<span style="color:var(--gray-400);font-size:12px;">⏳ 확인대기</span>';
+        return `
+        <div class="salesite-item" style="${gridStyle}">
+            <div><div class="salesite-name">${s.building}</div></div>
+            <div style="font-size:13px;color:var(--gray-700);">${s.address}</div>
+            <div style="font-size:13px;color:var(--gray-700);">${s.scope}</div>
+            <div>
+                <div style="font-size:13px;font-weight:600;">${s.manager}</div>
+                ${s.phone ? `<div style="font-size:12px;color:var(--gray-400);">${s.phone}</div>` : ''}
+            </div>
+            <div>
+                <div style="font-size:12px;color:var(--gray-400);">${s.createdAt}</div>
+                ${confirmLabel}
+            </div>
+        </div>`;
+    }
 }
 
 function renderSaleSiteList() {
@@ -4759,7 +5121,11 @@ function renderSaleSiteList() {
     if (currentSaleSiteFilter === 'dup') {
         filtered = filtered.filter(s => dupIdSet.has(s.id));
     } else if (currentSaleSiteFilter !== 'all') {
-        filtered = filtered.filter(s => s.status === currentSaleSiteFilter);
+        if (currentSaleSiteFilter === '접수') {
+            filtered = filtered.filter(s => s.status === '접수' || s.status === '영업중');
+        } else {
+            filtered = filtered.filter(s => s.status === currentSaleSiteFilter);
+        }
     }
 
     // Search
@@ -4769,18 +5135,18 @@ function renderSaleSiteList() {
     // Count badges
     const base = isAdmin ? saleSites : saleSites.filter(s => s.companyId === currentUser.id);
     document.getElementById('ssCountAll').textContent = base.length;
-    document.getElementById('ssCountActive').textContent = base.filter(s => s.status === '영업중').length;
+    document.getElementById('ssCountActive').textContent = base.filter(s => s.status === '접수' || s.status === '영업중').length;
     document.getElementById('ssCountDone').textContent = base.filter(s => s.status === '확정').length;
-    document.getElementById('ssCountHold').textContent = base.filter(s => s.status === '미정').length;
+    document.getElementById('ssCountHold').textContent = base.filter(s => s.status === '취소').length;
     document.getElementById('ssCountDup').textContent = isAdmin ? dupIdSet.size : 0;
 
     // Admin: show company + action columns
     const header = document.getElementById('saleSiteListHeader');
     if (isAdmin) {
-        header.style.gridTemplateColumns = '1.3fr 1.6fr 1fr 1fr 1.4fr 80px 100px';
-        header.innerHTML = '<div>단지명</div><div>주소</div><div>공종</div><div>담당자</div><div>시공사</div><div>등록일 / 상태</div><div>관리</div>';
+        header.style.gridTemplateColumns = '1.3fr 1.4fr 1fr 1fr 1.2fr 80px 60px 110px';
+        header.innerHTML = '<div>단지명</div><div>주소</div><div>공종</div><div>담당자</div><div>시공사</div><div>상태</div><div>확인</div><div>관리</div>';
     } else {
-        header.style.gridTemplateColumns = '1.6fr 2fr 1.2fr 1.2fr 100px';
+        header.style.gridTemplateColumns = '1.6fr 2fr 1.2fr 1.2fr 120px';
         header.innerHTML = '<div>단지명</div><div>주소</div><div>공종</div><div>담당자</div><div>등록일 / 상태</div>';
     }
 
@@ -4840,6 +5206,26 @@ function updateSaleSiteMemo(id, value) {
     if (_fbReady) {
         fbSet('saleSites', saleSites[idx].id, saleSites[idx]).catch(err => console.error('메모 저장 실패', err));
     }
+}
+
+function updateSaleSiteStatus(id, status) {
+    if (!isAdmin) return;
+    const idx = saleSites.findIndex(s => String(s.id) === String(id));
+    if (idx < 0) return;
+    saleSites[idx].status = status;
+    if (_fbReady) { fbSet('saleSites', saleSites[idx].id, saleSites[idx]).catch(err => console.error('상태 저장 실패', err)); }
+    renderSaleSiteList();
+    showToast(`상태가 "${status}"로 변경되었습니다.`, 'success');
+}
+
+function toggleSaleSiteConfirm(id, checked) {
+    if (!isAdmin) return;
+    const idx = saleSites.findIndex(s => String(s.id) === String(id));
+    if (idx < 0) return;
+    saleSites[idx].adminConfirmed = checked;
+    if (_fbReady) { fbSet('saleSites', saleSites[idx].id, saleSites[idx]).catch(err => console.error('확인 저장 실패', err)); }
+    renderSaleSiteList();
+    showToast(checked ? '확인 처리되었습니다.' : '확인이 해제되었습니다.', 'success');
 }
 
 function deleteSaleSite(id) {
@@ -5491,6 +5877,12 @@ function attachListeners() {
         }, err => console.error('[Firebase] sites 리스너 오류:', err))
     );
 
+    _unsubs.push(
+        db.collection('ptRequests').onSnapshot(snap => {
+            ptRequests = snap.docs.map(d => d.data());
+            renderPtRequests();
+        }, err => console.error('[Firebase] ptRequests 리스너 오류:', err))
+    );
     attachFormFilesListener();
     loadMaterialCalcFile();
 }
