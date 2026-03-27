@@ -3086,6 +3086,11 @@ function switchSection(name) {
     document.querySelectorAll('.nav-item').forEach(item => item.classList.toggle('active', item.dataset.section === name));
     document.getElementById('topbarTitle').textContent = sectionTitles[name][0];
     document.getElementById('topbarSubtitle').textContent = sectionTitles[name][1];
+    // 현장관리 섹션 진입 시 목록 뷰 표시
+    if (name === 'sites') {
+        document.getElementById('siteListView').style.display = 'block';
+        document.getElementById('siteDetailView').style.display = 'none';
+    }
 }
 
 // ========== FORMS (각종양식) 파일 관리 ==========
@@ -5276,34 +5281,42 @@ function initFirebase() {
 // ── 초기 샘플 데이터 시드 (컬렉션이 비어있을 때 1회만) ──
 async function seedInitialData() {
     try {
-        const check = await db.collection('saleSites').limit(1).get();
-        if (!check.empty) return; // 이미 데이터 있음
+        // 각 컬렉션별로 독립적으로 시드 여부 확인
+        const collections = [
+            { name: 'saleSites', data: saleSites },
+            { name: 'tickets', data: tickets },
+            { name: 'techQAs', data: techQAs },
+            { name: 'leads', data: leads },
+            { name: 'sites', data: sites },
+        ];
 
-        const batch = db.batch();
+        // sites 컬렉션은 데이터 모델이 변경되었으므로 기존 데이터 확인 후 리시드
+        const sitesCheck = await db.collection('sites').limit(1).get();
+        if (!sitesCheck.empty) {
+            const firstDoc = sitesCheck.docs[0].data();
+            // address 필드가 없으면 이전 형식 → 삭제 후 리시드
+            if (!firstDoc.address && firstDoc.address !== '') {
+                const oldDocs = await db.collection('sites').get();
+                const delBatch = db.batch();
+                oldDocs.docs.forEach(d => delBatch.delete(d.ref));
+                await delBatch.commit();
+                console.log('[Firebase] 이전 형식 sites 데이터 삭제');
+                // sites를 리시드 대상에 추가 (아래 for문에서 처리)
+            }
+        }
 
-        saleSites.forEach(s => {
-            const ref = db.collection('saleSites').doc(String(s.id));
-            batch.set(ref, s);
-        });
-        tickets.forEach(t => {
-            const ref = db.collection('tickets').doc(String(t.id));
-            batch.set(ref, t);
-        });
-        techQAs.forEach(q => {
-            const ref = db.collection('techQAs').doc(String(q.id));
-            batch.set(ref, q);
-        });
-        leads.forEach(l => {
-            const ref = db.collection('leads').doc(String(l.id));
-            batch.set(ref, l);
-        });
-        sites.forEach(s => {
-            const ref = db.collection('sites').doc(String(s.id));
-            batch.set(ref, s);
-        });
+        for (const col of collections) {
+            const check = await db.collection(col.name).limit(1).get();
+            if (!check.empty) continue; // 이미 데이터 있음
 
-        await batch.commit();
-        console.log('[Firebase] 초기 데이터 시드 완료');
+            const batch = db.batch();
+            col.data.forEach(item => {
+                const ref = db.collection(col.name).doc(String(item.id));
+                batch.set(ref, item);
+            });
+            await batch.commit();
+            console.log(`[Firebase] ${col.name} 초기 데이터 시드 완료`);
+        }
     } catch(e) {
         console.warn('[Firebase] 시드 실패', e);
     }
