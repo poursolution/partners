@@ -1575,11 +1575,6 @@
                 <span class="nav-item-icon">📁</span>
                 <span class="nav-item-text">자료실</span>
             </div>
-            <div class="nav-item" data-section="comm" onclick="switchSection('comm')">
-                <span class="nav-item-icon">💬</span>
-                <span class="nav-item-text">기타문의</span>
-                <span class="nav-badge" id="unreadBadge" style="display:none">2</span>
-            </div>
 
             <div class="nav-item" data-section="salesites" onclick="switchSection('salesites')">
                 <span class="nav-item-icon">📍</span>
@@ -1591,11 +1586,16 @@
                 <span class="nav-item-text">기술문의</span>
                 <span class="nav-badge" id="techBadge" style="display:none">0</span>
             </div>
+            <div class="nav-item" data-section="comm" onclick="switchSection('comm')">
+                <span class="nav-item-icon">💬</span>
+                <span class="nav-item-text">기타문의</span>
+                <span class="nav-badge" id="unreadBadge" style="display:none">2</span>
+            </div>
 
             <div class="nav-section-label" style="margin-top: 8px;">업무</div>
-            <div class="nav-item" data-section="orders" onclick="switchSection('orders')">
+            <div class="nav-item" onclick="openMaterialCalcPage()">
                 <span class="nav-item-icon">📦</span>
-                <span class="nav-item-text">자재발주</span>
+                <span class="nav-item-text">자재발주 및 소모량 계산</span>
             </div>
             <div class="nav-item" data-section="forms" onclick="switchSection('forms')">
                 <span class="nav-item-icon">📋</span>
@@ -2051,19 +2051,26 @@
             <!-- ========== ORDERS (자재발주) ========== -->
             <div class="section-page" id="section-orders">
                 <div class="section-header">
-                    <div class="section-title">자재발주</div>
+                    <div class="section-title">자재발주 및 소모량 계산</div>
+                    <button class="btn btn-primary btn-sm admin-only" onclick="openMaterialFileUploadModal()">📤 단가표 파일 업로드</button>
                 </div>
                 <div class="card" style="padding:32px;">
                     <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
                         <span style="font-size:28px;">📦</span>
                         <div>
-                            <div style="font-size:16px;font-weight:600;color:var(--gray-900);">POUR공법 자재 단가표</div>
-                            <div style="font-size:13px;color:var(--gray-500);">자재 발주 시 아래 단가표를 참고하세요.</div>
+                            <div style="font-size:16px;font-weight:600;color:var(--gray-900);">POUR공법 자재 단가표 / 소모량 계산</div>
+                            <div style="font-size:13px;color:var(--gray-500);">아래 버튼을 클릭하면 별도 창에서 단가표 및 소모량 계산 페이지가 열립니다.</div>
                         </div>
                     </div>
-                    <a href="file:///C:/Users/Administrator/Downloads/POUR_%EB%8B%A8%EA%B0%80%ED%91%9C_v10.html" target="_blank" style="display:inline-flex;align-items:center;gap:8px;padding:12px 24px;background:var(--primary);color:#fff;border-radius:8px;font-size:14px;font-weight:600;text-decoration:none;cursor:pointer;">
-                        📄 단가표 열기 (POUR_단가표_v10)
-                    </a>
+                    <div style="display:flex;gap:12px;flex-wrap:wrap;">
+                        <button onclick="openMaterialCalcPage()" style="display:inline-flex;align-items:center;gap:8px;padding:12px 24px;background:var(--primary);color:#fff;border-radius:8px;font-size:14px;font-weight:600;border:none;cursor:pointer;">
+                            📄 단가표 / 소모량 계산 열기
+                        </button>
+                    </div>
+                    <div id="materialFileInfo" style="margin-top:16px;display:none;">
+                        <div style="font-size:13px;color:var(--gray-500);margin-bottom:4px;">현재 등록된 파일:</div>
+                        <div id="materialFileName" style="font-size:14px;font-weight:600;color:var(--blue);"></div>
+                    </div>
                 </div>
             </div>
 
@@ -2677,6 +2684,40 @@
     </div>
 </div>
 
+<!-- Material Calc File Upload Modal -->
+<div class="modal-overlay" id="materialUploadModal">
+    <div class="modal">
+        <div class="modal-header">
+            <div class="modal-title">📤 단가표 파일 업로드</div>
+            <button class="modal-close" onclick="closeModal('materialUploadModal')">×</button>
+        </div>
+        <div class="modal-body">
+            <form class="modal-form" id="materialUploadForm" onsubmit="handleMaterialFileUpload(event)">
+                <div class="form-group">
+                    <label class="form-label">파일 선택 (HTML 파일)</label>
+                    <div class="file-upload-area" id="materialFileUploadArea">
+                        <label class="file-upload-placeholder" for="materialFileInput" style="cursor:pointer;">
+                            <div class="file-upload-icon">📎</div>
+                            <div class="file-upload-text">클릭하여 HTML 파일 선택</div>
+                            <div class="file-upload-hint">단가표/소모량 계산 HTML 파일</div>
+                        </label>
+                        <input type="file" id="materialFileInput" style="display:none" accept=".html,.htm" onchange="handleMaterialFileSelect(event)">
+                    </div>
+                    <div id="materialFileSelected" style="display:none;align-items:center;gap:8px;padding:10px 14px;background:var(--gray-50);border-radius:8px;margin-top:8px;">
+                        <span>📄</span>
+                        <span id="materialFileSelectedName" style="flex:1;font-size:13px;color:var(--gray-700);"></span>
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="removeMaterialFile()" style="padding:4px 10px;font-size:12px;">✕</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeModal('materialUploadModal')">취소</button>
+            <button class="btn btn-primary" id="materialUploadSubmitBtn" onclick="document.getElementById('materialUploadForm').requestSubmit()">업로드</button>
+        </div>
+    </div>
+</div>
+
 <!-- Toast -->
 <div class="toast" id="toast"></div>
 
@@ -3075,7 +3116,7 @@ const sectionTitles = {
     comm: ['기타문의', '요청, 문의 및 공지사항'],
     salesites: ['기술사용등록', 'POUR공법 기술 사용 단지 목록'],
     techqa: ['기술문의', 'POUR공법 기술 지원 및 Q&A'],
-    orders: ['자재발주', '자재 발주 및 입고 관리'],
+    orders: ['자재발주 및 소모량 계산', '단가표 및 소모량 계산'],
     forms: ['각종양식', '업무 양식 다운로드'],
     myinfo: ['내 정보', '회사 정보 및 계정 설정'],
 };
@@ -3265,6 +3306,92 @@ async function deleteFormFile(docId, name) {
         console.error('Firestore 삭제 실패:', e);
         showToast('삭제에 실패했습니다.', 'error');
     }
+}
+
+// ========== 자재발주 및 소모량 계산 ==========
+let _materialCalcFileData = null;
+let _selectedMaterialFile = null;
+
+function openMaterialCalcPage() {
+    // 1) Firestore에 저장된 파일이 있으면 그걸 열기
+    if (_materialCalcFileData) {
+        const w = window.open('', '_blank');
+        if (w) { w.document.write(_materialCalcFileData); w.document.close(); }
+        else { showToast('팝업이 차단되었습니다. 팝업을 허용해주세요.', 'error'); }
+        return;
+    }
+    // 2) 없으면 안내
+    switchSection('orders');
+    showToast('등록된 단가표 파일이 없습니다. 관리자에게 요청하세요.', 'error');
+}
+
+function openMaterialFileUploadModal() {
+    document.getElementById('materialUploadModal').classList.add('active');
+    document.getElementById('materialUploadForm').reset();
+    removeMaterialFile();
+}
+
+function handleMaterialFileSelect(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    _selectedMaterialFile = file;
+    document.getElementById('materialFileSelected').style.display = 'flex';
+    document.getElementById('materialFileSelectedName').textContent = file.name;
+}
+
+function removeMaterialFile() {
+    _selectedMaterialFile = null;
+    document.getElementById('materialFileSelected').style.display = 'none';
+    document.getElementById('materialFileInput').value = '';
+}
+
+async function handleMaterialFileUpload(e) {
+    e.preventDefault();
+    if (!_selectedMaterialFile) { showToast('파일을 선택해주세요.', 'error'); return; }
+
+    const reader = new FileReader();
+    reader.onload = async function(ev) {
+        const htmlContent = ev.target.result;
+        _materialCalcFileData = htmlContent;
+
+        // Firestore에 저장
+        if (db && _fbReady) {
+            try {
+                await db.collection('appSettings').doc('materialCalcFile').set({
+                    fileName: _selectedMaterialFile.name,
+                    fileData: htmlContent,
+                    uploadDate: new Date().toLocaleDateString('ko-KR'),
+                    uploadedBy: currentUser ? currentUser.name : '관리자'
+                });
+            } catch(err) {
+                console.error('단가표 저장 실패:', err);
+            }
+        }
+
+        // UI 업데이트
+        document.getElementById('materialFileInfo').style.display = 'block';
+        document.getElementById('materialFileName').textContent = _selectedMaterialFile.name;
+
+        closeModal('materialUploadModal');
+        showToast(_selectedMaterialFile.name + ' 파일이 업로드되었습니다.', 'success');
+    };
+    reader.readAsText(_selectedMaterialFile);
+}
+
+function loadMaterialCalcFile() {
+    if (!db) return;
+    db.collection('appSettings').doc('materialCalcFile').onSnapshot(snap => {
+        if (snap.exists) {
+            const data = snap.data();
+            _materialCalcFileData = data.fileData;
+            const infoEl = document.getElementById('materialFileInfo');
+            const nameEl = document.getElementById('materialFileName');
+            if (infoEl && nameEl) {
+                infoEl.style.display = 'block';
+                nameEl.textContent = data.fileName + ' (' + (data.uploadDate || '') + ')';
+            }
+        }
+    }, err => console.warn('단가표 파일 로드 실패:', err));
 }
 
 // ========== HOME ==========
@@ -5365,6 +5492,7 @@ function attachListeners() {
     );
 
     attachFormFilesListener();
+    loadMaterialCalcFile();
 }
 
 function updateBadges() {
