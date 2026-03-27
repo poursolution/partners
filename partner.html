@@ -5254,11 +5254,11 @@ function initFirebase() {
 
         // 연결 테스트: 실제 쓰기 권한 확인
         db.collection('_ping').doc('test').set({ t: Date.now() })
-            .then(() => {
+            .then(async () => {
                 _fbReady = true;
                 console.log('[Firebase] 연결 및 쓰기 권한 확인 완료');
                 showFbBanner('✅ 데이터베이스 연결됨 — 모든 데이터가 자동 저장됩니다.', 'ok');
-                seedInitialData();
+                await seedInitialData();
                 attachListeners();
             })
             .catch(err => {
@@ -5268,10 +5268,9 @@ function initFirebase() {
                     '<a href="https://console.firebase.google.com/project/partner-a3006/firestore/rules" target="_blank" style="color:#fff;text-decoration:underline;">규칙 설정하기 →</a>',
                     'error'
                 );
+                // 쓰기 실패해도 읽기 리스너는 시도
+                attachListeners();
             });
-
-        // 리스너는 일단 붙여두기 (읽기 권한은 별도)
-        attachListeners();
     } catch(e) {
         console.warn('[Firebase] 초기화 실패 — 로컬 데이터로 동작합니다.', e);
         showFbBanner('⚠️ Firebase 연결 실패 — 새로고침 시 데이터가 초기화됩니다.', 'error');
@@ -5357,9 +5356,11 @@ function attachListeners() {
     );
     _unsubs.push(
         db.collection('sites').onSnapshot(snap => {
-            sites = snap.docs.map(d => d.data());
-            renderSiteList();
-            renderHome();
+            if (snap.docs.length > 0) {
+                sites = snap.docs.map(d => d.data());
+                renderSiteList();
+                renderHome();
+            }
         }, err => console.error('[Firebase] sites 리스너 오류:', err))
     );
 
