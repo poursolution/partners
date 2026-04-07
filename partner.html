@@ -3383,24 +3383,7 @@ let currentFilter = 'all';
 let currentDefectStatusFilter = 'all';
 let currentDefectTab = 'list';
 let selectedDefectPhoto = null;
-let defects = [
-    { id: 1, siteId: 1, date: '2026-03-22', type: '누수', location: '옥상 A동 드레인 주변', content: '드레인 주변 5cm 균열, 누수 우려', cause: '시공', status: '계획수립',
-      planDate: '2026-04-06', planManager: '박성은', planAssignee: '정정훈', responses: [{date:'2026-04-06', text:'1차 현장 확인 완료, 추가 시공 검토'}],
-      createdAt: '2026-03-22' },
-    { id: 2, siteId: 2, date: '2026-03-15', type: '균열', location: '지하주차장 B구역 벽체', content: '미세 균열 다수 확인', cause: '자연', status: '종결',
-      planDate: '2026-03-18', planManager: '김기영', planAssignee: '이수정', responses: [{date:'2026-03-18', text:'1차 보강 시공 완료'}],
-      completeDate: '2026-03-25', resultText: '균열 보수 및 표면 방수 처리 완료', resultPhotos: ['after1.jpg'],
-      closeDate: '2026-03-28',
-      createdAt: '2026-03-15' },
-    { id: 3, siteId: 1, date: '2026-02-28', type: '들뜸', location: '1층 로비 바닥 타일', content: '바닥재 들뜸 발생', cause: '자재', status: '종결',
-      planDate: '2026-03-02', planManager: '박성은', planAssignee: '정정훈', responses: [{date:'2026-03-02', text:'타일 교체 진행'}],
-      completeDate: '2026-03-05', resultText: '들뜬 타일 부분 재시공 완료', resultPhotos: [],
-      closeDate: '2026-03-07',
-      createdAt: '2026-02-28' },
-    { id: 4, siteId: 1, date: '2026-04-01', type: '들뜸', location: '1동 트렌치 주변', content: '트렌치 부근 들뜸 현상', cause: '시공', status: '접수',
-      responses: [], createdAt: '2026-04-01' },
-];
-let _defectIdSeq = 4;
+let defects = [];
 let currentTicketFilter = 'all';
 let currentDocCat = 'all';
 let selectedLoginCompany = null;
@@ -4261,9 +4244,11 @@ function handleDefectIntake(e) {
     e.preventDefault();
     const location = document.getElementById('defectLocation').value.trim();
     if (!location) { showToast('하자 위치를 입력해주세요.', 'error'); return; }
+    const newId = _fbReady ? fbGenId() : String(Date.now());
     const newDefect = {
-        id: _defectIdSeq++,
-        siteId: _currentDefectSiteId,
+        id: newId,
+        siteId: _currentDefectSiteId ? String(_currentDefectSiteId) : null,
+        companyId: currentUser ? currentUser.id : null,
         date: document.getElementById('defectDate').value || new Date().toISOString().slice(0, 10),
         type: document.getElementById('defectType').value,
         location: location,
@@ -4271,9 +4256,13 @@ function handleDefectIntake(e) {
         cause: document.getElementById('defectCause').value,
         status: '접수',
         photoName: selectedDefectPhoto ? selectedDefectPhoto.name : null,
-        createdAt: new Date().toISOString().slice(0, 10),
+        responses: [],
+        createdAt: new Date().toISOString(),
     };
     defects.unshift(newDefect);
+    if (_fbReady) {
+        fbSet('defects', newId, newDefect).catch(err => console.error('[Firebase] defect 저장 실패', err));
+    }
     closeModal('defectIntakeModal');
     showToast('하자가 접수되었습니다.', 'success');
     document.getElementById('countDefect').textContent = defects.length;
@@ -4283,6 +4272,12 @@ function handleDefectIntake(e) {
         renderDefects();
     }
     _currentDefectSiteId = null;
+}
+
+function _persistDefect(d) {
+    if (_fbReady && d && d.id) {
+        fbSet('defects', d.id, d).catch(err => console.error('[Firebase] defect 저장 실패', err));
+    }
 }
 
 function switchDefectTab(tab) {
@@ -4333,20 +4328,20 @@ function renderDefectCard(d) {
     let actions = '';
     if (d.status === '접수') {
         actions = `
-            <button class="defect-action-btn primary" onclick="openDefectPlanModal(${d.id})">→ 계획수립으로 진행</button>
-            ${isAdmin ? `<button class="defect-action-btn danger" onclick="deleteDefect(${d.id})">🗑️ 삭제</button>` : ''}
+            ${isAdmin ? `<button class="defect-action-btn primary" onclick="openDefectPlanModal('${d.id}')">→ 계획수립으로 진행</button>` : ''}
+            ${isAdmin ? `<button class="defect-action-btn danger" onclick="deleteDefect('${d.id}')">🗑️ 삭제</button>` : ''}
         `;
     } else if (d.status === '계획수립') {
-        actions = `
-            <button class="defect-action-btn primary" onclick="openDefectCompleteModal(${d.id})">→ 완료로 진행</button>
-            <button class="defect-action-btn secondary" onclick="openResponseEditModal(${d.id})">— 응대이력 수정</button>
-        `;
+        actions = isAdmin ? `
+            <button class="defect-action-btn primary" onclick="openDefectCompleteModal('${d.id}')">→ 완료로 진행</button>
+            <button class="defect-action-btn secondary" onclick="openResponseEditModal('${d.id}')">— 응대이력 수정</button>
+        ` : '';
     } else if (d.status === '완료') {
-        actions = `<button class="defect-action-btn primary" onclick="openDefectCloseModal(${d.id})">→ 종결으로 진행</button>`;
+        actions = isAdmin ? `<button class="defect-action-btn primary" onclick="openDefectCloseModal('${d.id}')">→ 종결으로 진행</button>` : '';
     } else if (d.status === '종결') {
         actions = `
             <span class="defect-action-btn success">✅ 종결 완료</span>
-            <button class="defect-action-btn secondary" onclick="openDefectReport(${d.id})">📄 보고서</button>
+            <button class="defect-action-btn secondary" onclick="openDefectReport('${d.id}')">📄 보고서</button>
         `;
     }
     const planLine = (d.status !== '접수' && d.planDate) ? (
@@ -4429,18 +4424,25 @@ function renderDefects() {
 let _workingDefectId = null;
 
 function _getWorkingDefect() {
-    return defects.find(d => d.id === _workingDefectId);
+    return defects.find(d => String(d.id) === String(_workingDefectId));
+}
+
+function _findDefect(id) {
+    return defects.find(d => String(d.id) === String(id));
 }
 
 function _setModalTitle(modalId, titleId, defectId, suffix) {
-    const d = defects.find(x => x.id === defectId);
+    const d = _findDefect(defectId);
     if (!d) return;
     document.getElementById(titleId).textContent = `${_siteName(d.siteId)} — ${suffix}`;
 }
 
 function deleteDefect(id) {
     if (!confirm('이 하자 접수를 삭제하시겠습니까?')) return;
-    defects = defects.filter(d => d.id !== id);
+    defects = defects.filter(d => String(d.id) !== String(id));
+    if (_fbReady) {
+        fbDelete('defects', id).catch(err => console.error('[Firebase] defect 삭제 실패', err));
+    }
     showToast('삭제되었습니다.', 'success');
     document.getElementById('countDefect').textContent = defects.length;
     renderDefects();
@@ -4486,6 +4488,7 @@ function addPlanResponse() {
     if (!date || !text) { showToast('응대일자와 내용을 입력해주세요.', 'error'); return; }
     if (!d.responses) d.responses = [];
     d.responses.push({ date, text });
+    _persistDefect(d);
     document.getElementById('planResponseText').value = '';
     _renderPlanResponseList(d.responses);
     showToast('응대이력이 추가되었습니다.', 'success');
@@ -4501,6 +4504,7 @@ function handleDefectPlan(e) {
     d.planManagerPhone = document.getElementById('planManagerPhone').value.trim();
     if (!d.planDate) { showToast('하자 투입일을 입력해주세요.', 'error'); return; }
     d.status = '계획수립';
+    _persistDefect(d);
     closeModal('defectPlanModal');
     showToast('계획수립으로 진행되었습니다.', 'success');
     renderDefects();
@@ -4547,6 +4551,7 @@ function addResponseEditItem() {
     if (!date || !text) { showToast('응대일자와 내용을 입력해주세요.', 'error'); return; }
     if (!d.responses) d.responses = [];
     d.responses.push({ date, text });
+    _persistDefect(d);
     document.getElementById('responseEditText').value = '';
     _renderResponseEditList();
 }
@@ -4555,10 +4560,13 @@ function removeResponseEditItem(idx) {
     const d = _getWorkingDefect();
     if (!d || !d.responses) return;
     d.responses.splice(idx, 1);
+    _persistDefect(d);
     _renderResponseEditList();
 }
 
 function saveResponseEdit() {
+    const d = _getWorkingDefect();
+    if (d) _persistDefect(d);
     closeModal('defectResponseEditModal');
     showToast('응대이력이 저장되었습니다.', 'success');
     renderDefects();
@@ -4602,6 +4610,7 @@ function handleDefectComplete(e) {
     d.completeDate = document.getElementById('completeDate').value || new Date().toISOString().slice(0, 10);
     d.resultPhotos = _selectedCompletePhotos.map(f => f.name);
     d.status = '완료';
+    _persistDefect(d);
     closeModal('defectCompleteModal');
     showToast('완료 처리되었습니다.', 'success');
     renderDefects();
@@ -4626,6 +4635,7 @@ function confirmDefectClose() {
     if (!d) return;
     d.status = '종결';
     d.closeDate = new Date().toISOString().slice(0, 10);
+    _persistDefect(d);
     closeModal('defectCloseModal');
     showToast('종결 처리되었습니다.', 'success');
     renderDefects();
@@ -4633,7 +4643,7 @@ function confirmDefectClose() {
 
 // ----- 보고서 (HTML 다운로드) -----
 function openDefectReport(id) {
-    const d = defects.find(x => x.id === id);
+    const d = _findDefect(id);
     if (!d) return;
     const site = sites.find(s => String(s.id) === String(d.siteId));
     const company = site ? companies[site.companyId] : null;
@@ -7096,6 +7106,22 @@ function attachListeners() {
             ptRequests = snap.docs.map(d => d.data());
             renderPtRequests();
         }, err => console.error('[Firebase] ptRequests 리스너 오류:', err))
+    );
+    _unsubs.push(
+        db.collection('defects').onSnapshot(snap => {
+            defects = snap.docs.map(d => d.data())
+                .sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+            const countEl = document.getElementById('countDefect');
+            if (countEl) countEl.textContent = defects.length;
+            // 하자 탭이 활성화되어 있으면 리스트 갱신
+            if (document.getElementById('defectView') && document.getElementById('defectView').style.display !== 'none') {
+                renderDefects();
+            }
+            // 현장 상세 뷰에서 하자 탭이 열려있으면 갱신
+            if (document.getElementById('siteDetailView').style.display !== 'none' && _currentDetailTab === 'defects') {
+                renderSiteDetail();
+            }
+        }, err => console.error('[Firebase] defects 리스너 오류:', err))
     );
     attachFormFilesListener();
     loadMaterialCalcFile();
