@@ -1829,7 +1829,7 @@
                             <button class="filter-tab" data-filter="발주">발주<span class="count" id="countOrder">0</span></button>
                             <button class="filter-tab" data-filter="시공">시공<span class="count" id="countConstruction">0</span></button>
                             <button class="filter-tab" data-filter="정산">정산<span class="count" id="countSettlement">0</span></button>
-                            <button class="filter-tab" data-filter="하자">하자<span class="count" id="countDefect">0</span></button>
+                            <button class="filter-tab admin-only" data-filter="하자">하자<span class="count" id="countDefect">0</span></button>
                         </div>
                         <div class="search-box">
                             <select class="type-select" id="typeFilter" onchange="applyFilters()">
@@ -2950,6 +2950,10 @@
         </div>
         <div class="modal-body">
             <form class="modal-form" id="defectIntakeForm" onsubmit="handleDefectIntake(event)">
+                <div class="form-group" style="display:none;">
+                    <label class="form-label">현장</label>
+                    <div id="defectSiteName" style="padding:10px 12px;background:var(--gray-50);border-radius:9px;font-size:13px;font-weight:600;color:var(--gray-700);"></div>
+                </div>
                 <div class="form-row-2">
                     <div class="form-group">
                         <label class="form-label">접수일자</label>
@@ -3179,9 +3183,9 @@ let currentDefectStatusFilter = 'all';
 let currentDefectTab = 'list';
 let selectedDefectPhoto = null;
 let defects = [
-    { id: 1, date: '2026-03-22', type: '누수', location: '옥상 A동 드레인 주변', content: '강우 후 천장 누수 흔적 확인', cause: '시공', status: '계획수립', createdAt: '2026-03-22' },
-    { id: 2, date: '2026-03-15', type: '균열', location: '지하주차장 B구역 벽체', content: '미세 균열 다수 확인', cause: '자연', status: '종결', createdAt: '2026-03-15' },
-    { id: 3, date: '2026-02-28', type: '들뜸', location: '1층 로비 바닥 타일', content: '바닥재 들뜸 발생', cause: '자재', status: '종결', createdAt: '2026-02-28' },
+    { id: 1, siteId: 1, date: '2026-03-22', type: '누수', location: '옥상 A동 드레인 주변', content: '강우 후 천장 누수 흔적 확인', cause: '시공', status: '계획수립', createdAt: '2026-03-22' },
+    { id: 2, siteId: 2, date: '2026-03-15', type: '균열', location: '지하주차장 B구역 벽체', content: '미세 균열 다수 확인', cause: '자연', status: '종결', createdAt: '2026-03-15' },
+    { id: 3, siteId: 1, date: '2026-02-28', type: '들뜸', location: '1층 로비 바닥 타일', content: '바닥재 들뜸 발생', cause: '자재', status: '종결', createdAt: '2026-02-28' },
 ];
 let _defectIdSeq = 4;
 let currentTicketFilter = 'all';
@@ -4004,12 +4008,25 @@ function toggleDefectView(show) {
 }
 
 // ========== DEFECTS ==========
-function openDefectIntakeModal() {
+let _currentDefectSiteId = null;
+function openDefectIntakeModal(siteId) {
+    _currentDefectSiteId = siteId || null;
     document.getElementById('defectIntakeForm').reset();
     const today = new Date().toISOString().slice(0, 10);
     document.getElementById('defectDate').value = today;
     selectedDefectPhoto = null;
     document.getElementById('defectPhotoSelected').style.display = 'none';
+    // 현장명 표시
+    const siteNameEl = document.getElementById('defectSiteName');
+    if (siteNameEl) {
+        if (_currentDefectSiteId) {
+            const site = sites.find(s => String(s.id) === String(_currentDefectSiteId));
+            siteNameEl.textContent = site ? site.building : '';
+            siteNameEl.parentElement.style.display = '';
+        } else {
+            siteNameEl.parentElement.style.display = 'none';
+        }
+    }
     document.getElementById('defectIntakeModal').classList.add('active');
 }
 
@@ -4033,6 +4050,7 @@ function handleDefectIntake(e) {
     if (!location) { showToast('하자 위치를 입력해주세요.', 'error'); return; }
     const newDefect = {
         id: _defectIdSeq++,
+        siteId: _currentDefectSiteId,
         date: document.getElementById('defectDate').value || new Date().toISOString().slice(0, 10),
         type: document.getElementById('defectType').value,
         location: location,
@@ -4046,7 +4064,12 @@ function handleDefectIntake(e) {
     closeModal('defectIntakeModal');
     showToast('하자가 접수되었습니다.', 'success');
     document.getElementById('countDefect').textContent = defects.length;
-    renderDefects();
+    if (_currentDefectSiteId && document.getElementById('siteDetailView').style.display !== 'none') {
+        renderSiteDetail();
+    } else {
+        renderDefects();
+    }
+    _currentDefectSiteId = null;
 }
 
 function switchDefectTab(tab) {
@@ -4198,12 +4221,14 @@ function renderSiteDetail() {
             { id: 'payment', label: '입금현황' },
             { id: 'progress', label: '공정률' },
             { id: 'photos', label: '준공사진첩' },
+            { id: 'defects', label: '하자' },
         ];
     } else {
         tabs = [
             { id: 'basic', label: '기본정보' },
             { id: 'material', label: '자재발주' },
             { id: 'purchase', label: '구매이력' },
+            { id: 'defects', label: '하자' },
         ];
     }
 
@@ -4403,6 +4428,65 @@ function renderSiteDetail() {
                 </div>
             ` : '<div style="color:var(--gray-400);text-align:center;padding:40px;">등록된 준공사진이 없습니다.</div>'}
         `;
+    } else if (_currentDetailTab === 'defects') {
+        const siteDefects = defects.filter(d => String(d.siteId) === String(site.id));
+        if (isAdmin) {
+            // 관리자: 전체 하자 내역 + 상태 표시
+            body.innerHTML = `
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+                    <h4 style="font-size:15px;font-weight:700;">🔧 하자 내역 (${siteDefects.length}건)</h4>
+                    <button class="btn btn-primary btn-sm" onclick="openDefectIntakeModal('${site.id}')">➕ 하자 접수</button>
+                </div>
+                ${siteDefects.length ? `
+                    <div class="defect-list">
+                        ${siteDefects.map(d => `
+                            <div class="defect-card">
+                                <div class="defect-card-top">
+                                    <div class="defect-card-title">${escapeHtml(d.location)}</div>
+                                    <span class="defect-badge ${d.status}">${d.status}</span>
+                                </div>
+                                <div class="defect-card-meta">
+                                    <span>📅 ${d.date}</span>
+                                    <span>🏷️ ${d.type}</span>
+                                    <span>🔍 원인: ${d.cause}</span>
+                                    ${d.photoName ? `<span>📷 ${escapeHtml(d.photoName)}</span>` : ''}
+                                </div>
+                                ${d.content ? `<div class="defect-card-content">${escapeHtml(d.content)}</div>` : ''}
+                            </div>
+                        `).join('')}
+                    </div>
+                ` : '<div style="color:var(--gray-400);text-align:center;padding:40px;">접수된 하자가 없습니다.</div>'}
+            `;
+        } else {
+            // 협력사: 본인 현장 하자 접수 가능 + 본인이 접수한 내역만 간단 노출
+            body.innerHTML = `
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+                    <h4 style="font-size:15px;font-weight:700;">🔧 하자 접수</h4>
+                    <button class="btn btn-primary btn-sm" onclick="openDefectIntakeModal('${site.id}')">➕ 하자 접수하기</button>
+                </div>
+                <div style="font-size:13px;color:var(--gray-500);margin-bottom:16px;">
+                    현장에서 발견된 하자를 접수해주세요. 접수된 하자는 관리자가 확인 후 처리합니다.
+                </div>
+                ${siteDefects.length ? `
+                    <h5 style="font-size:13px;font-weight:700;color:var(--gray-700);margin-bottom:10px;">접수 내역 (${siteDefects.length}건)</h5>
+                    <div class="defect-list">
+                        ${siteDefects.map(d => `
+                            <div class="defect-card">
+                                <div class="defect-card-top">
+                                    <div class="defect-card-title">${escapeHtml(d.location)}</div>
+                                    <span class="defect-badge ${d.status}">${d.status}</span>
+                                </div>
+                                <div class="defect-card-meta">
+                                    <span>📅 ${d.date}</span>
+                                    <span>🏷️ ${d.type}</span>
+                                </div>
+                                ${d.content ? `<div class="defect-card-content">${escapeHtml(d.content)}</div>` : ''}
+                            </div>
+                        `).join('')}
+                    </div>
+                ` : '<div style="color:var(--gray-400);text-align:center;padding:30px;font-size:13px;">아직 접수된 하자가 없습니다.</div>'}
+            `;
+        }
     }
 }
 
