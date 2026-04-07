@@ -907,6 +907,72 @@
 
         .search-box { display: flex; align-items: center; gap: 10px; }
 
+        /* ===== Defect (하자) View ===== */
+        .defect-header {
+            display: flex; justify-content: space-between; align-items: flex-end;
+            padding: 4px 4px 18px; border-bottom: 1px solid var(--gray-200); margin-bottom: 18px;
+        }
+        .defect-title { font-size: 22px; font-weight: 800; color: var(--gray-900); }
+        .defect-subtitle { font-size: 13px; color: var(--gray-500); margin-top: 4px; }
+        .defect-tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--gray-200); margin-bottom: 18px; }
+        .defect-tab {
+            padding: 12px 18px; border: none; background: transparent;
+            font-size: 14px; font-weight: 600; color: var(--gray-500);
+            cursor: pointer; border-bottom: 2px solid transparent; font-family: inherit;
+        }
+        .defect-tab.active { color: var(--blue); border-bottom-color: var(--blue); }
+        .defect-status-pills { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+        .defect-pill {
+            padding: 7px 14px; border-radius: 999px; border: 1px solid var(--gray-200);
+            background: var(--gray-50); color: var(--gray-600);
+            font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit;
+        }
+        .defect-pill.active { background: var(--blue); color: #fff; border-color: var(--blue); }
+        .pill-count {
+            display: inline-block; margin-left: 4px; padding: 0 6px;
+            border-radius: 10px; background: rgba(0,0,0,0.08); font-size: 11px;
+        }
+        .defect-pill.active .pill-count { background: rgba(255,255,255,0.25); }
+        .defect-list { display: flex; flex-direction: column; gap: 10px; }
+        .defect-card {
+            border: 1px solid var(--gray-200); border-radius: 12px;
+            padding: 16px 18px; background: #fff; transition: all 0.15s;
+        }
+        .defect-card:hover { border-color: var(--blue); box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .defect-card-top { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 8px; }
+        .defect-card-title { font-size: 15px; font-weight: 700; color: var(--gray-900); }
+        .defect-card-meta { display: flex; gap: 12px; font-size: 12px; color: var(--gray-500); flex-wrap: wrap; }
+        .defect-card-content { font-size: 13px; color: var(--gray-600); margin-top: 8px; }
+        .defect-badge {
+            display: inline-block; padding: 3px 10px; border-radius: 999px;
+            font-size: 11px; font-weight: 700;
+        }
+        .defect-badge.접수 { background: #fef3c7; color: #b45309; }
+        .defect-badge.계획수립 { background: #dbeafe; color: #1d4ed8; }
+        .defect-badge.완료 { background: #d1fae5; color: #047857; }
+        .defect-badge.종결 { background: #e5e7eb; color: #374151; }
+        .defect-empty {
+            text-align: center; padding: 60px 20px; color: var(--gray-400);
+        }
+        .defect-analysis-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px; }
+        .defect-stat-card {
+            background: var(--gray-50); border: 1px solid var(--gray-200); border-radius: 12px; padding: 16px;
+        }
+        .defect-stat-label { font-size: 12px; color: var(--gray-500); margin-bottom: 6px; }
+        .defect-stat-value { font-size: 24px; font-weight: 800; color: var(--gray-900); }
+        .defect-analysis-section {
+            border: 1px solid var(--gray-200); border-radius: 12px; padding: 16px 18px; margin-bottom: 14px;
+        }
+        .defect-analysis-title { font-size: 14px; font-weight: 700; color: var(--gray-700); margin-bottom: 12px; }
+        .defect-bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; font-size: 12px; }
+        .defect-bar-label { width: 70px; color: var(--gray-600); }
+        .defect-bar-track { flex: 1; height: 8px; background: var(--gray-100); border-radius: 999px; overflow: hidden; }
+        .defect-bar-fill { height: 100%; background: var(--blue); border-radius: 999px; }
+        .defect-bar-count { width: 30px; text-align: right; color: var(--gray-700); font-weight: 600; }
+        @media (max-width: 768px) {
+            .defect-analysis-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+
         .search-input {
             padding: 9px 14px; border: 1.5px solid var(--gray-200);
             border-radius: 10px; font-size: 13px; width: 200px; outline: none;
@@ -1763,6 +1829,7 @@
                             <button class="filter-tab" data-filter="발주">발주<span class="count" id="countOrder">0</span></button>
                             <button class="filter-tab" data-filter="시공">시공<span class="count" id="countConstruction">0</span></button>
                             <button class="filter-tab" data-filter="정산">정산<span class="count" id="countSettlement">0</span></button>
+                            <button class="filter-tab" data-filter="하자">하자<span class="count" id="countDefect">0</span></button>
                         </div>
                         <div class="search-box">
                             <select class="type-select" id="typeFilter" onchange="applyFilters()">
@@ -1793,6 +1860,62 @@
                             <tbody id="siteTableBody">
                             </tbody>
                         </table>
+                    </div>
+
+                    <!-- 하자 처리 현황 (하자 탭 활성화 시 노출) -->
+                    <div id="defectView" style="display:none;">
+                        <div class="defect-header">
+                            <div>
+                                <div class="defect-title">하자 처리 현황</div>
+                                <div class="defect-subtitle">접수된 하자의 단계별 처리 및 데이터 분석</div>
+                            </div>
+                            <button class="btn btn-primary btn-sm" onclick="openDefectIntakeModal()">➕ 하자 접수</button>
+                        </div>
+
+                        <div class="defect-tabs">
+                            <button class="defect-tab active" data-dtab="list" onclick="switchDefectTab('list')">📋 처리 목록</button>
+                            <button class="defect-tab" data-dtab="analysis" onclick="switchDefectTab('analysis')">📊 하자 분석</button>
+                        </div>
+
+                        <div id="defectListPane">
+                            <div class="defect-status-pills" id="defectStatusPills">
+                                <button class="defect-pill active" data-dstatus="all">전체 <span class="pill-count" id="defectCountAll">0</span></button>
+                                <button class="defect-pill" data-dstatus="접수">접수 <span class="pill-count" id="defectCountReceived">0</span></button>
+                                <button class="defect-pill" data-dstatus="계획수립">계획수립 <span class="pill-count" id="defectCountPlanning">0</span></button>
+                                <button class="defect-pill" data-dstatus="완료">완료 <span class="pill-count" id="defectCountDone">0</span></button>
+                                <button class="defect-pill" data-dstatus="종결">종결 <span class="pill-count" id="defectCountClosed">0</span></button>
+                            </div>
+                            <div class="defect-list" id="defectList"></div>
+                        </div>
+
+                        <div id="defectAnalysisPane" style="display:none;">
+                            <div class="defect-analysis-grid">
+                                <div class="defect-stat-card">
+                                    <div class="defect-stat-label">총 하자 건수</div>
+                                    <div class="defect-stat-value" id="defectStatTotal">0</div>
+                                </div>
+                                <div class="defect-stat-card">
+                                    <div class="defect-stat-label">처리 진행 중</div>
+                                    <div class="defect-stat-value" id="defectStatOpen">0</div>
+                                </div>
+                                <div class="defect-stat-card">
+                                    <div class="defect-stat-label">처리 완료</div>
+                                    <div class="defect-stat-value" id="defectStatDone">0</div>
+                                </div>
+                                <div class="defect-stat-card">
+                                    <div class="defect-stat-label">종결</div>
+                                    <div class="defect-stat-value" id="defectStatClosed">0</div>
+                                </div>
+                            </div>
+                            <div class="defect-analysis-section">
+                                <div class="defect-analysis-title">하자 유형별 분포</div>
+                                <div id="defectByType"></div>
+                            </div>
+                            <div class="defect-analysis-section">
+                                <div class="defect-analysis-title">원인별 분포</div>
+                                <div id="defectByCause"></div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -2818,6 +2941,74 @@
     </div>
 </div>
 
+<!-- 하자 접수 Modal -->
+<div class="modal-overlay" id="defectIntakeModal">
+    <div class="modal" style="max-width:560px;">
+        <div class="modal-header">
+            <div class="modal-title">하자 접수</div>
+            <button class="modal-close" onclick="closeModal('defectIntakeModal')">×</button>
+        </div>
+        <div class="modal-body">
+            <form class="modal-form" id="defectIntakeForm" onsubmit="handleDefectIntake(event)">
+                <div class="form-row-2">
+                    <div class="form-group">
+                        <label class="form-label">접수일자</label>
+                        <input type="date" class="form-input" id="defectDate">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">하자유형</label>
+                        <select class="form-select" id="defectType">
+                            <option value="누수">누수</option>
+                            <option value="균열">균열</option>
+                            <option value="들뜸">들뜸</option>
+                            <option value="부식">부식</option>
+                            <option value="오염">오염</option>
+                            <option value="기타">기타</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">하자 위치 <span style="color:var(--red)">*</span></label>
+                    <input type="text" class="form-input" id="defectLocation" placeholder="예: 옥상 A동 드레인 주변" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">하자 내용</label>
+                    <textarea class="form-textarea" id="defectContent" placeholder="" style="min-height:90px;"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">원인</label>
+                    <select class="form-select" id="defectCause">
+                        <option value="미분류">미분류</option>
+                        <option value="자재">자재</option>
+                        <option value="시공">시공</option>
+                        <option value="자연">자연</option>
+                        <option value="기타">기타</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">접수 사진 (현장 사진)</label>
+                    <div class="file-upload-area">
+                        <label class="file-upload-placeholder" for="defectPhotoInput">
+                            <div class="file-upload-icon">📷</div>
+                            <div class="file-upload-text">클릭하거나 드래그해서 사진 첨부</div>
+                        </label>
+                        <input type="file" id="defectPhotoInput" style="display:none" accept="image/*" onchange="handleDefectPhotoSelect(event)">
+                    </div>
+                    <div class="file-selected" id="defectPhotoSelected" style="display:none;">
+                        <div class="file-icon">🖼️</div>
+                        <div class="file-name" id="defectPhotoName"></div>
+                        <button type="button" class="file-remove-btn" onclick="removeDefectPhoto()">×</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeModal('defectIntakeModal')">취소</button>
+            <button class="btn btn-primary" onclick="document.getElementById('defectIntakeForm').requestSubmit()">접수</button>
+        </div>
+    </div>
+</div>
+
 <!-- Toast -->
 <div class="toast" id="toast"></div>
 
@@ -2984,6 +3175,15 @@ const notices = [
 let currentUser = null;
 let isAdmin = false;
 let currentFilter = 'all';
+let currentDefectStatusFilter = 'all';
+let currentDefectTab = 'list';
+let selectedDefectPhoto = null;
+let defects = [
+    { id: 1, date: '2026-03-22', type: '누수', location: '옥상 A동 드레인 주변', content: '강우 후 천장 누수 흔적 확인', cause: '시공', status: '계획수립', createdAt: '2026-03-22' },
+    { id: 2, date: '2026-03-15', type: '균열', location: '지하주차장 B구역 벽체', content: '미세 균열 다수 확인', cause: '자연', status: '종결', createdAt: '2026-03-15' },
+    { id: 3, date: '2026-02-28', type: '들뜸', location: '1층 로비 바닥 타일', content: '바닥재 들뜸 발생', cause: '자재', status: '종결', createdAt: '2026-02-28' },
+];
+let _defectIdSeq = 4;
 let currentTicketFilter = 'all';
 let currentDocCat = 'all';
 let selectedLoginCompany = null;
@@ -3726,6 +3926,7 @@ function renderSiteList() {
     document.getElementById('countOrder').textContent = allSites.filter(s => s.stage === '발주').length;
     document.getElementById('countConstruction').textContent = allSites.filter(s => s.stage === '시공').length;
     document.getElementById('countSettlement').textContent = allSites.filter(s => s.stage === '정산').length;
+    document.getElementById('countDefect').textContent = defects.length;
 
     const tbody = document.getElementById('siteTableBody');
     if (!mySites.length) {
@@ -3779,8 +3980,168 @@ document.getElementById('stageTabs').addEventListener('click', function(e) {
     document.querySelectorAll('#stageTabs .filter-tab').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     currentFilter = btn.dataset.filter;
-    renderSiteList();
+    toggleDefectView(currentFilter === '하자');
+    if (currentFilter === '하자') {
+        renderDefects();
+    } else {
+        renderSiteList();
+    }
 });
+
+function toggleDefectView(show) {
+    const siteListEl = document.getElementById('siteList');
+    const defectViewEl = document.getElementById('defectView');
+    const searchBox = document.querySelector('#siteListView .search-box');
+    if (show) {
+        siteListEl.style.display = 'none';
+        defectViewEl.style.display = 'block';
+        if (searchBox) searchBox.style.display = 'none';
+    } else {
+        siteListEl.style.display = '';
+        defectViewEl.style.display = 'none';
+        if (searchBox) searchBox.style.display = '';
+    }
+}
+
+// ========== DEFECTS ==========
+function openDefectIntakeModal() {
+    document.getElementById('defectIntakeForm').reset();
+    const today = new Date().toISOString().slice(0, 10);
+    document.getElementById('defectDate').value = today;
+    selectedDefectPhoto = null;
+    document.getElementById('defectPhotoSelected').style.display = 'none';
+    document.getElementById('defectIntakeModal').classList.add('active');
+}
+
+function handleDefectPhotoSelect(e) {
+    const f = e.target.files[0];
+    if (!f) return;
+    selectedDefectPhoto = f;
+    document.getElementById('defectPhotoName').textContent = f.name;
+    document.getElementById('defectPhotoSelected').style.display = 'flex';
+}
+
+function removeDefectPhoto() {
+    selectedDefectPhoto = null;
+    document.getElementById('defectPhotoInput').value = '';
+    document.getElementById('defectPhotoSelected').style.display = 'none';
+}
+
+function handleDefectIntake(e) {
+    e.preventDefault();
+    const location = document.getElementById('defectLocation').value.trim();
+    if (!location) { showToast('하자 위치를 입력해주세요.', 'error'); return; }
+    const newDefect = {
+        id: _defectIdSeq++,
+        date: document.getElementById('defectDate').value || new Date().toISOString().slice(0, 10),
+        type: document.getElementById('defectType').value,
+        location: location,
+        content: document.getElementById('defectContent').value.trim(),
+        cause: document.getElementById('defectCause').value,
+        status: '접수',
+        photoName: selectedDefectPhoto ? selectedDefectPhoto.name : null,
+        createdAt: new Date().toISOString().slice(0, 10),
+    };
+    defects.unshift(newDefect);
+    closeModal('defectIntakeModal');
+    showToast('하자가 접수되었습니다.', 'success');
+    document.getElementById('countDefect').textContent = defects.length;
+    renderDefects();
+}
+
+function switchDefectTab(tab) {
+    currentDefectTab = tab;
+    document.querySelectorAll('.defect-tab').forEach(b => {
+        b.classList.toggle('active', b.dataset.dtab === tab);
+    });
+    document.getElementById('defectListPane').style.display = tab === 'list' ? 'block' : 'none';
+    document.getElementById('defectAnalysisPane').style.display = tab === 'analysis' ? 'block' : 'none';
+    if (tab === 'analysis') renderDefectAnalysis();
+}
+
+document.getElementById('defectStatusPills').addEventListener('click', function(e) {
+    const btn = e.target.closest('.defect-pill');
+    if (!btn) return;
+    document.querySelectorAll('.defect-pill').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentDefectStatusFilter = btn.dataset.dstatus;
+    renderDefects();
+});
+
+function renderDefects() {
+    // Update pill counts
+    document.getElementById('defectCountAll').textContent = defects.length;
+    document.getElementById('defectCountReceived').textContent = defects.filter(d => d.status === '접수').length;
+    document.getElementById('defectCountPlanning').textContent = defects.filter(d => d.status === '계획수립').length;
+    document.getElementById('defectCountDone').textContent = defects.filter(d => d.status === '완료').length;
+    document.getElementById('defectCountClosed').textContent = defects.filter(d => d.status === '종결').length;
+
+    let list = defects.slice();
+    if (currentDefectStatusFilter !== 'all') {
+        list = list.filter(d => d.status === currentDefectStatusFilter);
+    }
+
+    const container = document.getElementById('defectList');
+    if (!list.length) {
+        container.innerHTML = `<div class="defect-empty">
+            <div style="font-size:32px;margin-bottom:10px;">🔧</div>
+            <div style="font-size:15px;font-weight:600;margin-bottom:4px;">접수된 하자가 없습니다</div>
+            <div style="font-size:13px;">우측 상단 "하자 접수" 버튼으로 등록할 수 있습니다.</div>
+        </div>`;
+        return;
+    }
+
+    container.innerHTML = list.map(d => `
+        <div class="defect-card">
+            <div class="defect-card-top">
+                <div class="defect-card-title">${escapeHtml(d.location)}</div>
+                <span class="defect-badge ${d.status}">${d.status}</span>
+            </div>
+            <div class="defect-card-meta">
+                <span>📅 ${d.date}</span>
+                <span>🏷️ ${d.type}</span>
+                <span>🔍 원인: ${d.cause}</span>
+                ${d.photoName ? `<span>📷 ${escapeHtml(d.photoName)}</span>` : ''}
+            </div>
+            ${d.content ? `<div class="defect-card-content">${escapeHtml(d.content)}</div>` : ''}
+        </div>
+    `).join('');
+}
+
+function renderDefectAnalysis() {
+    document.getElementById('defectStatTotal').textContent = defects.length;
+    document.getElementById('defectStatOpen').textContent = defects.filter(d => d.status === '접수' || d.status === '계획수립').length;
+    document.getElementById('defectStatDone').textContent = defects.filter(d => d.status === '완료').length;
+    document.getElementById('defectStatClosed').textContent = defects.filter(d => d.status === '종결').length;
+
+    const types = ['누수', '균열', '들뜸', '부식', '오염', '기타'];
+    const causes = ['미분류', '자재', '시공', '자연', '기타'];
+    const total = defects.length || 1;
+
+    document.getElementById('defectByType').innerHTML = types.map(t => {
+        const cnt = defects.filter(d => d.type === t).length;
+        const pct = Math.round((cnt / total) * 100);
+        return `<div class="defect-bar-row">
+            <div class="defect-bar-label">${t}</div>
+            <div class="defect-bar-track"><div class="defect-bar-fill" style="width:${pct}%;"></div></div>
+            <div class="defect-bar-count">${cnt}</div>
+        </div>`;
+    }).join('');
+
+    document.getElementById('defectByCause').innerHTML = causes.map(c => {
+        const cnt = defects.filter(d => d.cause === c).length;
+        const pct = Math.round((cnt / total) * 100);
+        return `<div class="defect-bar-row">
+            <div class="defect-bar-label">${c}</div>
+            <div class="defect-bar-track"><div class="defect-bar-fill" style="width:${pct}%;"></div></div>
+            <div class="defect-bar-count">${cnt}</div>
+        </div>`;
+    }).join('');
+}
+
+function escapeHtml(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
 
 // ========== SITE DETAIL (인라인 뷰) ==========
 let _currentDetailTab = 'basic';
