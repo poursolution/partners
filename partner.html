@@ -4394,14 +4394,20 @@ function handleDefectPhotoSelect(e) {
     if (!f) return;
     document.getElementById('defectPhotoName').textContent = f.name + ' (압축 중...)';
     document.getElementById('defectPhotoSelected').style.display = 'flex';
-    _compressImageFile(f).then(dataUrl => {
-        selectedDefectPhoto = { name: f.name, data: dataUrl };
-        document.getElementById('defectPhotoName').textContent = f.name;
-    }).catch(err => {
-        console.error('이미지 압축 실패', err);
-        selectedDefectPhoto = { name: f.name, data: null };
-        document.getElementById('defectPhotoName').textContent = f.name;
-    });
+    // Promise 로 저장해서 제출 시 await 가능하게
+    selectedDefectPhoto = {
+        name: f.name,
+        data: null,
+        ready: _compressImageFile(f).then(dataUrl => {
+            selectedDefectPhoto.data = dataUrl;
+            document.getElementById('defectPhotoName').textContent = f.name;
+            return dataUrl;
+        }).catch(err => {
+            console.error('이미지 압축 실패', err);
+            document.getElementById('defectPhotoName').textContent = f.name + ' (압축 실패)';
+            return null;
+        }),
+    };
 }
 
 function removeDefectPhoto() {
@@ -4410,10 +4416,22 @@ function removeDefectPhoto() {
     document.getElementById('defectPhotoSelected').style.display = 'none';
 }
 
-function handleDefectIntake(e) {
+async function handleDefectIntake(e) {
     e.preventDefault();
     const location = document.getElementById('defectLocation').value.trim();
     if (!location) { showToast('하자 위치를 입력해주세요.', 'error'); return; }
+    // 압축 진행 중이면 대기
+    let photoData = null, photoName = null;
+    if (selectedDefectPhoto) {
+        photoName = selectedDefectPhoto.name;
+        if (selectedDefectPhoto.ready) {
+            showToast('사진 처리 중...', 'info');
+            try { photoData = await selectedDefectPhoto.ready; }
+            catch (err) { console.error(err); }
+        } else {
+            photoData = selectedDefectPhoto.data;
+        }
+    }
     const newId = _fbReady ? fbGenId() : String(Date.now());
     const newDefect = {
         id: newId,
@@ -4425,8 +4443,8 @@ function handleDefectIntake(e) {
         content: document.getElementById('defectContent').value.trim(),
         cause: document.getElementById('defectCause').value,
         status: '접수',
-        photoName: selectedDefectPhoto ? selectedDefectPhoto.name : null,
-        photoData: selectedDefectPhoto ? selectedDefectPhoto.data : null,
+        photoName: photoName,
+        photoData: photoData,
         responses: [],
         createdAt: new Date().toISOString(),
     };
@@ -4789,32 +4807,35 @@ function openDefectCompleteModal(id) {
     document.getElementById('defectCompleteModal').classList.add('active');
 }
 
-async function handleCompletePhotoSelect(e) {
+let _completePhotosReady = null;
+function handleCompletePhotoSelect(e) {
     const files = Array.from(e.target.files || []);
     const el = document.getElementById('completePhotoSelected');
-    if (!files.length) { _selectedCompletePhotos = []; el.style.display = 'none'; return; }
+    if (!files.length) { _selectedCompletePhotos = []; _completePhotosReady = null; el.style.display = 'none'; return; }
     el.style.display = 'block';
     el.innerHTML = '📷 이미지 압축 중...';
-    _selectedCompletePhotos = [];
-    for (const f of files) {
-        try {
-            const data = await _compressImageFile(f);
-            _selectedCompletePhotos.push({ name: f.name, data });
-        } catch (err) {
-            console.error('이미지 압축 실패', err);
-            _selectedCompletePhotos.push({ name: f.name, data: null });
-        }
-    }
-    el.innerHTML = _selectedCompletePhotos.map(p => `📷 ${escapeHtml(p.name)}`).join('<br>');
+    _selectedCompletePhotos = files.map(f => ({ name: f.name, data: null }));
+    _completePhotosReady = Promise.all(files.map((f, i) =>
+        _compressImageFile(f)
+            .then(data => { _selectedCompletePhotos[i].data = data; return data; })
+            .catch(err => { console.error('이미지 압축 실패', err); return null; })
+    )).then(() => {
+        el.innerHTML = _selectedCompletePhotos.map(p => `📷 ${escapeHtml(p.name)}`).join('<br>');
+    });
 }
 
-function handleDefectComplete(e) {
+async function handleDefectComplete(e) {
     e.preventDefault();
     const d = _getWorkingDefect();
     if (!d) return;
     const cause = document.getElementById('completeCause').value;
     const result = document.getElementById('completeResult').value.trim();
     if (!cause || !result) { showToast('하자 원인과 처리 결과를 입력해주세요.', 'error'); return; }
+    // 사진 압축 완료 대기
+    if (_completePhotosReady) {
+        showToast('사진 처리 중...', 'info');
+        try { await _completePhotosReady; } catch (err) { console.error(err); }
+    }
     d.cause = cause;
     d.resultText = result;
     d.completeDate = document.getElementById('completeDate').value || new Date().toISOString().slice(0, 10);
@@ -5002,7 +5023,7 @@ function buildDefectReportHtml(d, site, company, today) {
 <div class="page">
     <div class="header">
         <div>
-            <div class="brand-name">넷폼앤디</div>
+            <div class="brand-name">넷폼알앤디</div>
             <div class="report-title">하자처리 보고서</div>
             <div class="report-date">${today} 작성</div>
         </div>
@@ -5040,16 +5061,6 @@ function buildDefectReportHtml(d, site, company, today) {
         </table>
     </div>
 
-    ${(d.responses && d.responses.length) ? `
-    <div class="section">
-        <div class="section-title">응대 이력</div>
-        <table class="info">
-            ${d.responses.map((r, i) => `
-                <tr><th>${i + 1}차 (${esc(r.date)})</th><td>${esc(r.text)}</td></tr>
-            `).join('')}
-        </table>
-    </div>` : ''}
-
     <div class="section">
         <div class="section-title">전 / 후 사진</div>
         <div class="photos">
@@ -5081,7 +5092,7 @@ function buildDefectReportHtml(d, site, company, today) {
 
     <div class="stamp-area">
         <div class="stamp">
-            <div class="stamp-title">넷폼앤디 사후관리팀</div>
+            <div class="stamp-title">넷폼알앤디 서비스운영팀</div>
             <div class="stamp-date">${today}</div>
         </div>
     </div>
