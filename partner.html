@@ -972,6 +972,64 @@
         @media (max-width: 768px) {
             .defect-analysis-grid { grid-template-columns: repeat(2, 1fr); }
         }
+        /* Home defect alert widget */
+        .home-defect-alert {
+            background: linear-gradient(135deg, #fee2e2 0%, #fff7ed 100%);
+            border: 1px solid #fecaca; border-left: 5px solid #dc2626;
+            border-radius: 14px; padding: 18px 22px; margin-bottom: 18px;
+            box-shadow: 0 2px 8px rgba(220, 38, 38, 0.08);
+        }
+        .home-defect-alert-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 14px;
+        }
+        .home-defect-alert-title {
+            display: flex; align-items: center; gap: 10px;
+            font-size: 16px; font-weight: 800; color: #991b1b;
+        }
+        .home-defect-alert-icon {
+            font-size: 20px; animation: defectPulse 1.6s ease-in-out infinite;
+        }
+        @keyframes defectPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+        }
+        .home-defect-alert-count {
+            display: inline-flex; align-items: center; justify-content: center;
+            min-width: 24px; height: 24px; padding: 0 8px;
+            background: #dc2626; color: #fff; border-radius: 999px;
+            font-size: 12px; font-weight: 800;
+        }
+        .home-defect-alert-list { display: flex; flex-direction: column; gap: 8px; }
+        .home-defect-alert-item {
+            background: #fff; border: 1px solid #fecaca; border-radius: 10px;
+            padding: 12px 14px; display: flex; justify-content: space-between; align-items: center;
+            gap: 12px; cursor: pointer; transition: all 0.15s;
+        }
+        .home-defect-alert-item:hover { border-color: #dc2626; transform: translateX(2px); }
+        .home-defect-alert-item-info { flex: 1; min-width: 0; }
+        .home-defect-alert-item-title {
+            font-size: 13px; font-weight: 700; color: #1f2937; margin-bottom: 2px;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .home-defect-alert-item-meta { font-size: 11px; color: #6b7280; }
+        .home-defect-alert-item-status {
+            padding: 4px 10px; border-radius: 999px; font-size: 11px; font-weight: 700;
+            white-space: nowrap;
+        }
+        .home-defect-alert-item-status.접수 { background: #fef3c7; color: #b45309; }
+        .home-defect-alert-item-status.계획수립 { background: #ddd6fe; color: #6d28d9; }
+        .home-defect-alert-item-status.완료 { background: #d1fae5; color: #047857; }
+        .home-defect-alert-empty {
+            text-align: center; padding: 14px; color: #6b7280; font-size: 13px;
+        }
+        #defectBadge {
+            background: #dc2626; animation: defectBadgePulse 1.6s ease-in-out infinite;
+        }
+        @keyframes defectBadgePulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.5); }
+            50% { box-shadow: 0 0 0 6px rgba(220, 38, 38, 0); }
+        }
         /* Stage progression badges inside card */
         .defect-stage-row { display: flex; gap: 6px; align-items: center; margin: 8px 0; flex-wrap: wrap; }
         .defect-stage-chip {
@@ -1685,6 +1743,7 @@
             <div class="nav-item" data-section="sites" onclick="switchSection('sites')">
                 <span class="nav-item-icon">🏗️</span>
                 <span class="nav-item-text">현장 관리</span>
+                <span class="nav-badge admin-only" id="defectBadge" style="display:none">0</span>
             </div>
             <div class="nav-item" data-section="salesites" onclick="switchSection('salesites')">
                 <span class="nav-item-icon">📍</span>
@@ -1781,6 +1840,19 @@
                             <div class="welcome-stat-label">미처리 요청</div>
                         </div>
                     </div>
+                </div>
+
+                <!-- 하자 알림 위젯 (관리자 전용) -->
+                <div class="home-defect-alert admin-only" id="homeDefectAlert" style="display:none;">
+                    <div class="home-defect-alert-header">
+                        <div class="home-defect-alert-title">
+                            <span class="home-defect-alert-icon">🚨</span>
+                            <span>하자 처리 알림</span>
+                            <span class="home-defect-alert-count" id="homeDefectAlertCount">0</span>
+                        </div>
+                        <button class="btn btn-outline btn-sm" onclick="goToDefectTab()">전체 보기 →</button>
+                    </div>
+                    <div class="home-defect-alert-list" id="homeDefectAlertList"></div>
                 </div>
 
                 <!-- 공지사항 배너 (관리자가 등록한 공지) -->
@@ -3384,6 +3456,7 @@ let currentDefectStatusFilter = 'all';
 let currentDefectTab = 'list';
 let selectedDefectPhoto = null;
 let defects = [];
+let _initialDefectsLoaded = false;
 let currentTicketFilter = 'all';
 let currentDocCat = 'all';
 let selectedLoginCompany = null;
@@ -3575,6 +3648,7 @@ function initDashboard() {
         if (isAdmin) el.classList.add('show');
         else el.classList.remove('show');
     });
+    requestNotifyPermissionIfNeeded();
 
     document.getElementById('adminCompanyFilter').className = isAdmin ? 'admin-company-filter show' : 'admin-company-filter';
 
@@ -4091,6 +4165,65 @@ function renderHome() {
             <span class="ticket-badge ${t.status}">${ticketStatusLabel(t.status)}</span>
         </div>
     `).join('') : '<div class="empty-state" style="padding:30px;"><div class="empty-desc">요청 내역이 없습니다</div></div>';
+
+    // 하자 알림 위젯 (관리자 전용)
+    renderHomeDefectAlert();
+}
+
+function renderHomeDefectAlert() {
+    const alertEl = document.getElementById('homeDefectAlert');
+    if (!alertEl) return;
+    if (!isAdmin) { alertEl.style.display = 'none'; return; }
+    // 미처리 = 접수 + 계획수립
+    const pending = defects.filter(d => d.status === '접수' || d.status === '계획수립');
+    const newOnes = defects.filter(d => d.status === '접수');
+    if (pending.length === 0) {
+        alertEl.style.display = 'none';
+        return;
+    }
+    alertEl.style.display = 'block';
+    document.getElementById('homeDefectAlertCount').textContent = `${newOnes.length}건 신규 / ${pending.length}건 처리중`;
+    // 최근 5건 (접수 우선, 그 다음 계획수립)
+    const sorted = pending.slice().sort((a, b) => {
+        if (a.status !== b.status) return a.status === '접수' ? -1 : 1;
+        return (b.createdAt || '').localeCompare(a.createdAt || '');
+    }).slice(0, 5);
+    document.getElementById('homeDefectAlertList').innerHTML = sorted.map(d => {
+        const days = _daysSince(d.date);
+        const overdue = d.status === '접수' && days >= 2;
+        return `
+            <div class="home-defect-alert-item" onclick="goToDefectAndOpen('${d.id}')">
+                <div class="home-defect-alert-item-info">
+                    <div class="home-defect-alert-item-title">📍 ${escapeHtml(_siteName(d.siteId))} — ${escapeHtml(d.location)}</div>
+                    <div class="home-defect-alert-item-meta">
+                        ${d.type} · 접수: ${d.date}${overdue ? ` · <strong style="color:#dc2626;">⚠ ${days}일 경과</strong>` : ''}
+                    </div>
+                </div>
+                <span class="home-defect-alert-item-status ${d.status}">${d.status}</span>
+            </div>
+        `;
+    }).join('');
+}
+
+function goToDefectTab() {
+    switchSection('sites');
+    setTimeout(() => {
+        const defectTabBtn = document.querySelector('#stageTabs .filter-tab[data-filter="하자"]');
+        if (defectTabBtn) defectTabBtn.click();
+    }, 100);
+}
+
+function goToDefectAndOpen(defectId) {
+    const d = _findDefect(defectId);
+    if (!d) return;
+    goToDefectTab();
+    setTimeout(() => {
+        if (d.status === '접수') {
+            openDefectPlanModal(defectId);
+        } else if (d.status === '계획수립') {
+            openDefectCompleteModal(defectId);
+        }
+    }, 250);
 }
 
 function getStageColor(stage) {
@@ -4277,6 +4410,37 @@ function handleDefectIntake(e) {
 function _persistDefect(d) {
     if (_fbReady && d && d.id) {
         fbSet('defects', d.id, d).catch(err => console.error('[Firebase] defect 저장 실패', err));
+    }
+}
+
+function notifyNewDefect(d) {
+    // Toast
+    showToast(`🚨 새 하자 접수: ${_siteName(d.siteId)} - ${d.location}`, 'error');
+    // 짧은 오디오 알림 (브라우저 비프)
+    try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const o = ctx.createOscillator();
+        const g = ctx.createGain();
+        o.connect(g); g.connect(ctx.destination);
+        o.type = 'sine'; o.frequency.value = 880;
+        g.gain.setValueAtTime(0.001, ctx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.18, ctx.currentTime + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
+        o.start(); o.stop(ctx.currentTime + 0.5);
+    } catch (e) {}
+    // 브라우저 푸시 알림 (권한 있을 경우)
+    if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+        new Notification('🚨 신규 하자 접수', {
+            body: `${_siteName(d.siteId)} — ${d.location}`,
+            tag: 'defect-' + d.id,
+        });
+    }
+}
+
+// 관리자 로그인 시 알림 권한 요청
+function requestNotifyPermissionIfNeeded() {
+    if (isAdmin && typeof Notification !== 'undefined' && Notification.permission === 'default') {
+        try { Notification.requestPermission(); } catch (e) {}
     }
 }
 
@@ -5189,7 +5353,7 @@ function renderSiteDetail() {
                 ` : '<div style="color:var(--gray-400);text-align:center;padding:40px;">접수된 하자가 없습니다.</div>'}
             `;
         } else {
-            // 협력사: 본인 현장 하자 접수 가능 + 본인이 접수한 내역만 간단 노출
+            // 협력사: 본인 현장 하자 접수 + 진행상태(투입일/현장소장/연락처) 노출
             body.innerHTML = `
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
                     <h4 style="font-size:15px;font-weight:700;">🔧 하자 접수</h4>
@@ -5207,11 +5371,28 @@ function renderSiteDetail() {
                                     <div class="defect-card-title">${escapeHtml(d.location)}</div>
                                     <span class="defect-badge ${d.status}">${d.status}</span>
                                 </div>
+                                ${renderDefectStageRow(d)}
                                 <div class="defect-card-meta">
-                                    <span>📅 ${d.date}</span>
+                                    <span>📅 접수일: ${d.date}</span>
                                     <span>🏷️ ${d.type}</span>
                                 </div>
                                 ${d.content ? `<div class="defect-card-content">${escapeHtml(d.content)}</div>` : ''}
+                                ${(d.status !== '접수' && d.planDate) ? `
+                                    <div style="margin-top:10px;padding:10px 12px;background:#eff6ff;border-left:3px solid var(--blue);border-radius:6px;font-size:12px;color:#1e40af;">
+                                        <div style="font-weight:700;margin-bottom:4px;">📋 처리 진행 상태</div>
+                                        <div>🗓 투입일: <strong>${d.planDate}</strong></div>
+                                        ${d.planManager ? `<div>👷 투입 현장소장: <strong>${escapeHtml(d.planManager)}</strong></div>` : ''}
+                                        ${d.planManagerPhone ? `<div>📞 소장님 연락처: <strong>${escapeHtml(d.planManagerPhone)}</strong></div>` : ''}
+                                    </div>
+                                ` : ''}
+                                ${(d.status === '완료' || d.status === '종결') && d.resultText ? `
+                                    <div class="defect-result-line" style="margin-top:8px;">✅ 처리 완료 (${d.completeDate || '-'}): ${escapeHtml(d.resultText)}</div>
+                                ` : ''}
+                                ${d.status === '종결' ? `
+                                    <div style="margin-top:10px;">
+                                        <button class="defect-action-btn secondary" onclick="openDefectReport('${d.id}')">📄 처리 보고서</button>
+                                    </div>
+                                ` : ''}
                             </div>
                         `).join('')}
                     </div>
@@ -7109,10 +7290,22 @@ function attachListeners() {
     );
     _unsubs.push(
         db.collection('defects').onSnapshot(snap => {
+            const prevCount = defects.filter(d => d.status === '접수').length;
+            const prevIds = new Set(defects.map(d => String(d.id)));
             defects = snap.docs.map(d => d.data())
                 .sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
             const countEl = document.getElementById('countDefect');
             if (countEl) countEl.textContent = defects.length;
+            // 새 하자 접수 감지 → 관리자에게 알림
+            if (isAdmin && _initialDefectsLoaded) {
+                const newOnes = defects.filter(d => d.status === '접수' && !prevIds.has(String(d.id)));
+                if (newOnes.length > 0) {
+                    notifyNewDefect(newOnes[0]);
+                }
+            }
+            _initialDefectsLoaded = true;
+            updateBadges();
+            renderHomeDefectAlert();
             // 하자 탭이 활성화되어 있으면 리스트 갱신
             if (document.getElementById('defectView') && document.getElementById('defectView').style.display !== 'none') {
                 renderDefects();
@@ -7139,6 +7332,17 @@ function updateBadges() {
     const cnt = techQAs.filter(t => t.status !== 'done' && (isAdmin || t.companyId === currentUser?.id)).length;
     const b = document.getElementById('techBadge');
     if (b) { b.style.display = cnt > 0 ? 'inline' : 'none'; b.textContent = cnt; }
+    // 하자 뱃지 (관리자 전용 - 접수 상태)
+    const defectBadge = document.getElementById('defectBadge');
+    if (defectBadge) {
+        const newDefects = isAdmin ? defects.filter(d => d.status === '접수').length : 0;
+        if (isAdmin && newDefects > 0) {
+            defectBadge.style.display = 'inline';
+            defectBadge.textContent = newDefects;
+        } else {
+            defectBadge.style.display = 'none';
+        }
+    }
 }
 
 // ── Firestore CRUD 헬퍼 ──
