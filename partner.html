@@ -969,6 +969,49 @@
         .defect-bar-track { flex: 1; height: 8px; background: var(--gray-100); border-radius: 999px; overflow: hidden; }
         .defect-bar-fill { height: 100%; background: var(--blue); border-radius: 999px; }
         .defect-bar-count { width: 30px; text-align: right; color: var(--gray-700); font-weight: 600; }
+        .defect-manager-row {
+            display: grid; grid-template-columns: 140px 1fr auto auto; gap: 12px;
+            align-items: center; padding: 10px 12px;
+            border-bottom: 1px solid var(--gray-100); font-size: 12px;
+        }
+        .defect-manager-row:last-child { border-bottom: none; }
+        .defect-manager-name { font-weight: 700; color: var(--gray-800); }
+        .defect-manager-bar-track {
+            height: 10px; background: var(--gray-100); border-radius: 999px; overflow: hidden;
+        }
+        .defect-manager-bar-fill {
+            height: 100%; background: linear-gradient(90deg, #60a5fa, #2563eb);
+            border-radius: 999px;
+        }
+        .defect-manager-bar-fill.high { background: linear-gradient(90deg, #fb923c, #dc2626); }
+        .defect-manager-bar-fill.mid { background: linear-gradient(90deg, #facc15, #f59e0b); }
+        .defect-manager-rate { font-weight: 700; color: var(--gray-700); min-width: 50px; text-align: right; }
+        .defect-manager-count { color: var(--gray-500); min-width: 60px; text-align: right; }
+        .ai-review-card {
+            background: linear-gradient(135deg, #eff6ff 0%, #faf5ff 100%);
+            border: 1px solid #dbeafe; border-radius: 12px; padding: 16px 20px;
+            margin-bottom: 10px;
+        }
+        .ai-review-headline {
+            font-size: 14px; font-weight: 800; color: #1e3a8a; margin-bottom: 10px;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .ai-review-bullet {
+            padding: 6px 0; border-top: 1px dashed #c7d2fe;
+            color: #1f2937;
+        }
+        .ai-review-bullet:first-of-type { border-top: none; padding-top: 0; }
+        .ai-review-bullet strong { color: #1d4ed8; }
+        .ai-review-empty {
+            text-align: center; padding: 20px; color: var(--gray-400); font-size: 13px;
+        }
+        .ai-review-tag {
+            display: inline-block; padding: 2px 8px; border-radius: 999px;
+            font-size: 10px; font-weight: 700; margin-right: 4px;
+        }
+        .ai-review-tag.warning { background: #fee2e2; color: #b91c1c; }
+        .ai-review-tag.info { background: #dbeafe; color: #1e40af; }
+        .ai-review-tag.success { background: #d1fae5; color: #047857; }
         @media (max-width: 768px) {
             .defect-analysis-grid { grid-template-columns: repeat(2, 1fr); }
         }
@@ -2037,6 +2080,17 @@
                             <div class="defect-analysis-section">
                                 <div class="defect-analysis-title">원인별 분포</div>
                                 <div id="defectByCause"></div>
+                            </div>
+                            <div class="defect-analysis-section">
+                                <div class="defect-analysis-title">👷 현장소장별 하자율</div>
+                                <div id="defectByManager"></div>
+                            </div>
+                            <div class="defect-analysis-section" id="defectAiReviewSection">
+                                <div class="defect-analysis-title">
+                                    🤖 AI 원인 분석 리뷰
+                                    <button class="btn btn-outline btn-sm" style="margin-left:10px;" onclick="runDefectAiReview()">재분석</button>
+                                </div>
+                                <div id="defectAiReview" style="font-size:13px;line-height:1.7;color:var(--gray-700);"></div>
                             </div>
                         </div>
                     </div>
@@ -5149,6 +5203,197 @@ function renderDefectAnalysis() {
             <div class="defect-bar-count">${cnt}</div>
         </div>`;
     }).join('');
+
+    // 현장소장별 하자율
+    renderDefectsByManager();
+    // AI 원인 분석 리뷰
+    runDefectAiReview();
+}
+
+// ===== 현장소장별 하자율 =====
+function _collectManagerStats() {
+    // 현장별 소장 목록 구축: site.siteManager 를 기준으로 함
+    // 슬래시로 구분된 복수 소장은 모두 집계
+    const managerSiteMap = {}; // manager -> Set of siteId
+    const managerDefectCount = {}; // manager -> defect count
+    const managerCauseMap = {}; // manager -> {cause: count}
+
+    sites.forEach(s => {
+        if (!s.siteManager) return;
+        const names = String(s.siteManager).split(/[\/,,]/).map(n => n.trim()).filter(Boolean);
+        names.forEach(n => {
+            if (!managerSiteMap[n]) managerSiteMap[n] = new Set();
+            managerSiteMap[n].add(String(s.id));
+        });
+    });
+
+    defects.forEach(d => {
+        const site = sites.find(s => String(s.id) === String(d.siteId));
+        if (!site || !site.siteManager) return;
+        const names = String(site.siteManager).split(/[\/,,]/).map(n => n.trim()).filter(Boolean);
+        names.forEach(n => {
+            managerDefectCount[n] = (managerDefectCount[n] || 0) + 1;
+            if (!managerCauseMap[n]) managerCauseMap[n] = {};
+            const cause = d.cause || '미분류';
+            managerCauseMap[n][cause] = (managerCauseMap[n][cause] || 0) + 1;
+        });
+    });
+
+    // 모든 소장 + 그 소장의 현장수 + 하자건수
+    const stats = [];
+    Object.keys(managerSiteMap).forEach(name => {
+        const siteCount = managerSiteMap[name].size;
+        const defectCount = managerDefectCount[name] || 0;
+        // 하자율 = 소장 담당 현장당 평균 하자 건수 (0 현장은 제외되므로 안전)
+        const rate = siteCount > 0 ? (defectCount / siteCount) : 0;
+        stats.push({ name, siteCount, defectCount, rate, causes: managerCauseMap[name] || {} });
+    });
+    stats.sort((a, b) => b.rate - a.rate);
+    return stats;
+}
+
+function renderDefectsByManager() {
+    const el = document.getElementById('defectByManager');
+    if (!el) return;
+    const stats = _collectManagerStats();
+    if (!stats.length) {
+        el.innerHTML = `<div style="text-align:center;padding:20px;color:var(--gray-400);font-size:12px;">담당 소장이 등록된 현장이 없습니다.</div>`;
+        return;
+    }
+    const maxRate = Math.max(...stats.map(s => s.rate), 1);
+    el.innerHTML = stats.map(s => {
+        const pct = Math.round((s.rate / maxRate) * 100);
+        const cls = s.rate >= 2 ? 'high' : s.rate >= 1 ? 'mid' : '';
+        return `<div class="defect-manager-row">
+            <div class="defect-manager-name">${escapeHtml(s.name)}</div>
+            <div class="defect-manager-bar-track"><div class="defect-manager-bar-fill ${cls}" style="width:${pct}%;"></div></div>
+            <div class="defect-manager-rate">${s.rate.toFixed(2)}건/현장</div>
+            <div class="defect-manager-count">${s.defectCount}건 / ${s.siteCount}현장</div>
+        </div>`;
+    }).join('');
+}
+
+// ===== AI 원인 분석 리뷰 =====
+function runDefectAiReview() {
+    const el = document.getElementById('defectAiReview');
+    if (!el) return;
+    if (!defects.length) {
+        el.innerHTML = `<div class="ai-review-empty">분석할 하자 데이터가 아직 없습니다. 접수 데이터가 쌓이면 자동으로 원인별 인사이트가 생성됩니다.</div>`;
+        return;
+    }
+
+    const total = defects.length;
+    const causeCount = {};
+    const typeCount = {};
+    const typeByCause = {}; // cause -> {type: cnt}
+    const causeByType = {}; // type -> {cause: cnt}
+    defects.forEach(d => {
+        const c = d.cause || '미분류';
+        const t = d.type || '기타';
+        causeCount[c] = (causeCount[c] || 0) + 1;
+        typeCount[t] = (typeCount[t] || 0) + 1;
+        if (!typeByCause[c]) typeByCause[c] = {};
+        typeByCause[c][t] = (typeByCause[c][t] || 0) + 1;
+        if (!causeByType[t]) causeByType[t] = {};
+        causeByType[t][c] = (causeByType[t][c] || 0) + 1;
+    });
+
+    // 상위 원인/유형
+    const topCause = Object.entries(causeCount).sort((a, b) => b[1] - a[1])[0];
+    const topType = Object.entries(typeCount).sort((a, b) => b[1] - a[1])[0];
+    const unknownRate = ((causeCount['미분류'] || 0) / total * 100);
+    const constructionRate = ((causeCount['시공'] || 0) / total * 100);
+    const materialRate = ((causeCount['자재'] || 0) / total * 100);
+    const naturalRate = ((causeCount['자연'] || 0) / total * 100);
+
+    // 처리 완료율
+    const closed = defects.filter(d => d.status === '종결' || d.status === '완료').length;
+    const closeRate = (closed / total * 100);
+
+    // 관리자별 위험 신호
+    const mgrStats = _collectManagerStats();
+    const riskyManager = mgrStats.filter(m => m.defectCount >= 2).sort((a, b) => b.rate - a.rate)[0];
+
+    const insights = [];
+
+    // 1) 가장 많은 원인
+    if (topCause) {
+        let tag = 'info', headline = '주요 원인';
+        if (topCause[0] === '시공' && constructionRate >= 40) {
+            tag = 'warning'; headline = '시공 품질 경고';
+        } else if (topCause[0] === '자재' && materialRate >= 40) {
+            tag = 'warning'; headline = '자재 품질 경고';
+        }
+        const topTypeForCause = Object.entries(typeByCause[topCause[0]] || {}).sort((a, b) => b[1] - a[1])[0];
+        insights.push({
+            tag, headline,
+            text: `전체 ${total}건 중 <strong>${topCause[0]}</strong> 원인이 <strong>${topCause[1]}건 (${Math.round(topCause[1]/total*100)}%)</strong>로 가장 많습니다.` +
+                  (topTypeForCause ? ` 특히 <strong>${topTypeForCause[0]}</strong> 유형과 자주 결합되어 나타납니다 (${topTypeForCause[1]}건).` : '')
+        });
+    }
+
+    // 2) 미분류 비율 경고
+    if (unknownRate >= 30) {
+        insights.push({
+            tag: 'warning', headline: '원인 미분류 과다',
+            text: `전체의 <strong>${Math.round(unknownRate)}%</strong>가 "미분류" 상태입니다. 완료 처리 단계에서 원인을 정확히 선택해야 분석 정확도가 올라갑니다.`
+        });
+    }
+
+    // 3) 시공 vs 자재 vs 자연 비교
+    if (constructionRate >= 30 && constructionRate > materialRate && constructionRate > naturalRate) {
+        insights.push({
+            tag: 'warning', headline: '시공 원인 집중',
+            text: `시공 원인이 <strong>${Math.round(constructionRate)}%</strong>로 우세합니다. 작업 공정/검측 프로세스 보완 및 소장 교육이 권장됩니다.`
+        });
+    } else if (materialRate >= 30) {
+        insights.push({
+            tag: 'info', headline: '자재 품질 이슈',
+            text: `자재 원인이 <strong>${Math.round(materialRate)}%</strong>입니다. 공급사 품질 관리 및 입고 검수 강화를 검토해보세요.`
+        });
+    }
+
+    // 4) 상위 하자 유형
+    if (topType) {
+        const topCauseForType = Object.entries(causeByType[topType[0]] || {}).sort((a, b) => b[1] - a[1])[0];
+        insights.push({
+            tag: 'info', headline: '빈발 하자 유형',
+            text: `가장 많이 발생한 하자는 <strong>${topType[0]}</strong>입니다 (${topType[1]}건).` +
+                  (topCauseForType ? ` 주된 원인은 <strong>${topCauseForType[0]}</strong> (${topCauseForType[1]}건) 입니다.` : '')
+        });
+    }
+
+    // 5) 리스크 소장
+    if (riskyManager) {
+        const topCauseByMgr = Object.entries(riskyManager.causes).sort((a, b) => b[1] - a[1])[0];
+        insights.push({
+            tag: 'warning', headline: '주의 필요 소장',
+            text: `<strong>${riskyManager.name}</strong> 소장이 담당하는 ${riskyManager.siteCount}개 현장에서 ${riskyManager.defectCount}건 (현장당 ${riskyManager.rate.toFixed(2)}건) 의 하자가 발생했습니다.` +
+                  (topCauseByMgr ? ` 주요 원인은 <strong>${topCauseByMgr[0]}</strong> (${topCauseByMgr[1]}건) 입니다.` : '')
+        });
+    }
+
+    // 6) 처리 성과
+    insights.push({
+        tag: closeRate >= 70 ? 'success' : 'info',
+        headline: '처리 성과',
+        text: `전체 ${total}건 중 <strong>${closed}건 (${Math.round(closeRate)}%)</strong>가 완료/종결 처리되었습니다.`
+    });
+
+    el.innerHTML = `
+        <div class="ai-review-card">
+            <div class="ai-review-headline">💡 데이터 기반 인사이트 (${total}건 기준)</div>
+            ${insights.map(i => `
+                <div class="ai-review-bullet">
+                    <span class="ai-review-tag ${i.tag}">${i.headline}</span>
+                    ${i.text}
+                </div>
+            `).join('')}
+            <div style="margin-top:12px;padding-top:10px;border-top:1px dashed #c7d2fe;font-size:11px;color:#6b7280;">
+                ※ 본 리뷰는 접수된 하자 데이터를 기반으로 규칙 기반 분석으로 자동 생성됩니다. 데이터가 축적될수록 정확도가 높아집니다.
+            </div>
+        </div>
+    `;
 }
 
 function escapeHtml(s) {
