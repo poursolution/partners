@@ -4359,12 +4359,49 @@ function openDefectIntakeModal(siteId) {
     document.getElementById('defectIntakeModal').classList.add('active');
 }
 
+// 이미지 압축 (긴 변 최대 1200px, JPEG 품질 0.7) → base64 dataURL
+function _compressImageFile(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = function(ev) {
+            const img = new Image();
+            img.onload = function() {
+                const MAX = 1200;
+                let w = img.width, h = img.height;
+                if (w > MAX || h > MAX) {
+                    if (w >= h) { h = Math.round(h * MAX / w); w = MAX; }
+                    else { w = Math.round(w * MAX / h); h = MAX; }
+                }
+                const canvas = document.createElement('canvas');
+                canvas.width = w; canvas.height = h;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, w, h);
+                try {
+                    const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+                    resolve(dataUrl);
+                } catch (err) { reject(err); }
+            };
+            img.onerror = reject;
+            img.src = ev.target.result;
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+}
+
 function handleDefectPhotoSelect(e) {
     const f = e.target.files[0];
     if (!f) return;
-    selectedDefectPhoto = f;
-    document.getElementById('defectPhotoName').textContent = f.name;
+    document.getElementById('defectPhotoName').textContent = f.name + ' (압축 중...)';
     document.getElementById('defectPhotoSelected').style.display = 'flex';
+    _compressImageFile(f).then(dataUrl => {
+        selectedDefectPhoto = { name: f.name, data: dataUrl };
+        document.getElementById('defectPhotoName').textContent = f.name;
+    }).catch(err => {
+        console.error('이미지 압축 실패', err);
+        selectedDefectPhoto = { name: f.name, data: null };
+        document.getElementById('defectPhotoName').textContent = f.name;
+    });
 }
 
 function removeDefectPhoto() {
@@ -4389,6 +4426,7 @@ function handleDefectIntake(e) {
         cause: document.getElementById('defectCause').value,
         status: '접수',
         photoName: selectedDefectPhoto ? selectedDefectPhoto.name : null,
+        photoData: selectedDefectPhoto ? selectedDefectPhoto.data : null,
         responses: [],
         createdAt: new Date().toISOString(),
     };
@@ -4751,15 +4789,23 @@ function openDefectCompleteModal(id) {
     document.getElementById('defectCompleteModal').classList.add('active');
 }
 
-function handleCompletePhotoSelect(e) {
-    _selectedCompletePhotos = Array.from(e.target.files || []);
+async function handleCompletePhotoSelect(e) {
+    const files = Array.from(e.target.files || []);
     const el = document.getElementById('completePhotoSelected');
-    if (_selectedCompletePhotos.length) {
-        el.style.display = 'block';
-        el.innerHTML = _selectedCompletePhotos.map(f => `📷 ${escapeHtml(f.name)}`).join('<br>');
-    } else {
-        el.style.display = 'none';
+    if (!files.length) { _selectedCompletePhotos = []; el.style.display = 'none'; return; }
+    el.style.display = 'block';
+    el.innerHTML = '📷 이미지 압축 중...';
+    _selectedCompletePhotos = [];
+    for (const f of files) {
+        try {
+            const data = await _compressImageFile(f);
+            _selectedCompletePhotos.push({ name: f.name, data });
+        } catch (err) {
+            console.error('이미지 압축 실패', err);
+            _selectedCompletePhotos.push({ name: f.name, data: null });
+        }
     }
+    el.innerHTML = _selectedCompletePhotos.map(p => `📷 ${escapeHtml(p.name)}`).join('<br>');
 }
 
 function handleDefectComplete(e) {
@@ -4772,7 +4818,7 @@ function handleDefectComplete(e) {
     d.cause = cause;
     d.resultText = result;
     d.completeDate = document.getElementById('completeDate').value || new Date().toISOString().slice(0, 10);
-    d.resultPhotos = _selectedCompletePhotos.map(f => f.name);
+    d.resultPhotos = _selectedCompletePhotos.map(p => ({ name: p.name, data: p.data }));
     d.status = '완료';
     _persistDefect(d);
     closeModal('defectCompleteModal');
@@ -4831,8 +4877,12 @@ function buildDefectReportHtml(d, site, company, today) {
     const siteName = esc(site ? site.building : '-');
     const siteAddr = esc(site ? (site.address || '') : '');
     const scope = esc(site ? (site.scope || '-') : '-');
-    const beforePhoto = d.photoName ? esc(d.photoName) : '';
-    const afterPhotos = (d.resultPhotos && d.resultPhotos.length) ? d.resultPhotos.map(esc) : [];
+    const beforePhotoData = d.photoData || '';
+    const beforePhotoName = d.photoName || '';
+    // resultPhotos 호환: 과거에는 string array 로 저장되었을 수 있음
+    const afterPhotos = (d.resultPhotos && d.resultPhotos.length)
+        ? d.resultPhotos.map(p => typeof p === 'string' ? { name: p, data: null } : p)
+        : [];
 
     return `<!DOCTYPE html>
 <html lang="ko">
@@ -4906,8 +4956,19 @@ function buildDefectReportHtml(d, site, company, today) {
         color: #6b7280; border-bottom: 1px solid #e5e7eb;
     }
     .photo-card-img {
-        height: 200px; display: flex; align-items: center; justify-content: center;
+        min-height: 200px; display: flex; align-items: center; justify-content: center;
         background: #f3f4f6; color: #9ca3af; font-size: 13px;
+    }
+    .photo-card-img img {
+        width: 100%; height: auto; display: block; object-fit: contain;
+    }
+    .photo-card-caption {
+        padding: 6px 12px; font-size: 11px; color: #6b7280;
+        background: #fafafa; border-top: 1px solid #e5e7eb; text-align: center;
+        word-break: break-all;
+    }
+    .photo-grid-after {
+        display: grid; grid-template-columns: 1fr; gap: 0;
     }
     .stamp-area {
         display: flex; justify-content: flex-end; margin-top: 30px;
@@ -4994,11 +5055,21 @@ function buildDefectReportHtml(d, site, company, today) {
         <div class="photos">
             <div class="photo-card">
                 <div class="photo-card-label">📷 처리 전</div>
-                <div class="photo-card-img">${beforePhoto || '사진 없음'}</div>
+                ${beforePhotoData
+                    ? `<div class="photo-card-img"><img src="${beforePhotoData}" alt="처리 전"></div>
+                       ${beforePhotoName ? `<div class="photo-card-caption">${esc(beforePhotoName)}</div>` : ''}`
+                    : `<div class="photo-card-img">${beforePhotoName ? esc(beforePhotoName) : '사진 없음'}</div>`
+                }
             </div>
             <div class="photo-card">
                 <div class="photo-card-label">📷 처리 후</div>
-                <div class="photo-card-img">${afterPhotos.length ? afterPhotos.join(', ') : '사진 없음'}</div>
+                ${afterPhotos.length ? afterPhotos.map(p => `
+                    ${p.data
+                        ? `<div class="photo-card-img"><img src="${p.data}" alt="처리 후"></div>
+                           <div class="photo-card-caption">${esc(p.name || '')}</div>`
+                        : `<div class="photo-card-img">${esc(p.name || '사진 없음')}</div>`
+                    }
+                `).join('') : `<div class="photo-card-img">사진 없음</div>`}
             </div>
         </div>
     </div>
