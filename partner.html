@@ -3214,21 +3214,6 @@
     </div>
 </div>
 
-<!-- 하자 보고서 Modal -->
-<div class="modal-overlay" id="defectReportModal">
-    <div class="modal modal-lg">
-        <div class="modal-header">
-            <div class="modal-title">📄 하자 처리 보고서</div>
-            <button class="modal-close" onclick="closeModal('defectReportModal')">×</button>
-        </div>
-        <div class="modal-body" id="defectReportBody"></div>
-        <div class="modal-footer">
-            <button class="btn btn-secondary" onclick="closeModal('defectReportModal')">닫기</button>
-            <button class="btn btn-primary" onclick="printDefectReport()">🖨️ 인쇄</button>
-        </div>
-    </div>
-</div>
-
 <!-- Toast -->
 <div class="toast" id="toast"></div>
 
@@ -4646,75 +4631,226 @@ function confirmDefectClose() {
     renderDefects();
 }
 
-// ----- 보고서 -----
+// ----- 보고서 (HTML 다운로드) -----
 function openDefectReport(id) {
     const d = defects.find(x => x.id === id);
     if (!d) return;
     const site = sites.find(s => String(s.id) === String(d.siteId));
     const company = site ? companies[site.companyId] : null;
-    document.getElementById('defectReportBody').innerHTML = `
-        <div style="text-align:center;margin-bottom:20px;">
-            <div style="font-size:22px;font-weight:800;color:var(--gray-900);">하자 처리 보고서</div>
-            <div style="font-size:12px;color:var(--gray-500);margin-top:4px;">보고일: ${new Date().toISOString().slice(0,10)}</div>
-        </div>
-        <div class="report-section">
-            <div class="report-section-title">현장 정보</div>
-            <div class="report-section-value">
-                ${escapeHtml(site ? site.building : '-')}<br>
-                ${escapeHtml(site ? (site.address || '') : '')}<br>
-                시공사: ${escapeHtml(company ? company.name : '-')} | 현장소장: ${escapeHtml(site && site.siteManager ? site.siteManager : '-')}
-            </div>
-        </div>
-        <div class="report-divider"></div>
-        <div class="report-section">
-            <div class="report-section-title">하자 개요</div>
-            <div class="report-section-value">
-                <strong>위치:</strong> ${escapeHtml(d.location)}<br>
-                <strong>유형:</strong> ${d.type}<br>
-                <strong>접수일:</strong> ${d.date}<br>
-                <strong>내용:</strong> ${escapeHtml(d.content || '-')}
-            </div>
-        </div>
-        <div class="report-divider"></div>
-        <div class="report-section">
-            <div class="report-section-title">처리 일정</div>
-            <div class="report-section-value">
-                투입일: ${d.planDate || '-'} | 완료일: ${d.completeDate || '-'} | 종결일: ${d.closeDate || '-'}<br>
-                투입 현장소장: ${escapeHtml(d.planManager || '-')} | 처리 담당자: ${escapeHtml(d.planAssignee || '-')}
-            </div>
-        </div>
-        <div class="report-divider"></div>
-        <div class="report-section">
-            <div class="report-section-title">응대 이력</div>
-            <div class="report-section-value">
-                ${(d.responses && d.responses.length) ? d.responses.map((r, i) => `
-                    <div style="margin-bottom:6px;">${i + 1}차 (${r.date}): ${escapeHtml(r.text)}</div>
-                `).join('') : '응대 이력이 없습니다.'}
-            </div>
-        </div>
-        <div class="report-divider"></div>
-        <div class="report-section">
-            <div class="report-section-title">처리 결과</div>
-            <div class="report-section-value">
-                <strong>원인:</strong> ${escapeHtml(d.cause || '-')}<br>
-                <strong>처리 내용:</strong> ${escapeHtml(d.resultText || '-')}<br>
-                ${(d.resultPhotos && d.resultPhotos.length) ? `<strong>처리 사진:</strong> ${d.resultPhotos.map(escapeHtml).join(', ')}` : ''}
-            </div>
-        </div>
-    `;
-    document.getElementById('defectReportModal').classList.add('active');
+    const siteName = site ? site.building : '-';
+    const today = new Date().toISOString().slice(0, 10);
+    const html = buildDefectReportHtml(d, site, company, today);
+    const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `하자처리보고서_${siteName}_${today}.html`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 3000);
+    showToast('보고서가 다운로드되었습니다.', 'success');
 }
 
-function printDefectReport() {
-    const w = window.open('', '_blank');
-    w.document.write(`<html><head><title>하자 처리 보고서</title>
-        <style>body{font-family:sans-serif;padding:30px;line-height:1.6;}
-        .report-section{margin-bottom:18px;}
-        .report-section-title{font-size:11px;font-weight:700;color:#666;text-transform:uppercase;margin-bottom:6px;}
-        .report-divider{border-top:1px solid #ddd;margin:14px 0;}</style>
-        </head><body>${document.getElementById('defectReportBody').innerHTML}</body></html>`);
-    w.document.close();
-    w.print();
+function buildDefectReportHtml(d, site, company, today) {
+    const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    const siteName = esc(site ? site.building : '-');
+    const siteAddr = esc(site ? (site.address || '') : '');
+    const scope = esc(site ? (site.scope || '-') : '-');
+    const beforePhoto = d.photoName ? esc(d.photoName) : '';
+    const afterPhotos = (d.resultPhotos && d.resultPhotos.length) ? d.resultPhotos.map(esc) : [];
+
+    return `<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>하자처리 보고서 - ${siteName}</title>
+<style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+        font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
+        background: #f4f5f7; color: #1f2937; line-height: 1.6;
+        padding: 40px 20px;
+    }
+    .page {
+        max-width: 880px; margin: 0 auto; background: #fff;
+        padding: 50px 60px; border-radius: 4px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+    .header {
+        display: flex; justify-content: space-between; align-items: flex-start;
+        padding-bottom: 20px; margin-bottom: 30px;
+        border-bottom: 2px solid #1f2937;
+    }
+    .brand-name {
+        font-size: 13px; font-weight: 700; color: #ef4444;
+        letter-spacing: 0.05em; margin-bottom: 4px;
+    }
+    .report-title {
+        font-size: 26px; font-weight: 800; color: #1f2937; letter-spacing: -0.02em;
+    }
+    .report-date { font-size: 12px; color: #9ca3af; margin-top: 6px; }
+    .header-right { text-align: right; }
+    .header-site { font-size: 15px; font-weight: 700; color: #1f2937; }
+    .header-addr { font-size: 12px; color: #6b7280; margin-top: 2px; }
+    .section { margin-bottom: 28px; }
+    .section-title {
+        font-size: 14px; font-weight: 700; color: #1f2937;
+        padding-left: 10px; border-left: 4px solid #ef4444;
+        margin-bottom: 12px;
+    }
+    table.info {
+        width: 100%; border-collapse: collapse;
+        border: 1px solid #e5e7eb; border-radius: 4px; overflow: hidden;
+    }
+    table.info th, table.info td {
+        padding: 12px 16px; font-size: 13px; text-align: left;
+        border-bottom: 1px solid #e5e7eb;
+    }
+    table.info th {
+        width: 140px; background: #f9fafb; color: #6b7280; font-weight: 600;
+    }
+    table.info td { color: #1f2937; font-weight: 600; }
+    table.info tr:last-child th, table.info tr:last-child td { border-bottom: none; }
+    .text-box {
+        border: 1px solid #e5e7eb; border-radius: 4px;
+        padding: 14px 18px; font-size: 13px; color: #374151;
+        background: #fff; min-height: 60px; white-space: pre-wrap;
+    }
+    .badge {
+        display: inline-block; padding: 4px 12px; border-radius: 999px;
+        font-size: 12px; font-weight: 700; background: #fef3c7; color: #b45309;
+    }
+    .photos {
+        display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 8px;
+    }
+    .photo-card {
+        border: 1px solid #e5e7eb; border-radius: 6px; overflow: hidden;
+    }
+    .photo-card-label {
+        background: #f9fafb; padding: 8px 12px; font-size: 12px; font-weight: 700;
+        color: #6b7280; border-bottom: 1px solid #e5e7eb;
+    }
+    .photo-card-img {
+        height: 200px; display: flex; align-items: center; justify-content: center;
+        background: #f3f4f6; color: #9ca3af; font-size: 13px;
+    }
+    .stamp-area {
+        display: flex; justify-content: flex-end; margin-top: 30px;
+    }
+    .stamp {
+        border: 1px solid #d1d5db; border-radius: 4px; padding: 14px 24px;
+        text-align: center; min-width: 160px;
+    }
+    .stamp-title { font-size: 13px; font-weight: 700; color: #1f2937; }
+    .stamp-date { font-size: 11px; color: #6b7280; margin-top: 4px; }
+    .footer-note {
+        text-align: center; font-size: 11px; color: #9ca3af;
+        margin-top: 40px; padding-top: 18px; border-top: 1px solid #e5e7eb;
+    }
+    .actions { text-align: center; margin-top: 24px; }
+    .btn-print {
+        display: inline-flex; align-items: center; gap: 8px;
+        padding: 12px 28px; background: #1e3a5f; color: #fff;
+        border: none; border-radius: 8px; font-size: 14px; font-weight: 700;
+        cursor: pointer; font-family: inherit;
+    }
+    .btn-print:hover { background: #15294a; }
+    @media print {
+        body { background: #fff; padding: 0; }
+        .page { box-shadow: none; max-width: 100%; padding: 30px 40px; }
+        .actions, .no-print { display: none !important; }
+    }
+</style>
+</head>
+<body>
+<div class="page">
+    <div class="header">
+        <div>
+            <div class="brand-name">넷폼앤디</div>
+            <div class="report-title">하자처리 보고서</div>
+            <div class="report-date">${today} 작성</div>
+        </div>
+        <div class="header-right">
+            <div class="header-site">${siteName}</div>
+            <div class="header-addr">${siteAddr}</div>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">현장 및 하자 기본정보</div>
+        <table class="info">
+            <tr><th>현장명</th><td>${siteName}</td></tr>
+            <tr><th>주소</th><td>${siteAddr || '-'}</td></tr>
+            <tr><th>공종</th><td>${scope}</td></tr>
+            <tr><th>접수일</th><td>${esc(d.date || '-')}</td></tr>
+            <tr><th>하자 위치</th><td>${esc(d.location || '-')}</td></tr>
+            <tr><th>하자 유형</th><td>${esc(d.type || '-')}</td></tr>
+            <tr><th>하자 원인</th><td><span class="badge">${esc(d.cause || '미분류')}</span></td></tr>
+        </table>
+    </div>
+
+    <div class="section">
+        <div class="section-title">접수 내용</div>
+        <div class="text-box">${esc(d.content || '-')}</div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">처리 정보</div>
+        <table class="info">
+            <tr><th>투입일</th><td>${esc(d.planDate || '-')}</td></tr>
+            <tr><th>투입 현장소장</th><td>${esc(d.planManager || '-')}</td></tr>
+            <tr><th>처리 담당자</th><td>${esc(d.planAssignee || '-')}</td></tr>
+            <tr><th>완료일</th><td>${esc(d.completeDate || '-')}</td></tr>
+        </table>
+    </div>
+
+    ${(d.responses && d.responses.length) ? `
+    <div class="section">
+        <div class="section-title">응대 이력</div>
+        <table class="info">
+            ${d.responses.map((r, i) => `
+                <tr><th>${i + 1}차 (${esc(r.date)})</th><td>${esc(r.text)}</td></tr>
+            `).join('')}
+        </table>
+    </div>` : ''}
+
+    <div class="section">
+        <div class="section-title">전 / 후 사진</div>
+        <div class="photos">
+            <div class="photo-card">
+                <div class="photo-card-label">📷 처리 전</div>
+                <div class="photo-card-img">${beforePhoto || '사진 없음'}</div>
+            </div>
+            <div class="photo-card">
+                <div class="photo-card-label">📷 처리 후</div>
+                <div class="photo-card-img">${afterPhotos.length ? afterPhotos.join(', ') : '사진 없음'}</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">처리 결과</div>
+        <div class="text-box">${esc(d.resultText || '-')}</div>
+    </div>
+
+    <div class="stamp-area">
+        <div class="stamp">
+            <div class="stamp-title">넷폼앤디 사후관리팀</div>
+            <div class="stamp-date">${today}</div>
+        </div>
+    </div>
+
+    <div class="footer-note">
+        본 보고서는 POUR 사후관리 고객을 위한 자료입니다. 작성자를 통해 전달받은 경우를 제외한 외부로의 배포 또는 복제를 금합니다.
+    </div>
+
+    <div class="actions no-print">
+        <button class="btn-print" onclick="window.print()">🖨️ 인쇄 / PDF 저장</button>
+    </div>
+</div>
+</body>
+</html>`;
 }
 
 function renderDefectAnalysis() {
