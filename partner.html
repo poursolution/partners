@@ -1073,6 +1073,10 @@
             0%, 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.5); }
             50% { box-shadow: 0 0 0 6px rgba(220, 38, 38, 0); }
         }
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+            to { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
         /* Stage progression badges inside card */
         .defect-stage-row { display: flex; gap: 6px; align-items: center; margin: 8px 0; flex-wrap: wrap; }
         .defect-stage-chip {
@@ -4829,33 +4833,38 @@ async function handleDefectIntake(e) {
         id: newId,
         siteId: _currentDefectSiteId ? String(_currentDefectSiteId) : null,
         companyId: currentUser ? currentUser.id : null,
-        companyName: currentUser ? currentUser.name : null,
+        companyName: currentUser ? currentUser.name : '',
         date: document.getElementById('defectDate').value || new Date().toISOString().slice(0, 10),
         type: document.getElementById('defectType').value,
         location: location,
         content: document.getElementById('defectContent').value.trim(),
         cause: document.getElementById('defectCause').value,
         status: '접수',
-        photoName: photoName,
-        photoData: photoData,
-        docNumber: docNumber,
-        signatureData: signatureData,
+        photoName: photoName || '',
+        photoData: photoData || '',
+        docNumber: docNumber || '',
+        signatureData: signatureData || '',
         agreedAt: new Date().toISOString(),
-        siteManagerName: _site ? _site.siteManager : null,
-        siteManagerPhone: _site ? _site.siteManagerPhone : null,
-        // 소장님 응답 관련 필드
-        managerResponse: null,     // 'accepted' | 'rejected'
-        managerPlanDate: null,     // 소장님이 설정한 투입예정일
-        managerPlanTime: null,     // 예상 시간대
-        managerRejectReason: null, // 투입불가 사유
-        managerRespondedAt: null,  // 응답 시각
-        // 투입일 당일 안전서약
-        safetyPledge: null,        // { signatureData, agreedAt }
-        // 소장님 완료 기입
-        managerResult: null,       // { resultText, resultPhotos[], completedAt }
+        siteManagerName: _site && _site.siteManager ? _site.siteManager : '',
+        siteManagerPhone: _site && _site.siteManagerPhone ? _site.siteManagerPhone : '',
+        // 소장님 응답 관련
+        managerResponse: '',
+        managerPlanDate: '',
+        managerPlanTime: '',
+        managerRejectReason: '',
+        managerRespondedAt: '',
+        // 안전서약/완료기입 (빈 객체로 초기화)
+        safetyPledge: {},
+        managerResult: {},
+        // 소장님 알림 전송 여부
+        managerNotified: false,
+        managerNotifiedAt: '',
         responses: [],
         createdAt: new Date().toISOString(),
     };
+    // 소장님 알림 플래그 미리 세팅 (Firebase 저장 전)
+    newDefect.managerNotified = true;
+    newDefect.managerNotifiedAt = new Date().toISOString();
     defects.unshift(newDefect);
     if (_fbReady) {
         fbSet('defects', newId, newDefect).catch(err => console.error('[Firebase] defect 저장 실패', err));
@@ -4863,8 +4872,12 @@ async function handleDefectIntake(e) {
     closeModal('defectIntakeModal');
     showToast('하자가 접수되었습니다.', 'success');
     document.getElementById('countDefect').textContent = defects.length;
-    // 소장님에게 알림 (접수 즉시)
-    _notifySiteManager(newDefect);
+    // 소장님에게 알림 (접수 즉시) - 이미 defect에 플래그 세팅했으므로 noti만 발송
+    _sendManagerNotification(newDefect);
+    // 접수 완료 후 소장님 알림 전송 상태 팝업 표시
+    const _mgrName2 = newDefect.siteManagerName || '(미배정)';
+    const _mgrPhone2 = newDefect.siteManagerPhone || '(연락처 미등록)';
+    _showManagerNotifyBanner(newDefect.id, _mgrName2, _mgrPhone2);
     if (_currentDefectSiteId && document.getElementById('siteDetailView').style.display !== 'none') {
         renderSiteDetail();
     } else {
@@ -4903,12 +4916,12 @@ function notifyNewDefect(d) {
     }
 }
 
-// 소장님(현장관리자)에게 직접 알림 전달 (SMS 연동 대비)
-function _notifySiteManager(d) {
+// 소장님(현장관리자)에게 알림 발송 전용 (defect 저장은 호출측에서 처리)
+function _sendManagerNotification(d) {
     const site = d.siteId ? sites.find(s => String(s.id) === String(d.siteId)) : null;
     const siteName = site ? site.building : '(현장 미지정)';
-    const siteManager = site ? site.siteManager : null;
-    const siteManagerPhone = site ? site.siteManagerPhone : null;
+    const siteManager = site ? (site.siteManager || '') : '';
+    const siteManagerPhone = site ? (site.siteManagerPhone || '') : '';
     const companyName = d.companyName || (currentUser ? currentUser.name : '시공사');
     // Firebase에 소장님 알림 레코드 저장 (SMS 발송 트리거용)
     if (_fbReady) {
@@ -4916,14 +4929,14 @@ function _notifySiteManager(d) {
         fbSet('notifications', notiId, {
             id: notiId,
             type: 'defect_intake',
-            defectId: d.id,
-            siteId: d.siteId,
+            defectId: d.id || '',
+            siteId: d.siteId || '',
             siteName: siteName,
             siteManager: siteManager,
             siteManagerPhone: siteManagerPhone,
             companyName: companyName,
-            location: d.location,
-            defectType: d.type,
+            location: d.location || '',
+            defectType: d.type || '',
             message: `[하자접수] ${companyName} → ${siteName} / ${d.location} (${d.type})`,
             smsMessage: `[넷폼알앤디 하자접수]\n${siteName} 현장에 하자가 접수되었습니다.\n위치: ${d.location}\n유형: ${d.type}\n시공사: ${companyName}\n대시보드에서 투입일정을 확인해주세요.`,
             targetRole: 'siteManager',
@@ -4934,6 +4947,42 @@ function _notifySiteManager(d) {
     }
     // 관리자에게도 알림 (기존 로직 유지)
     notifyNewDefect(d);
+}
+
+// 소장님 알림 전송 배너 표시
+function _showManagerNotifyBanner(defectId, mgrName, mgrPhone) {
+    // 기존 배너 제거
+    const existing = document.getElementById('mgrNotifyBanner');
+    if (existing) existing.remove();
+    const banner = document.createElement('div');
+    banner.id = 'mgrNotifyBanner';
+    banner.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:10000;background:#fff;border:2px solid var(--blue);border-radius:14px;box-shadow:0 8px 30px rgba(0,0,0,.18);padding:20px 28px;min-width:360px;max-width:500px;animation:slideDown .3s ease;';
+    banner.innerHTML = `
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+            <div style="width:40px;height:40px;border-radius:50%;background:var(--blue-light);display:flex;align-items:center;justify-content:center;font-size:20px;">📨</div>
+            <div>
+                <div style="font-size:15px;font-weight:700;color:var(--gray-800);">소장님에게 알림이 전송되었습니다</div>
+                <div style="font-size:12px;color:var(--gray-500);margin-top:2px;">하자접수 알림이 아래 소장님에게 전달됩니다.</div>
+            </div>
+        </div>
+        <div style="background:#f0f7ff;border-radius:10px;padding:14px 16px;margin-bottom:14px;">
+            <div style="font-size:13px;line-height:1.8;">
+                <div>👷 <strong>현장소장:</strong> ${escapeHtml(mgrName)}</div>
+                <div>📞 <strong>연락처:</strong> ${escapeHtml(mgrPhone)}</div>
+                <div>📋 <strong>전달 내용:</strong> 투입일정 확인 요청</div>
+            </div>
+        </div>
+        <div style="font-size:11px;color:var(--gray-400);margin-bottom:14px;">
+            ※ SMS 자동 발송이 연결되면 위 연락처로 알림 문자가 발송됩니다.<br>
+            ※ 소장님이 대시보드에서 투입일정을 확인하면 상태가 업데이트됩니다.
+        </div>
+        <div style="text-align:right;">
+            <button onclick="document.getElementById('mgrNotifyBanner').remove()" style="background:var(--blue);color:#fff;border:none;border-radius:8px;padding:8px 24px;font-size:13px;font-weight:600;cursor:pointer;">확인</button>
+        </div>
+    `;
+    document.body.appendChild(banner);
+    // 10초 후 자동 닫기
+    setTimeout(() => { const el = document.getElementById('mgrNotifyBanner'); if (el) el.remove(); }, 10000);
 }
 
 // 관리자 로그인 시 알림 권한 요청
@@ -5348,6 +5397,30 @@ function renderDefectCard(d) {
     const resultLine = (d.status === '완료' || d.status === '종결') && d.resultText
         ? `<div class="defect-result-line">✅ 처리결과: ${escapeHtml(d.resultText)}</div>`
         : '';
+    // 소장님 알림 전송 상태
+    let notifyLine = '';
+    if (d.managerNotified) {
+        const notiTime = d.managerNotifiedAt ? new Date(d.managerNotifiedAt).toLocaleString('ko-KR') : '';
+        if (d.managerResponse === 'accepted') {
+            notifyLine = `<div class="defect-meta-line" style="color:var(--green);background:#d1fae5;padding:6px 10px;border-radius:6px;margin-top:4px;">
+                ✅ 소장님 투입 확인 완료 — 투입예정: ${d.managerPlanDate || '-'}${d.managerPlanTime ? ' (' + d.managerPlanTime + ')' : ''}
+            </div>`;
+        } else if (d.managerResponse === 'rejected') {
+            if (isAdmin) {
+                notifyLine = `<div class="defect-meta-line" style="color:var(--red);background:#fee2e2;padding:6px 10px;border-radius:6px;margin-top:4px;">
+                    ❌ 소장님 투입 불가 — 사유: ${escapeHtml(d.managerRejectReason || '')}
+                </div>`;
+            } else {
+                notifyLine = `<div class="defect-meta-line" style="color:#f59e0b;background:#fffbeb;padding:6px 10px;border-radius:6px;margin-top:4px;">
+                    ⏳ 투입일정 확인중입니다.
+                </div>`;
+            }
+        } else {
+            notifyLine = `<div class="defect-meta-line" style="color:var(--blue);background:#eff6ff;padding:6px 10px;border-radius:6px;margin-top:4px;">
+                📨 소장님에게 알림 전송됨 (${notiTime}) — 소장: ${escapeHtml(d.siteManagerName || '')}${d.siteManagerPhone ? ' / ' + escapeHtml(d.siteManagerPhone) : ''} — 응답 대기중
+            </div>`;
+        }
+    }
     // 안전서약 상태 (관리자용)
     const safetyLine = isAdmin && d.safetyPledge && d.safetyPledge.agreedAt
         ? `<div class="defect-meta-line" style="color:var(--green);">🛡️ 안전서약 완료 (${new Date(d.safetyPledge.agreedAt).toLocaleString('ko-KR')})</div>`
@@ -5367,6 +5440,7 @@ function renderDefectCard(d) {
                 <span class="defect-badge ${d.cause === '미분류' ? '접수' : '계획수립'}">${d.cause}</span>
             </div>
             ${d.content ? `<div class="defect-card-content">${escapeHtml(d.content)}</div>` : ''}
+            ${notifyLine}
             ${planLine}
             ${safetyLine}
             ${resultLine}
@@ -6394,7 +6468,18 @@ function renderSiteDetail() {
                 </div>
                 ${siteDefects.length ? `
                     <div class="defect-list">
-                        ${siteDefects.map(d => `
+                        ${siteDefects.map(d => {
+                            let _notiLine = '';
+                            if (d.managerNotified) {
+                                if (d.managerResponse === 'accepted') {
+                                    _notiLine = '<div style="margin-top:6px;padding:5px 10px;background:#d1fae5;border-radius:6px;font-size:11px;color:#065f46;">✅ 소장님 투입확인 — ' + (d.managerPlanDate||'-') + (d.managerPlanTime?' ('+d.managerPlanTime+')':'') + '</div>';
+                                } else if (d.managerResponse === 'rejected') {
+                                    _notiLine = '<div style="margin-top:6px;padding:5px 10px;background:#fee2e2;border-radius:6px;font-size:11px;color:#991b1b;">❌ 투입불가 — ' + escapeHtml(d.managerRejectReason||'') + '</div>';
+                                } else {
+                                    _notiLine = '<div style="margin-top:6px;padding:5px 10px;background:#eff6ff;border-radius:6px;font-size:11px;color:#1e40af;">📨 소장님 알림 전송됨 (응답 대기) — ' + escapeHtml(d.siteManagerName||'') + (d.siteManagerPhone?' / '+escapeHtml(d.siteManagerPhone):'') + '</div>';
+                                }
+                            }
+                            return `
                             <div class="defect-card">
                                 <div class="defect-card-top">
                                     <div class="defect-card-title">${escapeHtml(d.location)}</div>
@@ -6404,11 +6489,12 @@ function renderSiteDetail() {
                                     <span>📅 ${d.date}</span>
                                     <span>🏷️ ${d.type}</span>
                                     <span>🔍 원인: ${d.cause}</span>
-                                    ${d.photoName ? `<span>📷 ${escapeHtml(d.photoName)}</span>` : ''}
+                                    ${d.photoName ? '<span>📷 '+escapeHtml(d.photoName)+'</span>' : ''}
                                 </div>
-                                ${d.content ? `<div class="defect-card-content">${escapeHtml(d.content)}</div>` : ''}
-                            </div>
-                        `).join('')}
+                                ${d.content ? '<div class="defect-card-content">'+escapeHtml(d.content)+'</div>' : ''}
+                                ${_notiLine}
+                            </div>`;
+                        }).join('')}
                     </div>
                 ` : '<div style="color:var(--gray-400);text-align:center;padding:40px;">접수된 하자가 없습니다.</div>'}
             `;
@@ -6435,6 +6521,15 @@ function renderSiteDetail() {
                             const _planLabel = (d.managerResponse === 'rejected')
                                 ? '<span style="color:#f59e0b;">확인중</span>'
                                 : (_pDate ? _pDate + (d.managerPlanTime ? ' (' + d.managerPlanTime + ')' : '') : '<span style="color:#f59e0b;">확인중</span>');
+                            // 알림 전송 상태
+                            let _notiLine2 = '';
+                            if (d.managerNotified && d.managerResponse === 'accepted') {
+                                _notiLine2 = '<div style="margin-top:6px;padding:5px 10px;background:#d1fae5;border-radius:6px;font-size:11px;color:#065f46;">✅ 소장님 투입확인 완료</div>';
+                            } else if (d.managerNotified && !d.managerResponse) {
+                                _notiLine2 = '<div style="margin-top:6px;padding:5px 10px;background:#eff6ff;border-radius:6px;font-size:11px;color:#1e40af;">📨 소장님에게 알림 전송됨 — 응답 대기중</div>';
+                            } else if (d.managerNotified && d.managerResponse === 'rejected') {
+                                _notiLine2 = '<div style="margin-top:6px;padding:5px 10px;background:#fffbeb;border-radius:6px;font-size:11px;color:#92400e;">⏳ 투입일정 확인중</div>';
+                            }
                             return `
                             <div class="defect-card">
                                 <div class="defect-card-top">
@@ -6447,6 +6542,7 @@ function renderSiteDetail() {
                                     <span>🏷️ ${d.type}</span>
                                 </div>
                                 ${d.content ? '<div class="defect-card-content">' + escapeHtml(d.content) + '</div>' : ''}
+                                ${_notiLine2}
                                 ${(d.status !== '종결') ? (
                                     '<div style="margin-top:10px;padding:10px 12px;background:#eff6ff;border-left:3px solid var(--blue);border-radius:6px;font-size:12px;color:#1e40af;">'
                                     + '<div style="font-weight:700;margin-bottom:4px;">📋 처리 진행 상태</div>'
