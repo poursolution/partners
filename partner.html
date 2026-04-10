@@ -2521,6 +2521,11 @@
                     </div>
                 </div>
 
+                <div class="form-group">
+                    <label class="form-label">현장소장 연락처</label>
+                    <input type="tel" class="form-input" id="newSiteManagerPhone" placeholder="예: 010-1234-5678">
+                </div>
+
                 <div class="form-section-title">📅 공사 일정</div>
 
                 <div class="form-row-2">
@@ -3154,7 +3159,11 @@
                     <span style="font-size:11px;color:var(--gray-500);">문서번호: <strong id="defectDocNumber" style="color:var(--gray-700);"></strong></span>
                     <span style="font-size:11px;color:var(--gray-500);">발급일시: <strong id="defectDocDate" style="color:var(--gray-700);"></strong></span>
                 </div>
-                <div style="font-size:11px;color:var(--gray-500);margin-bottom:12px;">발급주체: <strong id="defectDocIssuer" style="color:var(--gray-700);"></strong></div>
+                <div style="font-size:11px;color:var(--gray-500);margin-bottom:8px;">발급주체: <strong id="defectDocIssuer" style="color:var(--gray-700);"></strong></div>
+                <div id="defectDocManagerInfo" style="font-size:11px;color:var(--gray-500);margin-bottom:12px;padding:6px 10px;background:rgba(255,255,255,0.6);border-radius:6px;">
+                    👷 현장소장: <strong id="defectDocManagerName" style="color:var(--gray-700);"></strong>
+                    &nbsp;|&nbsp; 📞 연락처: <strong id="defectDocManagerPhone" style="color:var(--gray-700);"></strong>
+                </div>
                 <div style="font-size:12px;line-height:1.7;color:var(--gray-600);">
                     본 작업지시서는 <strong id="defectDocCompanyName" style="color:var(--blue);"></strong> 요청에 따라 넷폼알앤디㈜ 하자대응 시스템을 통해 발급된 문서입니다.<br>
                     넷폼알앤디㈜는 POUR공법 기술 및 자재를 지원하며 하자 처리 품질에 대한 컨설팅을 제공합니다.<br>
@@ -3245,6 +3254,149 @@
         <div class="modal-footer">
             <button class="btn btn-secondary" onclick="closeModal('defectIntakeModal')">취소</button>
             <button class="btn btn-primary" onclick="document.getElementById('defectIntakeForm').requestSubmit()">접수</button>
+        </div>
+    </div>
+</div>
+
+<!-- 소장님 투입일정 응답 Modal -->
+<div class="modal-overlay" id="defectManagerResponseModal">
+    <div class="modal" style="max-width:520px;">
+        <div class="modal-header">
+            <div class="modal-title">투입 일정 확인</div>
+            <button class="modal-close" onclick="closeModal('defectManagerResponseModal')">×</button>
+        </div>
+        <div class="modal-body" style="padding:20px;">
+            <div id="mgrResponseDefectInfo" style="background:var(--gray-50);border-radius:10px;padding:14px 16px;margin-bottom:18px;font-size:13px;line-height:1.6;"></div>
+            <div style="margin-bottom:16px;">
+                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:10px 14px;border:2px solid var(--gray-200);border-radius:10px;margin-bottom:8px;" id="mgrAcceptLabel">
+                    <input type="radio" name="mgrResponseType" value="accepted" id="mgrResponseAccept" onchange="_toggleManagerResponseType()">
+                    <span style="font-size:14px;font-weight:600;color:var(--blue);">투입 가능</span>
+                </label>
+                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:10px 14px;border:2px solid var(--gray-200);border-radius:10px;" id="mgrRejectLabel">
+                    <input type="radio" name="mgrResponseType" value="rejected" id="mgrResponseReject" onchange="_toggleManagerResponseType()">
+                    <span style="font-size:14px;font-weight:600;color:var(--red);">투입 불가</span>
+                </label>
+            </div>
+            <!-- 투입 가능 시 -->
+            <div id="mgrAcceptFields" style="display:none;">
+                <div class="form-group">
+                    <label class="form-label">투입 예정일 <span style="color:var(--red)">*</span></label>
+                    <input type="date" class="form-input" id="mgrPlanDate">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">예상 시간대</label>
+                    <select class="form-select" id="mgrPlanTime">
+                        <option value="">선택</option>
+                        <option value="오전 (09:00~12:00)">오전 (09:00~12:00)</option>
+                        <option value="오후 (13:00~17:00)">오후 (13:00~17:00)</option>
+                        <option value="종일 (09:00~17:00)">종일 (09:00~17:00)</option>
+                    </select>
+                </div>
+            </div>
+            <!-- 투입 불가 시 -->
+            <div id="mgrRejectFields" style="display:none;">
+                <div class="form-group">
+                    <label class="form-label">투입 불가 사유 <span style="color:var(--red)">*</span></label>
+                    <textarea class="form-textarea" id="mgrRejectReason" placeholder="투입이 불가능한 상세 사유를 작성해주세요." style="min-height:100px;"></textarea>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeModal('defectManagerResponseModal')">취소</button>
+            <button class="btn btn-primary" onclick="submitManagerResponse()">제출</button>
+        </div>
+    </div>
+</div>
+
+<!-- 투입일 당일 안전수칙 서약서 Modal -->
+<div class="modal-overlay" id="defectSafetyPledgeModal">
+    <div class="modal" style="max-width:560px;">
+        <div class="modal-header">
+            <div class="modal-title">작업전 안전확인</div>
+            <button class="modal-close" onclick="closeModal('defectSafetyPledgeModal')">×</button>
+        </div>
+        <div class="modal-body" style="padding:20px;">
+            <div id="safetyPledgeDefectInfo" style="background:var(--gray-50);border-radius:10px;padding:12px 14px;margin-bottom:16px;font-size:12px;line-height:1.6;color:var(--gray-600);"></div>
+            <div style="font-size:14px;font-weight:600;color:var(--gray-700);margin-bottom:14px;">작업 시작 전 아래 항목을 본인이 직접 확인해 주세요.</div>
+            <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:16px;font-size:13px;line-height:2;color:var(--gray-700);">
+                <div style="margin-bottom:6px;"><span style="font-weight:700;">● 보호구 착용 확인</span><br>&nbsp;&nbsp;안전모·안전대(고소작업 시)·방진마스크·안전화를 착용하였습니다.</div>
+                <div style="margin-bottom:6px;"><span style="font-weight:700;">● 작업 구역 위험 요소 확인</span><br>&nbsp;&nbsp;추락 위험 구역, 전기·가스 라인, 일반인 통제 여부를 직접 확인하였습니다.</div>
+                <div style="margin-bottom:6px;"><span style="font-weight:700;">● 비상 연락처 숙지</span><br>&nbsp;&nbsp;119 및 낙찰사 현장 담당자 연락처를 확인하였습니다.</div>
+                <div><span style="font-weight:700;">● 신체 상태 확인</span><br>&nbsp;&nbsp;음주·극도의 피로 상태가 아니며 정상적으로 작업 가능한 상태임을 확인합니다.</div>
+            </div>
+            <div style="margin-top:18px;border-top:1px solid var(--gray-200);padding-top:14px;">
+                <label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;font-size:12.5px;line-height:1.6;color:var(--gray-600);margin-bottom:14px;">
+                    <input type="checkbox" id="safetyPledgeAgree" style="margin-top:4px;min-width:16px;">
+                    <span>본인은 위 항목을 작업 시작 전 직접 확인하였으며, 안전한 상태에서 작업을 시작함에 동의합니다.</span>
+                </label>
+                <div>
+                    <div style="font-size:13px;font-weight:600;color:var(--gray-700);margin-bottom:8px;">서명</div>
+                    <div style="position:relative;border:1px solid var(--gray-300);border-radius:9px;background:#fff;overflow:hidden;">
+                        <canvas id="safetySignatureCanvas" width="480" height="130" style="width:100%;display:block;cursor:crosshair;"></canvas>
+                        <button type="button" onclick="clearSafetySignature()" style="position:absolute;top:6px;right:6px;background:var(--gray-100);border:1px solid var(--gray-300);border-radius:6px;padding:3px 10px;font-size:11px;color:var(--gray-500);cursor:pointer;">초기화</button>
+                    </div>
+                    <div style="font-size:11px;color:var(--gray-400);margin-top:4px;">위 영역에 서명해주세요.</div>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeModal('defectSafetyPledgeModal')">취소</button>
+            <button class="btn btn-primary" onclick="submitSafetyPledge()">서약서 제출</button>
+        </div>
+    </div>
+</div>
+
+<!-- 소장님 하자처리 완료 기입 Modal -->
+<div class="modal-overlay" id="defectManagerCompleteModal">
+    <div class="modal" style="max-width:560px;">
+        <div class="modal-header">
+            <div class="modal-title">하자 처리 결과 기입</div>
+            <button class="modal-close" onclick="closeModal('defectManagerCompleteModal')">×</button>
+        </div>
+        <div class="modal-body">
+            <div id="mgrCompleteDefectInfo" style="background:var(--gray-50);border-radius:10px;padding:12px 14px;margin-bottom:16px;font-size:12px;line-height:1.6;color:var(--gray-600);"></div>
+            <form class="modal-form" id="defectManagerCompleteForm" onsubmit="handleManagerComplete(event)">
+                <div class="form-group">
+                    <label class="form-label">처리 결과 <span style="color:var(--red)">*</span></label>
+                    <textarea class="form-textarea" id="mgrCompleteResult" placeholder="처리 방법 및 결과를 상세히 입력하세요" required style="min-height:90px;"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">처리 사진 (전·중·후)</label>
+                    <div class="file-upload-area">
+                        <label class="file-upload-placeholder" for="mgrCompletePhotoInput">
+                            <div class="file-upload-icon">📷</div>
+                            <div class="file-upload-text">클릭하거나 사진을 드래그해서 첨부</div>
+                            <div class="file-upload-hint">JPG, PNG 등 여러 장 가능</div>
+                        </label>
+                        <input type="file" id="mgrCompletePhotoInput" style="display:none" accept="image/*" multiple onchange="handleMgrCompletePhotoSelect(event)">
+                    </div>
+                    <div id="mgrCompletePhotoSelected" style="display:none;font-size:12px;color:var(--gray-600);margin-top:8px;"></div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">완료일</label>
+                    <input type="date" class="form-input" id="mgrCompleteDate">
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeModal('defectManagerCompleteModal')">취소</button>
+            <button class="btn btn-primary" onclick="document.getElementById('defectManagerCompleteForm').requestSubmit()">처리 완료 제출</button>
+        </div>
+    </div>
+</div>
+
+<!-- 관리자: 동의서/서약서 열람 Modal -->
+<div class="modal-overlay" id="defectAgreementViewModal">
+    <div class="modal" style="max-width:620px;">
+        <div class="modal-header">
+            <div class="modal-title">동의서·서약서 열람</div>
+            <button class="modal-close" onclick="closeModal('defectAgreementViewModal')">×</button>
+        </div>
+        <div class="modal-body" style="padding:20px;">
+            <div id="agreementViewContent" style="font-size:13px;line-height:1.7;"></div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeModal('defectAgreementViewModal')">닫기</button>
         </div>
     </div>
 </div>
@@ -4565,6 +4717,12 @@ function _openDefectIntakeFormAfterPledge() {
     document.getElementById('defectDocDate').textContent = docDate;
     document.getElementById('defectDocIssuer').textContent = companyName;
     document.getElementById('defectDocCompanyName').textContent = companyName;
+    // 현장소장 정보 채우기
+    const site = _currentDefectSiteId ? sites.find(s => String(s.id) === String(_currentDefectSiteId)) : null;
+    const mgrName = site && site.siteManager ? site.siteManager : '-';
+    const mgrPhone = site && site.siteManagerPhone ? site.siteManagerPhone : '-';
+    document.getElementById('defectDocManagerName').textContent = mgrName;
+    document.getElementById('defectDocManagerPhone').textContent = mgrPhone;
     // 체크박스 초기화
     document.getElementById('defectAgree1').checked = false;
     document.getElementById('defectAgree2').checked = false;
@@ -4666,6 +4824,7 @@ async function handleDefectIntake(e) {
     }
     const newId = _fbReady ? fbGenId() : String(Date.now());
     const docNumber = document.getElementById('defectDocNumber').textContent;
+    const _site = _currentDefectSiteId ? sites.find(s => String(s.id) === String(_currentDefectSiteId)) : null;
     const newDefect = {
         id: newId,
         siteId: _currentDefectSiteId ? String(_currentDefectSiteId) : null,
@@ -4682,6 +4841,18 @@ async function handleDefectIntake(e) {
         docNumber: docNumber,
         signatureData: signatureData,
         agreedAt: new Date().toISOString(),
+        siteManagerName: _site ? _site.siteManager : null,
+        siteManagerPhone: _site ? _site.siteManagerPhone : null,
+        // 소장님 응답 관련 필드
+        managerResponse: null,     // 'accepted' | 'rejected'
+        managerPlanDate: null,     // 소장님이 설정한 투입예정일
+        managerPlanTime: null,     // 예상 시간대
+        managerRejectReason: null, // 투입불가 사유
+        managerRespondedAt: null,  // 응답 시각
+        // 투입일 당일 안전서약
+        safetyPledge: null,        // { signatureData, agreedAt }
+        // 소장님 완료 기입
+        managerResult: null,       // { resultText, resultPhotos[], completedAt }
         responses: [],
         createdAt: new Date().toISOString(),
     };
@@ -4732,13 +4903,14 @@ function notifyNewDefect(d) {
     }
 }
 
-// 소장님(현장관리자)에게 직접 알림 전달
+// 소장님(현장관리자)에게 직접 알림 전달 (SMS 연동 대비)
 function _notifySiteManager(d) {
     const site = d.siteId ? sites.find(s => String(s.id) === String(d.siteId)) : null;
     const siteName = site ? site.building : '(현장 미지정)';
     const siteManager = site ? site.siteManager : null;
+    const siteManagerPhone = site ? site.siteManagerPhone : null;
     const companyName = d.companyName || (currentUser ? currentUser.name : '시공사');
-    // Firebase에 소장님 알림 레코드 저장
+    // Firebase에 소장님 알림 레코드 저장 (SMS 발송 트리거용)
     if (_fbReady) {
         const notiId = fbGenId();
         fbSet('notifications', notiId, {
@@ -4748,11 +4920,14 @@ function _notifySiteManager(d) {
             siteId: d.siteId,
             siteName: siteName,
             siteManager: siteManager,
+            siteManagerPhone: siteManagerPhone,
             companyName: companyName,
             location: d.location,
             defectType: d.type,
             message: `[하자접수] ${companyName} → ${siteName} / ${d.location} (${d.type})`,
+            smsMessage: `[넷폼알앤디 하자접수]\n${siteName} 현장에 하자가 접수되었습니다.\n위치: ${d.location}\n유형: ${d.type}\n시공사: ${companyName}\n대시보드에서 투입일정을 확인해주세요.`,
             targetRole: 'siteManager',
+            targetPhone: siteManagerPhone,
             read: false,
             createdAt: new Date().toISOString(),
         }).catch(err => console.error('[Firebase] 소장 알림 저장 실패', err));
@@ -4766,6 +4941,296 @@ function requestNotifyPermissionIfNeeded() {
     if (isAdmin && typeof Notification !== 'undefined' && Notification.permission === 'default') {
         try { Notification.requestPermission(); } catch (e) {}
     }
+}
+
+// ========== 소장님 투입일정 응답 ==========
+let _mgrResponseDefectId = null;
+
+function _toggleManagerResponseType() {
+    const accepted = document.getElementById('mgrResponseAccept').checked;
+    document.getElementById('mgrAcceptFields').style.display = accepted ? 'block' : 'none';
+    document.getElementById('mgrRejectFields').style.display = accepted ? 'none' : 'block';
+    document.getElementById('mgrAcceptLabel').style.borderColor = accepted ? 'var(--blue)' : 'var(--gray-200)';
+    document.getElementById('mgrRejectLabel').style.borderColor = accepted ? 'var(--gray-200)' : 'var(--red)';
+}
+
+function openManagerResponseModal(defectId) {
+    _mgrResponseDefectId = defectId;
+    const d = defects.find(x => String(x.id) === String(defectId));
+    if (!d) return;
+    const siteName = _siteName(d.siteId);
+    document.getElementById('mgrResponseDefectInfo').innerHTML = `
+        <div><strong>${escapeHtml(siteName)}</strong></div>
+        <div>📍 ${escapeHtml(d.location)} | 🏷️ ${d.type}</div>
+        <div>📅 접수일: ${d.date}</div>
+        ${d.content ? `<div style="margin-top:6px;color:var(--gray-500);">${escapeHtml(d.content)}</div>` : ''}
+    `;
+    document.getElementById('mgrResponseAccept').checked = false;
+    document.getElementById('mgrResponseReject').checked = false;
+    document.getElementById('mgrAcceptFields').style.display = 'none';
+    document.getElementById('mgrRejectFields').style.display = 'none';
+    document.getElementById('mgrAcceptLabel').style.borderColor = 'var(--gray-200)';
+    document.getElementById('mgrRejectLabel').style.borderColor = 'var(--gray-200)';
+    document.getElementById('mgrPlanDate').value = '';
+    document.getElementById('mgrPlanTime').value = '';
+    document.getElementById('mgrRejectReason').value = '';
+    document.getElementById('defectManagerResponseModal').classList.add('active');
+}
+
+function submitManagerResponse() {
+    const d = defects.find(x => String(x.id) === String(_mgrResponseDefectId));
+    if (!d) return;
+    const accepted = document.getElementById('mgrResponseAccept').checked;
+    const rejected = document.getElementById('mgrResponseReject').checked;
+    if (!accepted && !rejected) {
+        showToast('투입 가능 또는 투입 불가를 선택해주세요.', 'error'); return;
+    }
+    if (accepted) {
+        const planDate = document.getElementById('mgrPlanDate').value;
+        if (!planDate) { showToast('투입 예정일을 입력해주세요.', 'error'); return; }
+        d.managerResponse = 'accepted';
+        d.managerPlanDate = planDate;
+        d.managerPlanTime = document.getElementById('mgrPlanTime').value || null;
+        d.managerRejectReason = null;
+        d.planDate = planDate;
+        d.planManager = d.siteManagerName || d.planManager;
+        d.planManagerPhone = d.siteManagerPhone || d.planManagerPhone;
+        d.status = '계획수립';
+    } else {
+        const reason = document.getElementById('mgrRejectReason').value.trim();
+        if (!reason) { showToast('투입 불가 사유를 입력해주세요.', 'error'); return; }
+        d.managerResponse = 'rejected';
+        d.managerRejectReason = reason;
+        d.managerPlanDate = null;
+        d.managerPlanTime = null;
+    }
+    d.managerRespondedAt = new Date().toISOString();
+    _persistDefect(d);
+    closeModal('defectManagerResponseModal');
+    if (accepted) {
+        showToast('투입 일정이 확인되었습니다.', 'success');
+    } else {
+        showToast('투입 불가 사유가 전달되었습니다.', 'info');
+        // 관리자에게 투입불가 알림
+        if (_fbReady) {
+            const notiId = fbGenId();
+            fbSet('notifications', notiId, {
+                id: notiId,
+                type: 'defect_rejected',
+                defectId: d.id,
+                siteId: d.siteId,
+                siteName: _siteName(d.siteId),
+                location: d.location,
+                rejectReason: d.managerRejectReason,
+                message: `[투입불가] ${_siteName(d.siteId)} / ${d.location} — 사유: ${d.managerRejectReason}`,
+                targetRole: 'admin',
+                read: false,
+                createdAt: new Date().toISOString(),
+            }).catch(err => console.error('[Firebase] 투입불가 알림 저장 실패', err));
+        }
+    }
+    renderDefects();
+    if (document.getElementById('siteDetailView').style.display !== 'none') renderSiteDetail();
+}
+
+// ========== 투입일 당일 안전수칙 서약서 ==========
+let _safetyPledgeDefectId = null;
+let _safetySignatureCtx = null;
+let _safetySignatureDrawing = false;
+let _safetySignatureEmpty = true;
+
+function _initSafetySignature() {
+    const canvas = document.getElementById('safetySignatureCanvas');
+    if (!canvas) return;
+    _safetySignatureCtx = canvas.getContext('2d');
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * 2;
+    canvas.height = rect.height * 2;
+    _safetySignatureCtx.scale(2, 2);
+    _safetySignatureCtx.strokeStyle = '#1e293b';
+    _safetySignatureCtx.lineWidth = 2;
+    _safetySignatureCtx.lineCap = 'round';
+    _safetySignatureEmpty = true;
+    canvas.onmousedown = function(e) { _safetySignatureDrawing = true; _safetySignatureCtx.beginPath(); const r = canvas.getBoundingClientRect(); _safetySignatureCtx.moveTo(e.clientX - r.left, e.clientY - r.top); };
+    canvas.onmousemove = function(e) { if (!_safetySignatureDrawing) return; const r = canvas.getBoundingClientRect(); _safetySignatureCtx.lineTo(e.clientX - r.left, e.clientY - r.top); _safetySignatureCtx.stroke(); _safetySignatureEmpty = false; };
+    canvas.onmouseup = function() { _safetySignatureDrawing = false; };
+    canvas.onmouseleave = function() { _safetySignatureDrawing = false; };
+    canvas.ontouchstart = function(e) { e.preventDefault(); _safetySignatureDrawing = true; _safetySignatureCtx.beginPath(); const r = canvas.getBoundingClientRect(); const t = e.touches[0]; _safetySignatureCtx.moveTo(t.clientX - r.left, t.clientY - r.top); };
+    canvas.ontouchmove = function(e) { e.preventDefault(); if (!_safetySignatureDrawing) return; const r = canvas.getBoundingClientRect(); const t = e.touches[0]; _safetySignatureCtx.lineTo(t.clientX - r.left, t.clientY - r.top); _safetySignatureCtx.stroke(); _safetySignatureEmpty = false; };
+    canvas.ontouchend = function() { _safetySignatureDrawing = false; };
+}
+
+function clearSafetySignature() {
+    const canvas = document.getElementById('safetySignatureCanvas');
+    if (!canvas || !_safetySignatureCtx) return;
+    const rect = canvas.getBoundingClientRect();
+    _safetySignatureCtx.clearRect(0, 0, rect.width, rect.height);
+    _safetySignatureEmpty = true;
+}
+
+function openSafetyPledgeModal(defectId) {
+    _safetyPledgeDefectId = defectId;
+    const d = defects.find(x => String(x.id) === String(defectId));
+    if (!d) return;
+    // 투입일 당일인지 확인
+    const today = new Date().toISOString().slice(0, 10);
+    const planDate = d.managerPlanDate || d.planDate;
+    if (planDate && planDate !== today) {
+        showToast(`안전서약서는 투입일 당일(${planDate})에만 작성할 수 있습니다.`, 'error');
+        return;
+    }
+    document.getElementById('safetyPledgeDefectInfo').innerHTML = `
+        <div><strong>${escapeHtml(_siteName(d.siteId))}</strong> | 📍 ${escapeHtml(d.location)}</div>
+        <div>📅 투입 예정일: ${planDate || '-'}${d.managerPlanTime ? ` (${d.managerPlanTime})` : ''}</div>
+    `;
+    document.getElementById('safetyPledgeAgree').checked = false;
+    document.getElementById('defectSafetyPledgeModal').classList.add('active');
+    setTimeout(() => { _initSafetySignature(); }, 100);
+}
+
+function submitSafetyPledge() {
+    if (!document.getElementById('safetyPledgeAgree').checked) {
+        showToast('안전확인 동의에 체크해주세요.', 'error'); return;
+    }
+    if (_safetySignatureEmpty) {
+        showToast('서명을 해주세요.', 'error'); return;
+    }
+    const d = defects.find(x => String(x.id) === String(_safetyPledgeDefectId));
+    if (!d) return;
+    const canvas = document.getElementById('safetySignatureCanvas');
+    d.safetyPledge = {
+        signatureData: canvas ? canvas.toDataURL('image/png') : null,
+        agreedAt: new Date().toISOString(),
+    };
+    _persistDefect(d);
+    closeModal('defectSafetyPledgeModal');
+    showToast('안전수칙 서약서가 제출되었습니다.', 'success');
+    renderDefects();
+    if (document.getElementById('siteDetailView').style.display !== 'none') renderSiteDetail();
+}
+
+// ========== 소장님 하자처리 완료 기입 ==========
+let _mgrCompleteDefectId = null;
+let _mgrCompletePhotos = [];
+let _mgrCompletePhotosReady = null;
+
+function openManagerCompleteModal(defectId) {
+    _mgrCompleteDefectId = defectId;
+    const d = defects.find(x => String(x.id) === String(defectId));
+    if (!d) return;
+    document.getElementById('mgrCompleteDefectInfo').innerHTML = `
+        <div><strong>${escapeHtml(_siteName(d.siteId))}</strong> | 📍 ${escapeHtml(d.location)}</div>
+        <div>📅 투입일: ${d.managerPlanDate || d.planDate || '-'}${d.managerPlanTime ? ` (${d.managerPlanTime})` : ''}</div>
+    `;
+    document.getElementById('defectManagerCompleteForm').reset();
+    document.getElementById('mgrCompleteResult').value = '';
+    document.getElementById('mgrCompleteDate').value = new Date().toISOString().slice(0, 10);
+    _mgrCompletePhotos = [];
+    document.getElementById('mgrCompletePhotoSelected').style.display = 'none';
+    document.getElementById('defectManagerCompleteModal').classList.add('active');
+}
+
+function handleMgrCompletePhotoSelect(e) {
+    const files = Array.from(e.target.files || []);
+    const el = document.getElementById('mgrCompletePhotoSelected');
+    if (!files.length) { _mgrCompletePhotos = []; _mgrCompletePhotosReady = null; el.style.display = 'none'; return; }
+    el.style.display = 'block';
+    el.innerHTML = '📷 이미지 압축 중...';
+    _mgrCompletePhotos = files.map(f => ({ name: f.name, data: null }));
+    _mgrCompletePhotosReady = Promise.all(files.map((f, i) =>
+        _compressImageFile(f)
+            .then(data => { _mgrCompletePhotos[i].data = data; return data; })
+            .catch(err => { console.error('이미지 압축 실패', err); return null; })
+    )).then(() => {
+        el.innerHTML = _mgrCompletePhotos.map(p => `📷 ${escapeHtml(p.name)}`).join('<br>');
+    });
+}
+
+async function handleManagerComplete(e) {
+    e.preventDefault();
+    const d = defects.find(x => String(x.id) === String(_mgrCompleteDefectId));
+    if (!d) return;
+    const result = document.getElementById('mgrCompleteResult').value.trim();
+    if (!result) { showToast('처리 결과를 입력해주세요.', 'error'); return; }
+    if (_mgrCompletePhotosReady) {
+        showToast('사진 처리 중...', 'info');
+        try { await _mgrCompletePhotosReady; } catch (err) { console.error(err); }
+    }
+    d.managerResult = {
+        resultText: result,
+        resultPhotos: _mgrCompletePhotos.map(p => ({ name: p.name, data: p.data })),
+        completedAt: new Date().toISOString(),
+    };
+    d.resultText = result;
+    d.resultPhotos = _mgrCompletePhotos.map(p => ({ name: p.name, data: p.data }));
+    d.completeDate = document.getElementById('mgrCompleteDate').value || new Date().toISOString().slice(0, 10);
+    d.status = '완료';
+    _persistDefect(d);
+    closeModal('defectManagerCompleteModal');
+    showToast('하자 처리 완료가 기록되었습니다.', 'success');
+    renderDefects();
+    if (document.getElementById('siteDetailView').style.display !== 'none') renderSiteDetail();
+}
+
+// ========== 관리자: 동의서·서약서 열람 ==========
+function openAgreementViewModal(defectId) {
+    const d = defects.find(x => String(x.id) === String(defectId));
+    if (!d) return;
+    const siteName = _siteName(d.siteId);
+    let html = '';
+    // 1. 시공사 하자접수 동의서
+    html += `<div style="margin-bottom:24px;">
+        <div style="font-size:15px;font-weight:700;color:var(--blue);margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid var(--blue);">1. 하자접수 동의서 (시공사 작성)</div>
+        <div style="background:var(--gray-50);border-radius:8px;padding:14px;margin-bottom:8px;">
+            <div style="font-size:12px;line-height:1.8;">
+                <div>문서번호: <strong>${d.docNumber || '-'}</strong></div>
+                <div>시공사: <strong>${escapeHtml(d.companyName || '-')}</strong></div>
+                <div>현장: <strong>${escapeHtml(siteName)}</strong></div>
+                <div>동의 시각: <strong>${d.agreedAt ? new Date(d.agreedAt).toLocaleString('ko-KR') : '-'}</strong></div>
+            </div>
+        </div>
+        <div style="font-size:12px;color:var(--gray-600);margin-bottom:8px;">
+            <div>✅ 넷폼알앤디 기술·자재 지원 컨설팅 서비스 이용 동의</div>
+            <div>✅ 작업 품질(넷폼알앤디) / 현장 안전 관리(낙찰사) 역할 확인</div>
+        </div>
+        ${d.signatureData ? `<div style="font-size:12px;font-weight:600;margin-bottom:4px;">서명:</div><img src="${d.signatureData}" style="max-width:280px;border:1px solid var(--gray-200);border-radius:6px;">` : '<div style="color:var(--gray-400);font-size:12px;">서명 없음</div>'}
+    </div>`;
+    // 2. 소장님 안전수칙 서약서
+    html += `<div style="margin-bottom:16px;">
+        <div style="font-size:15px;font-weight:700;color:var(--green);margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid var(--green);">2. 작업전 안전확인 서약서 (현장소장 작성)</div>`;
+    if (d.safetyPledge && d.safetyPledge.agreedAt) {
+        html += `<div style="background:var(--gray-50);border-radius:8px;padding:14px;margin-bottom:8px;">
+            <div style="font-size:12px;line-height:1.8;">
+                <div>현장소장: <strong>${escapeHtml(d.siteManagerName || d.planManager || '-')}</strong></div>
+                <div>작성 시각: <strong>${new Date(d.safetyPledge.agreedAt).toLocaleString('ko-KR')}</strong></div>
+            </div>
+        </div>
+        <div style="font-size:12px;color:var(--gray-600);margin-bottom:8px;">
+            <div>✅ 보호구 착용 확인</div>
+            <div>✅ 작업 구역 위험 요소 확인</div>
+            <div>✅ 비상 연락처 숙지</div>
+            <div>✅ 신체 상태 확인</div>
+        </div>
+        ${d.safetyPledge.signatureData ? `<div style="font-size:12px;font-weight:600;margin-bottom:4px;">서명:</div><img src="${d.safetyPledge.signatureData}" style="max-width:280px;border:1px solid var(--gray-200);border-radius:6px;">` : ''}`;
+    } else {
+        html += `<div style="color:var(--gray-400);font-size:13px;padding:20px;text-align:center;">아직 작성되지 않았습니다.</div>`;
+    }
+    html += `</div>`;
+    // 3. 소장님 투입 응답
+    html += `<div>
+        <div style="font-size:15px;font-weight:700;color:var(--purple);margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid #a78bfa;">3. 소장님 투입 응답</div>`;
+    if (d.managerResponse) {
+        html += `<div style="background:var(--gray-50);border-radius:8px;padding:14px;font-size:12px;line-height:1.8;">
+            <div>응답: <strong style="color:${d.managerResponse === 'accepted' ? 'var(--green)' : 'var(--red)'};">${d.managerResponse === 'accepted' ? '투입 가능' : '투입 불가'}</strong></div>
+            ${d.managerResponse === 'accepted' ? `<div>투입 예정일: <strong>${d.managerPlanDate || '-'}</strong></div><div>예상 시간대: <strong>${d.managerPlanTime || '-'}</strong></div>` : `<div>불가 사유: <strong>${escapeHtml(d.managerRejectReason || '-')}</strong></div>`}
+            <div>응답 시각: <strong>${d.managerRespondedAt ? new Date(d.managerRespondedAt).toLocaleString('ko-KR') : '-'}</strong></div>
+        </div>`;
+    } else {
+        html += `<div style="color:var(--gray-400);font-size:13px;padding:20px;text-align:center;">아직 응답하지 않았습니다.</div>`;
+    }
+    html += `</div>`;
+    document.getElementById('agreementViewContent').innerHTML = html;
+    document.getElementById('defectAgreementViewModal').classList.add('active');
 }
 
 function switchDefectTab(tab) {
@@ -4813,33 +5278,79 @@ function renderDefectStageRow(d) {
 function renderDefectCard(d) {
     const overdue = d.status === '접수' && _daysSince(d.date) >= 2;
     const overdueLabel = overdue ? `<span class="defect-badge 접수">⏰ ${_daysSince(d.date)}일 경과</span>` : '';
+    const today = new Date().toISOString().slice(0, 10);
+    const planDate = d.managerPlanDate || d.planDate;
+    const isDeployDay = planDate && planDate === today;
     let actions = '';
     if (d.status === '접수') {
-        actions = `
-            ${isAdmin ? `<button class="defect-action-btn primary" onclick="openDefectPlanModal('${d.id}')">→ 계획수립으로 진행</button>` : ''}
-            ${isAdmin ? `<button class="defect-action-btn danger" onclick="deleteDefect('${d.id}')">🗑️ 삭제</button>` : ''}
-        `;
+        if (isAdmin) {
+            actions = `
+                <button class="defect-action-btn primary" onclick="openDefectPlanModal('${d.id}')">→ 계획수립으로 진행</button>
+                <button class="defect-action-btn secondary" onclick="openAgreementViewModal('${d.id}')">📋 동의서 열람</button>
+                <button class="defect-action-btn danger" onclick="deleteDefect('${d.id}')">🗑️ 삭제</button>
+            `;
+        } else {
+            // 소장님이 응답할 수 있는 버튼
+            actions = `<button class="defect-action-btn primary" onclick="openManagerResponseModal('${d.id}')">📋 투입일정 확인</button>`;
+        }
     } else if (d.status === '계획수립') {
-        actions = isAdmin ? `
-            <button class="defect-action-btn primary" onclick="openDefectCompleteModal('${d.id}')">→ 완료로 진행</button>
-            <button class="defect-action-btn secondary" onclick="openResponseEditModal('${d.id}')">— 응대이력 수정</button>
-        ` : '';
+        if (isAdmin) {
+            actions = `
+                <button class="defect-action-btn primary" onclick="openDefectCompleteModal('${d.id}')">→ 완료로 진행</button>
+                <button class="defect-action-btn secondary" onclick="openResponseEditModal('${d.id}')">— 응대이력 수정</button>
+                <button class="defect-action-btn secondary" onclick="openAgreementViewModal('${d.id}')">📋 동의서 열람</button>
+            `;
+        } else {
+            actions = '';
+            // 투입일 당일이면 안전서약서 작성 가능
+            if (isDeployDay && !(d.safetyPledge && d.safetyPledge.agreedAt)) {
+                actions += `<button class="defect-action-btn primary" onclick="openSafetyPledgeModal('${d.id}')">📝 안전수칙 서약서 작성</button>`;
+            } else if (d.safetyPledge && d.safetyPledge.agreedAt) {
+                actions += `<span class="defect-action-btn success">✅ 안전서약 완료</span>`;
+            }
+            // 소장님이 처리 결과 기입 가능
+            actions += `<button class="defect-action-btn primary" onclick="openManagerCompleteModal('${d.id}')">📷 처리결과 기입</button>`;
+        }
     } else if (d.status === '완료') {
-        actions = isAdmin ? `<button class="defect-action-btn primary" onclick="openDefectCloseModal('${d.id}')">→ 종결으로 진행</button>` : '';
+        if (isAdmin) {
+            actions = `
+                <button class="defect-action-btn primary" onclick="openDefectCloseModal('${d.id}')">→ 종결으로 진행</button>
+                <button class="defect-action-btn secondary" onclick="openAgreementViewModal('${d.id}')">📋 동의서 열람</button>
+            `;
+        }
     } else if (d.status === '종결') {
         actions = `
             <span class="defect-action-btn success">✅ 종결 완료</span>
             <button class="defect-action-btn secondary" onclick="openDefectReport('${d.id}')">📄 보고서</button>
+            ${isAdmin ? `<button class="defect-action-btn secondary" onclick="openAgreementViewModal('${d.id}')">📋 동의서 열람</button>` : ''}
         `;
     }
-    const planDateLabel = d.planDate ? d.planDate : '<span style="color:#f59e0b;">확인중</span>';
+    // 투입일 표시 (시공사: 투입불가 시 '확인중' / 관리자: 불가사유 표시)
+    let planDateLabel;
+    if (d.managerResponse === 'rejected') {
+        if (isAdmin) {
+            planDateLabel = `<span style="color:var(--red);font-weight:600;">투입불가</span> <span style="font-size:11px;color:var(--gray-500);">(${escapeHtml(d.managerRejectReason || '')})</span>`;
+        } else {
+            planDateLabel = '<span style="color:#f59e0b;">확인중</span>';
+        }
+    } else if (d.planDate) {
+        planDateLabel = d.planDate + (d.managerPlanTime ? ` (${d.managerPlanTime})` : '');
+    } else {
+        planDateLabel = '<span style="color:#f59e0b;">확인중</span>';
+    }
+    const mgrName = d.siteManagerName || d.planManager;
+    const mgrPhone = d.siteManagerPhone || d.planManagerPhone;
     const planLine = (d.status === '종결' && !d.planDate) ? '' : (
         isAdmin
-            ? `<div class="defect-meta-line">📅 투입일: ${planDateLabel}${d.planManager ? ` | 현장소장: ${escapeHtml(d.planManager)}` : ''}${d.planAssignee ? ` | 처리담당: ${escapeHtml(d.planAssignee)}` : ''}</div>`
-            : `<div class="defect-meta-line">📅 투입일: ${planDateLabel}${d.planManager ? ` | 현장소장: ${escapeHtml(d.planManager)}` : ''}${d.planManagerPhone ? ` | ☎ ${escapeHtml(d.planManagerPhone)}` : ''}</div>`
+            ? `<div class="defect-meta-line">📅 투입일: ${planDateLabel}${mgrName ? ` | 현장소장: ${escapeHtml(mgrName)}` : ''}${d.planAssignee ? ` | 처리담당: ${escapeHtml(d.planAssignee)}` : ''}</div>`
+            : `<div class="defect-meta-line">📅 투입일: ${planDateLabel}${mgrName ? ` | 현장소장: ${escapeHtml(mgrName)}` : ''}${mgrPhone ? ` | ☎ ${escapeHtml(mgrPhone)}` : ''}</div>`
     );
     const resultLine = (d.status === '완료' || d.status === '종결') && d.resultText
         ? `<div class="defect-result-line">✅ 처리결과: ${escapeHtml(d.resultText)}</div>`
+        : '';
+    // 안전서약 상태 (관리자용)
+    const safetyLine = isAdmin && d.safetyPledge && d.safetyPledge.agreedAt
+        ? `<div class="defect-meta-line" style="color:var(--green);">🛡️ 안전서약 완료 (${new Date(d.safetyPledge.agreedAt).toLocaleString('ko-KR')})</div>`
         : '';
     return `
         <div class="defect-card ${overdue ? 'overdue' : ''}">
@@ -4857,6 +5368,7 @@ function renderDefectCard(d) {
             </div>
             ${d.content ? `<div class="defect-card-content">${escapeHtml(d.content)}</div>` : ''}
             ${planLine}
+            ${safetyLine}
             ${resultLine}
             <div class="defect-actions">${actions}</div>
         </div>
@@ -5714,6 +6226,7 @@ function renderSiteDetail() {
                     <div class="detail-info-row"><div class="detail-info-label">시공 범위</div><div class="detail-info-value">${site.scope}</div></div>
                     <div class="detail-info-row"><div class="detail-info-label">시공사</div><div class="detail-info-value">${company ? company.name : '-'}</div></div>
                     <div class="detail-info-row"><div class="detail-info-label">현장소장</div><div class="detail-info-value">${site.siteManager || '<span style="color:var(--red);">미배정</span>'}</div></div>
+                    <div class="detail-info-row"><div class="detail-info-label">소장 연락처</div><div class="detail-info-value">${site.siteManagerPhone || '-'}</div></div>
                 </div>
                 <div style="padding-left:24px;">
                     <div class="detail-info-row"><div class="detail-info-label">착공일</div><div class="detail-info-value" style="color:var(--blue);font-weight:600;">${site.constructionStart || '-'}</div></div>
@@ -5912,7 +6425,17 @@ function renderSiteDetail() {
                 ${siteDefects.length ? `
                     <h5 style="font-size:13px;font-weight:700;color:var(--gray-700);margin-bottom:10px;">접수 내역 (${siteDefects.length}건)</h5>
                     <div class="defect-list">
-                        ${siteDefects.map(d => `
+                        ${siteDefects.map(d => {
+                            const _today = new Date().toISOString().slice(0, 10);
+                            const _pDate = d.managerPlanDate || d.planDate;
+                            const _isDeployDay = _pDate && _pDate === _today;
+                            const _mgrName = d.siteManagerName || d.planManager;
+                            const _mgrPhone = d.siteManagerPhone || d.planManagerPhone;
+                            // 시공사 화면: 투입불가 시 '확인중'으로 표시
+                            const _planLabel = (d.managerResponse === 'rejected')
+                                ? '<span style="color:#f59e0b;">확인중</span>'
+                                : (_pDate ? _pDate + (d.managerPlanTime ? ' (' + d.managerPlanTime + ')' : '') : '<span style="color:#f59e0b;">확인중</span>');
+                            return `
                             <div class="defect-card">
                                 <div class="defect-card-top">
                                     <div class="defect-card-title">${escapeHtml(d.location)}</div>
@@ -5923,25 +6446,19 @@ function renderSiteDetail() {
                                     <span>📅 접수일: ${d.date}</span>
                                     <span>🏷️ ${d.type}</span>
                                 </div>
-                                ${d.content ? `<div class="defect-card-content">${escapeHtml(d.content)}</div>` : ''}
+                                ${d.content ? '<div class="defect-card-content">' + escapeHtml(d.content) + '</div>' : ''}
                                 ${(d.status !== '종결') ? (
                                     '<div style="margin-top:10px;padding:10px 12px;background:#eff6ff;border-left:3px solid var(--blue);border-radius:6px;font-size:12px;color:#1e40af;">'
                                     + '<div style="font-weight:700;margin-bottom:4px;">📋 처리 진행 상태</div>'
-                                    + '<div>🗓 투입일: <strong>' + (d.planDate ? d.planDate : '<span style="color:#f59e0b;">확인중</span>') + '</strong></div>'
-                                    + (d.planManager ? ('<div>👷 투입 현장소장: <strong>' + escapeHtml(d.planManager) + '</strong></div>') : '')
-                                    + (d.planManagerPhone ? ('<div>📞 소장님 연락처: <strong>' + escapeHtml(d.planManagerPhone) + '</strong></div>') : '')
+                                    + '<div>🗓 투입일: <strong>' + _planLabel + '</strong></div>'
+                                    + (_mgrName ? ('<div>👷 현장소장: <strong>' + escapeHtml(_mgrName) + '</strong></div>') : '')
+                                    + (_mgrPhone ? ('<div>📞 연락처: <strong>' + escapeHtml(_mgrPhone) + '</strong></div>') : '')
                                     + '</div>'
                                 ) : ''}
-                                ${(d.status === '완료' || d.status === '종결') && d.resultText ? `
-                                    <div class="defect-result-line" style="margin-top:8px;">✅ 처리 완료 (${d.completeDate || '-'}): ${escapeHtml(d.resultText)}</div>
-                                ` : ''}
-                                ${d.status === '종결' ? `
-                                    <div style="margin-top:10px;">
-                                        <button class="defect-action-btn secondary" onclick="openDefectReport('${d.id}')">📄 처리 보고서</button>
-                                    </div>
-                                ` : ''}
-                            </div>
-                        `).join('')}
+                                ${(d.status === '완료' || d.status === '종결') && d.resultText ? '<div class="defect-result-line" style="margin-top:8px;">✅ 처리 완료 (' + (d.completeDate || '-') + '): ' + escapeHtml(d.resultText) + '</div>' : ''}
+                                ${d.status === '종결' ? '<div style="margin-top:10px;"><button class="defect-action-btn secondary" onclick="openDefectReport(\''+d.id+'\')">📄 처리 보고서</button></div>' : ''}
+                            </div>`;
+                        }).join('')}
                     </div>
                 ` : '<div style="color:var(--gray-400);text-align:center;padding:30px;font-size:13px;">아직 접수된 하자가 없습니다.</div>'}
             `;
@@ -6270,6 +6787,7 @@ function _getFormSiteFields() {
         scope: document.getElementById('newSiteScope').value,
         stage: document.getElementById('newSiteStage').value,
         siteManager: document.getElementById('newSiteManager').value,
+        siteManagerPhone: document.getElementById('newSiteManagerPhone').value,
         constructionStart: document.getElementById('newSiteConstructionStart').value,
         constructionEnd: document.getElementById('newSiteConstructionEnd').value,
         defectDeadline: document.getElementById('newSiteDefectDeadline').value,
@@ -6387,6 +6905,7 @@ function openEditSiteModal(siteId) {
     document.getElementById('newSiteScope').value = site.scope;
     document.getElementById('newSiteStage').value = site.stage;
     document.getElementById('newSiteManager').value = site.siteManager || '';
+    document.getElementById('newSiteManagerPhone').value = site.siteManagerPhone || '';
     document.getElementById('newSiteConstructionStart').value = site.constructionStart || '';
     document.getElementById('newSiteConstructionEnd').value = site.constructionEnd || '';
     document.getElementById('newSiteDefectDeadline').value = site.defectDeadline || '';
