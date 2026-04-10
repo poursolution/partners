@@ -3118,14 +3118,50 @@
     </div>
 </div>
 
-<!-- 하자 접수 Modal -->
-<div class="modal-overlay" id="defectIntakeModal">
+<!-- 하자처리 지원안내 서약 팝업 -->
+<div class="modal-overlay" id="defectPledgeModal">
     <div class="modal" style="max-width:560px;">
         <div class="modal-header">
-            <div class="modal-title">하자 접수</div>
+            <div class="modal-title">하자처리 지원안내</div>
+            <button class="modal-close" onclick="closeModal('defectPledgeModal')">×</button>
+        </div>
+        <div class="modal-body" style="padding:24px;">
+            <div style="font-size:14px;line-height:1.8;color:var(--gray-700);">
+                <p style="font-weight:600;margin-bottom:12px;">하자처리 프로세스 안내입니다.</p>
+                <p style="margin-bottom:12px;">넷폼알앤디㈜는 POUR공법 기술 및 자재를 지원하며 하자 처리 품질에 대한 컨설팅을 제공합니다. 현장 내 안전 관리 및 인원 통제는 낙찰사 주관으로 진행됩니다.<br><span style="color:var(--gray-500);font-size:12px;">(산업안전보건법 제63조)</span></p>
+                <p style="margin-bottom:12px;">작업지시서 작성이 완료되면 자동으로 요청하신 팀에 전달되고, 요청받은 팀은 투입 일정을 대시보드로 회신드립니다.</p>
+                <p>작업 투입 완료 시 전·중·후 사진을 업로드하여 완료 상황을 공유하는 것으로 하자 처리 프로세스가 완료됩니다.</p>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeModal('defectPledgeModal')">취소</button>
+            <button class="btn btn-primary" onclick="closeModal('defectPledgeModal'); _openDefectIntakeFormAfterPledge();">확인 후 접수 진행</button>
+        </div>
+    </div>
+</div>
+
+<!-- 하자 접수 Modal -->
+<div class="modal-overlay" id="defectIntakeModal">
+    <div class="modal" style="max-width:620px;">
+        <div class="modal-header">
+            <div class="modal-title">하자 접수 (작업지시서)</div>
             <button class="modal-close" onclick="closeModal('defectIntakeModal')">×</button>
         </div>
         <div class="modal-body">
+            <!-- 문서 헤더 정보 -->
+            <div id="defectDocHeader" style="background:#f0f7ff;border:1px solid #bfdbfe;border-radius:10px;padding:16px 18px;margin-bottom:18px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+                    <span style="font-size:11px;color:var(--gray-500);">문서번호: <strong id="defectDocNumber" style="color:var(--gray-700);"></strong></span>
+                    <span style="font-size:11px;color:var(--gray-500);">발급일시: <strong id="defectDocDate" style="color:var(--gray-700);"></strong></span>
+                </div>
+                <div style="font-size:11px;color:var(--gray-500);margin-bottom:12px;">발급주체: <strong id="defectDocIssuer" style="color:var(--gray-700);"></strong></div>
+                <div style="font-size:12px;line-height:1.7;color:var(--gray-600);">
+                    본 작업지시서는 <strong id="defectDocCompanyName" style="color:var(--blue);"></strong> 요청에 따라 넷폼알앤디㈜ 하자대응 시스템을 통해 발급된 문서입니다.<br>
+                    넷폼알앤디㈜는 POUR공법 기술 및 자재를 지원하며 하자 처리 품질에 대한 컨설팅을 제공합니다.<br>
+                    현장 내 안전 관리 및 산업재해 예방은 낙찰사 주관으로 진행됩니다.
+                </div>
+            </div>
+
             <form class="modal-form" id="defectIntakeForm" onsubmit="handleDefectIntake(event)">
                 <div class="form-group" style="display:none;">
                     <label class="form-label">현장</label>
@@ -3179,6 +3215,29 @@
                         <div class="file-icon">🖼️</div>
                         <div class="file-name" id="defectPhotoName"></div>
                         <button type="button" class="file-remove-btn" onclick="removeDefectPhoto()">×</button>
+                    </div>
+                </div>
+
+                <!-- 동의 항목 -->
+                <div style="border-top:1px solid var(--gray-200);padding-top:16px;margin-top:8px;">
+                    <div style="font-size:13px;font-weight:600;color:var(--gray-700);margin-bottom:12px;">동의 항목</div>
+                    <label style="display:flex;align-items:flex-start;gap:8px;margin-bottom:10px;cursor:pointer;font-size:12.5px;line-height:1.6;color:var(--gray-600);">
+                        <input type="checkbox" id="defectAgree1" style="margin-top:4px;min-width:16px;">
+                        <span>위 안내 내용을 확인하였으며, 넷폼알앤디의 기술·자재 지원 컨설팅 서비스 이용에 동의합니다.</span>
+                    </label>
+                    <label style="display:flex;align-items:flex-start;gap:8px;margin-bottom:14px;cursor:pointer;font-size:12.5px;line-height:1.6;color:var(--gray-600);">
+                        <input type="checkbox" id="defectAgree2" style="margin-top:4px;min-width:16px;">
+                        <span>작업 품질 및 기술 방향은 넷폼알앤디가, 현장 안전 관리는 당사(낙찰사)가 주관함을 확인합니다.</span>
+                    </label>
+
+                    <!-- 서명란 -->
+                    <div style="margin-top:10px;">
+                        <div style="font-size:13px;font-weight:600;color:var(--gray-700);margin-bottom:8px;">서명</div>
+                        <div style="position:relative;border:1px solid var(--gray-300);border-radius:9px;background:#fff;overflow:hidden;">
+                            <canvas id="defectSignatureCanvas" width="520" height="140" style="width:100%;display:block;cursor:crosshair;"></canvas>
+                            <button type="button" onclick="clearDefectSignature()" style="position:absolute;top:6px;right:6px;background:var(--gray-100);border:1px solid var(--gray-300);border-radius:6px;padding:3px 10px;font-size:11px;color:var(--gray-500);cursor:pointer;">초기화</button>
+                        </div>
+                        <div style="font-size:11px;color:var(--gray-400);margin-top:4px;">위 영역에 서명해주세요.</div>
                     </div>
                 </div>
             </form>
@@ -4397,8 +4456,90 @@ function toggleDefectView(show) {
 
 // ========== DEFECTS ==========
 let _currentDefectSiteId = null;
+let _defectSignatureCtx = null;
+let _defectSignatureDrawing = false;
+let _defectSignatureEmpty = true;
+
+function _generateDefectDocNumber() {
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = String(now.getMonth() + 1).padStart(2, '0');
+    const d = String(now.getDate()).padStart(2, '0');
+    const seq = String(defects.length + 1).padStart(4, '0');
+    return `DF-${y}${m}${d}-${seq}`;
+}
+
+function _initDefectSignature() {
+    const canvas = document.getElementById('defectSignatureCanvas');
+    if (!canvas) return;
+    _defectSignatureCtx = canvas.getContext('2d');
+    // 캔버스 해상도 맞춤
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * 2;
+    canvas.height = rect.height * 2;
+    _defectSignatureCtx.scale(2, 2);
+    _defectSignatureCtx.strokeStyle = '#1e293b';
+    _defectSignatureCtx.lineWidth = 2;
+    _defectSignatureCtx.lineCap = 'round';
+    _defectSignatureEmpty = true;
+
+    // 마우스 이벤트
+    canvas.onmousedown = function(e) {
+        _defectSignatureDrawing = true;
+        _defectSignatureCtx.beginPath();
+        const r = canvas.getBoundingClientRect();
+        _defectSignatureCtx.moveTo(e.clientX - r.left, e.clientY - r.top);
+    };
+    canvas.onmousemove = function(e) {
+        if (!_defectSignatureDrawing) return;
+        const r = canvas.getBoundingClientRect();
+        _defectSignatureCtx.lineTo(e.clientX - r.left, e.clientY - r.top);
+        _defectSignatureCtx.stroke();
+        _defectSignatureEmpty = false;
+    };
+    canvas.onmouseup = function() { _defectSignatureDrawing = false; };
+    canvas.onmouseleave = function() { _defectSignatureDrawing = false; };
+
+    // 터치 이벤트
+    canvas.ontouchstart = function(e) {
+        e.preventDefault();
+        _defectSignatureDrawing = true;
+        _defectSignatureCtx.beginPath();
+        const r = canvas.getBoundingClientRect();
+        const t = e.touches[0];
+        _defectSignatureCtx.moveTo(t.clientX - r.left, t.clientY - r.top);
+    };
+    canvas.ontouchmove = function(e) {
+        e.preventDefault();
+        if (!_defectSignatureDrawing) return;
+        const r = canvas.getBoundingClientRect();
+        const t = e.touches[0];
+        _defectSignatureCtx.lineTo(t.clientX - r.left, t.clientY - r.top);
+        _defectSignatureCtx.stroke();
+        _defectSignatureEmpty = false;
+    };
+    canvas.ontouchend = function() { _defectSignatureDrawing = false; };
+}
+
+function clearDefectSignature() {
+    const canvas = document.getElementById('defectSignatureCanvas');
+    if (!canvas || !_defectSignatureCtx) return;
+    const rect = canvas.getBoundingClientRect();
+    _defectSignatureCtx.clearRect(0, 0, rect.width, rect.height);
+    _defectSignatureEmpty = true;
+}
+
 function openDefectIntakeModal(siteId) {
     _currentDefectSiteId = siteId || null;
+    // 시공사(비관리자)인 경우 서약 팝업을 먼저 표시
+    if (!isAdmin) {
+        document.getElementById('defectPledgeModal').classList.add('active');
+    } else {
+        _openDefectIntakeFormAfterPledge();
+    }
+}
+
+function _openDefectIntakeFormAfterPledge() {
     document.getElementById('defectIntakeForm').reset();
     const today = new Date().toISOString().slice(0, 10);
     document.getElementById('defectDate').value = today;
@@ -4415,7 +4556,21 @@ function openDefectIntakeModal(siteId) {
             siteNameEl.parentElement.style.display = 'none';
         }
     }
+    // 문서 헤더 정보 채우기
+    const companyName = currentUser ? currentUser.name : '(시공사명)';
+    const docNum = _generateDefectDocNumber();
+    const now = new Date();
+    const docDate = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+    document.getElementById('defectDocNumber').textContent = docNum;
+    document.getElementById('defectDocDate').textContent = docDate;
+    document.getElementById('defectDocIssuer').textContent = companyName;
+    document.getElementById('defectDocCompanyName').textContent = companyName;
+    // 체크박스 초기화
+    document.getElementById('defectAgree1').checked = false;
+    document.getElementById('defectAgree2').checked = false;
     document.getElementById('defectIntakeModal').classList.add('active');
+    // 서명 캔버스 초기화
+    setTimeout(() => { _initDefectSignature(); }, 100);
 }
 
 // 이미지 압축 (긴 변 최대 1200px, JPEG 품질 0.7) → base64 dataURL
@@ -4479,6 +4634,18 @@ async function handleDefectIntake(e) {
     e.preventDefault();
     const location = document.getElementById('defectLocation').value.trim();
     if (!location) { showToast('하자 위치를 입력해주세요.', 'error'); return; }
+    // 동의 체크 및 서명 검증 (시공사만)
+    if (!isAdmin) {
+        if (!document.getElementById('defectAgree1').checked) {
+            showToast('첫 번째 동의 항목에 체크해주세요.', 'error'); return;
+        }
+        if (!document.getElementById('defectAgree2').checked) {
+            showToast('두 번째 동의 항목에 체크해주세요.', 'error'); return;
+        }
+        if (_defectSignatureEmpty) {
+            showToast('서명을 해주세요.', 'error'); return;
+        }
+    }
     // 압축 진행 중이면 대기
     let photoData = null, photoName = null;
     if (selectedDefectPhoto) {
@@ -4491,11 +4658,19 @@ async function handleDefectIntake(e) {
             photoData = selectedDefectPhoto.data;
         }
     }
+    // 서명 데이터 추출
+    let signatureData = null;
+    if (!_defectSignatureEmpty) {
+        const canvas = document.getElementById('defectSignatureCanvas');
+        if (canvas) signatureData = canvas.toDataURL('image/png');
+    }
     const newId = _fbReady ? fbGenId() : String(Date.now());
+    const docNumber = document.getElementById('defectDocNumber').textContent;
     const newDefect = {
         id: newId,
         siteId: _currentDefectSiteId ? String(_currentDefectSiteId) : null,
         companyId: currentUser ? currentUser.id : null,
+        companyName: currentUser ? currentUser.name : null,
         date: document.getElementById('defectDate').value || new Date().toISOString().slice(0, 10),
         type: document.getElementById('defectType').value,
         location: location,
@@ -4504,6 +4679,9 @@ async function handleDefectIntake(e) {
         status: '접수',
         photoName: photoName,
         photoData: photoData,
+        docNumber: docNumber,
+        signatureData: signatureData,
+        agreedAt: new Date().toISOString(),
         responses: [],
         createdAt: new Date().toISOString(),
     };
@@ -4514,6 +4692,8 @@ async function handleDefectIntake(e) {
     closeModal('defectIntakeModal');
     showToast('하자가 접수되었습니다.', 'success');
     document.getElementById('countDefect').textContent = defects.length;
+    // 소장님에게 알림 (접수 즉시)
+    _notifySiteManager(newDefect);
     if (_currentDefectSiteId && document.getElementById('siteDetailView').style.display !== 'none') {
         renderSiteDetail();
     } else {
@@ -4550,6 +4730,35 @@ function notifyNewDefect(d) {
             tag: 'defect-' + d.id,
         });
     }
+}
+
+// 소장님(현장관리자)에게 직접 알림 전달
+function _notifySiteManager(d) {
+    const site = d.siteId ? sites.find(s => String(s.id) === String(d.siteId)) : null;
+    const siteName = site ? site.building : '(현장 미지정)';
+    const siteManager = site ? site.siteManager : null;
+    const companyName = d.companyName || (currentUser ? currentUser.name : '시공사');
+    // Firebase에 소장님 알림 레코드 저장
+    if (_fbReady) {
+        const notiId = fbGenId();
+        fbSet('notifications', notiId, {
+            id: notiId,
+            type: 'defect_intake',
+            defectId: d.id,
+            siteId: d.siteId,
+            siteName: siteName,
+            siteManager: siteManager,
+            companyName: companyName,
+            location: d.location,
+            defectType: d.type,
+            message: `[하자접수] ${companyName} → ${siteName} / ${d.location} (${d.type})`,
+            targetRole: 'siteManager',
+            read: false,
+            createdAt: new Date().toISOString(),
+        }).catch(err => console.error('[Firebase] 소장 알림 저장 실패', err));
+    }
+    // 관리자에게도 알림 (기존 로직 유지)
+    notifyNewDefect(d);
 }
 
 // 관리자 로그인 시 알림 권한 요청
@@ -5698,7 +5907,7 @@ function renderSiteDetail() {
                     <button class="btn btn-primary btn-sm" onclick="openDefectIntakeModal('${site.id}')">➕ 하자 접수하기</button>
                 </div>
                 <div style="font-size:13px;color:var(--gray-500);margin-bottom:16px;">
-                    현장에서 발견된 하자를 접수해주세요. 접수된 하자는 관리자가 확인 후 처리합니다.
+                    현장에서 발견된 하자를 접수해주세요. 접수 완료 시 담당 소장님에게 자동으로 알림이 전달됩니다.
                 </div>
                 ${siteDefects.length ? `
                     <h5 style="font-size:13px;font-weight:700;color:var(--gray-700);margin-bottom:10px;">접수 내역 (${siteDefects.length}건)</h5>
@@ -7634,8 +7843,8 @@ function attachListeners() {
                 .sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
             const countEl = document.getElementById('countDefect');
             if (countEl) countEl.textContent = defects.length;
-            // 새 하자 접수 감지 → 관리자에게 알림
-            if (isAdmin && _initialDefectsLoaded) {
+            // 새 하자 접수 감지 → 소장님 + 관리자에게 알림
+            if (_initialDefectsLoaded) {
                 const newOnes = defects.filter(d => d.status === '접수' && !prevIds.has(String(d.id)));
                 if (newOnes.length > 0) {
                     notifyNewDefect(newOnes[0]);
